@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Questões - Início</title>
+    <!-- Incluindo o Tailwind CSS para estilização rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluindo Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Incluindo Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Estilos personalizados */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* Efeito hover para o círculo e a letra (APENAS se não respondida E não selecionada) */
+        .option-item:not(.is-answered):not(.selected):hover .option-circle {
+            border-color: #3b82f6; /* Azul */
+        }
+        .option-item:not(.is-answered):not(.selected):hover .option-circle .option-letter {
+            color: #3b82f6; /* Azul */
+        }
+
+        /* Estilos para o círculo de seleção */
+        .selected .option-circle {
+            border-color: #3b82f6; /* Azul */
+            background-color: #3b82f6; /* Fundo azul quando selecionado */
+        }
+        .selected .option-circle .option-letter {
+            color: white; /* Letra branca quando selecionado */
+        }
+
+        /* Estilo para a resposta correta */
+        .correct-answer .option-circle {
+            border-color: #22c55e; /* Verde */
+            background-color: #dcfce7; /* green-100 */
+        }
+         .correct-answer .option-circle .option-letter {
+            color: #16a34a; /* green-700 */
+        }
+        .correct-answer .option-text {
+            color: #16a34a; /* Verde escuro */
+            font-weight: 500;
+        }
+
+        /* Estilo para a resposta incorreta selecionada */
+        .incorrect-answer .option-circle {
+            border-color: #ef4444; /* Vermelho */
+            background-color: #fee2e2; /* red-100 */
+        }
+        .incorrect-answer .option-circle .option-letter {
+            color: #b91c1c; /* red-700 */
+        }
+        .incorrect-answer .option-text {
+            color: #dc2626; /* Vermelho escuro */
+            font-weight: 500;
+        }
+
+        /* Estilo para a opção descartada */
+        .discarded .option-text {
+            text-decoration: line-through;
+            color: #9ca3af; /* gray-400 */
+        }
+        .discarded .option-circle {
+            opacity: 0.4;
+        }
+        .discarded .discard-btn {
+             opacity: 0.4 !important; /* Força a opacidade mesmo no hover */
+        }
+        
+        /* Estilos para botões de filtro toggle */
+        .filter-btn-toggle {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #4b5563; /* gray-600 */
+            border-color: #e5e7eb; /* gray-200 */
+        }
+        .filter-btn-toggle:hover {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+        .filter-btn-toggle.active-filter {
+            background-color: #e0e7ff; /* indigo-100 */
+            color: #3730a3; /* indigo-800 */
+            border-color: #a5b4fc; /* indigo-300 */
+            font-weight: 500;
+        }
+        
+        /* Estilos para abas */
+        .tab-button {
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            border-radius: 0.5rem 0.5rem 0 0;
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+        .tab-button.active {
+            background-color: white;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-f0f2f5">
+
+    <!-- Menu Superior Fixo (Header) -->
+    <header class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747h18"/>
+                        </svg>
+                        <span class="text-xl font-bold text-gray-800 ml-2">QuestõesApp</span>
+                    </div>
+                    <nav id="main-nav" class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Início</a>
+                            <a href="#" data-view="vade-mecum-view" class="nav-link text-blue-700 bg-blue-100 px-3 py-2 rounded-md text-sm font-medium">Questões</a>
+                            <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Cadernos</a>
+                            <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Matérias</a>
+                            <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                        </div>
+                    </nav>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Minha Conta</a>
+                    </div>
+                </div>
+                <div class="-mr-2 flex md:hidden">
+                    <button id="hamburger-btn" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <span class="sr-only">Abrir menu principal</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Menu Mobile -->
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#" data-view="vade-mecum-view" class="nav-link text-blue-700 bg-blue-100 block px-3 py-2 rounded-md text-base font-medium">Questões</a>
+                <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Cadernos</a>
+                <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Matérias</a>
+                <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Estatísticas</a>
+                <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Minha Conta</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="py-6 lg:py-10">
+        <div id="vade-mecum-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-bold text-gray-800">Vade Mecum de Questões</h2>
+            </div>
+            <!-- Seção de Filtros Reestruturada -->
+            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+                <div class="flex justify-end mb-4">
+                    <button id="saved-filters-list-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600 bg-gray-100 border border-gray-300 px-4 py-2 rounded-md shadow-sm">
+                        <i class="far fa-bookmark mr-2"></i>
+                        Filtros Salvos
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <!-- Linha 1: Dropdowns -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </span>
+                            <input type="text" id="search-input" placeholder="Pesquisar" class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Custom Select: Disciplina -->
+                        <div id="materia-filter" class="relative custom-select-container">
+                             <button class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-md bg-white text-gray-500 flex justify-between items-center">
+                                 <span class="custom-select-value">Disciplina</span>
+                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                             </button>
+                             <div class="custom-select-panel hidden absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                                <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-md" placeholder="Pesquisar..."></div>
+                                <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
+                                    <!-- Opções serão inseridas pelo JS -->
+                                </div>
+                             </div>
+                        </div>
+
+                        <!-- Custom Select: Assunto -->
+                        <div id="assunto-filter" class="relative custom-select-container">
+                             <button class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-md bg-white text-gray-500 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                 <span class="custom-select-value">Assunto</span>
+                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                             </button>
+                             <div class="custom-select-panel hidden absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                                <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-md" placeholder="Pesquisar..."></div>
+                                <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
+                                   <!-- Opções serão inseridas pelo JS -->
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Linha 2: Tipo de questão -->
+                    <div class="pt-4 border-t mt-4">
+                         <div class="flex items-center flex-wrap gap-x-4 gap-y-2">
+                            <span class="text-sm font-medium text-gray-700">Tipo de questão:</span>
+                            <div id="tipo-filter-group" class="flex flex-wrap gap-2 filter-btn-group">
+                                <button data-value="todos" class="filter-btn-toggle active-filter px-3 py-1 text-sm border rounded-md">Todos</button>
+                                <button data-value="C/E" class="filter-btn-toggle px-3 py-1 text-sm border rounded-md">Certo e errado</button>
+                                <button data-value="Multipla Escolha" class="filter-btn-toggle px-3 py-1 text-sm border rounded-md">Múltipla escolha</button>
+                            </div>
+                         </div>
+                    </div>
+                    
+                    <!-- Ações do Filtro -->
+                    <div class="flex flex-col md:flex-row justify-between items-center pt-4 border-t border-gray-200 mt-4">
+                         <div id="selected-filters-container" class="flex flex-wrap gap-2 items-center text-sm text-gray-700 flex-1">
+                             <!-- Tags de filtro aparecerão aqui -->
+                         </div>
+                         <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                             <button id="clear-filters-btn" class="text-sm text-gray-600 hover:text-blue-600">Limpar filtro</button>
+                             <button id="save-filter-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600">
+                                <i class="far fa-save mr-1 font-normal"></i>
+                                Salvar filtro
+                             </button>
+                             <button id="create-caderno-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600">
+                                <i class="fas fa-book mr-1 font-normal"></i>
+                                Criar Caderno
+                             </button>
+                             <button id="filter-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300">Filtrar questões</button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abas de Navegação e Container -->
+            <div class="mb-4">
+                <nav id="tabs-container" class="flex space-x-1">
+                    <button data-tab="question" class="tab-button active">Questões</button>
+                    <button data-tab="stats" class="tab-button">Estatísticas</button>
+                </nav>
+            </div>
+            
+            <div id="main-content-container" class="bg-white rounded-b-lg rounded-tr-lg shadow-sm -mt-4">
+                 <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                    <div>
+                        <h3 id="question-counter-top" class="flex items-baseline text-xl text-gray-800 hidden"></h3>
+                        <div id="question-info-container" class="mt-2 text-sm text-gray-600 space-y-1 hidden"></div>
+                    </div>
+                 </div>
+                 <div class="p-6">
+                    <div id="question-view">
+                        <div id="questions-container" class="space-y-6">
+                            <!-- As questões serão inseridas aqui pelo JavaScript -->
+                        </div>
+                        <div id="navigation-controls" class="flex justify-start items-center mt-8 space-x-4 hidden">
+                            <button id="prev-question-btn" class="p-3 border rounded-md bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                            </button>
+                            <button id="next-question-btn" class="p-3 border rounded-md bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="stats-view" class="hidden">
+                         <div id="stats-content">
+                            <!-- O conteúdo das estatísticas será inserido aqui -->
+                         </div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+        
+        <div id="cadernos-view" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-bold text-gray-800">Meus Cadernos</h2>
+            </div>
+            <div id="saved-cadernos-list-container" class="bg-white p-6 rounded-lg shadow-sm">
+                <!-- Lista de cadernos será inserida aqui -->
+            </div>
+        </div>
+
+    </main>
+    
+    <!-- Modal para Salvar Filtro -->
+    <div id="save-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <button id="close-save-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
+                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-900">Salvar novo filtro</h3>
+                <p class="text-sm text-gray-500 mt-2 mb-6">Economize tempo salvando seus filtros.</p>
+                <input type="text" id="filter-name-input" placeholder="Nome do filtro" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+                <div class="flex justify-center space-x-4">
+                    <button id="cancel-save-btn" class="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancelar</button>
+                    <button id="confirm-save-btn" class="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar filtro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Modal para Criar Caderno -->
+    <div id="caderno-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <button id="close-caderno-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
+                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-900">Criar novo caderno</h3>
+                <p class="text-sm text-gray-500 mt-2 mb-6">Salve as questões filtradas em um caderno para praticar depois.</p>
+                <input type="text" id="caderno-name-input" placeholder="Nome do caderno" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+                <div class="flex justify-center space-x-4">
+                    <button id="cancel-caderno-btn" class="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancelar</button>
+                    <button id="confirm-caderno-btn" class="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Criar caderno</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+     <!-- Modal para Carregar Filtros Salvos -->
+    <div id="load-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-lg shadow-lg rounded-md bg-white">
+             <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Filtros salvos</h3>
+                <button id="close-load-modal" class="text-gray-400 hover:text-gray-600">
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+             </div>
+             <div class="mb-4">
+                <input type="text" id="search-saved-filters-input" placeholder="Procurar por filtros" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+             </div>
+             <div id="saved-filters-list-container" class="mt-4 space-y-2 max-h-80 overflow-y-auto">
+                <!-- Lista de filtros salvos será inserida aqui -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        const mockQuestions = [
+            {
+                id: 1,
+                reference: "IESES 2018 - Tabelião (TJ-CE)",
+                text: "O registro lavrado fora das horas regulamentares ou em dias em que não houver expediente será anulável.",
+                options: ["Certo", "Errado"],
+                correctAnswer: "Certo",
+                explanation: "Correto. Conforme o Art. 9º da Lei de Registros Públicos (Lei 6.015/73), o ato praticado fora do horário regulamentar é considerado anulável.",
+                materia: "Direito Notarial",
+                assunto: "Registros Públicos",
+                tipo: "C/E",
+            },
+            {
+                id: 2,
+                reference: "IESES 2012 - Tabelião (TJ-RO)",
+                text: "Em todas as serventias, todos os títulos apresentados no horário regulamentar, que não forem registrados até a hora do encerramento do serviço, deverão aguardar o dia seguinte, no qual serão registrados, preferencialmente, aos apresentados nesse dia.",
+                options: ["Certo", "Errado"],
+                correctAnswer: "Errado",
+                explanation: "Incorreto. O parágrafo único do Art. 10 da Lei 6.015/73 estabelece que os títulos remanescentes devem ser registrados no dia seguinte, COM PREFERÊNCIA sobre os títulos apresentados nesse novo dia.",
+                materia: "Direito Notarial",
+                assunto: "Registros Públicos",
+                tipo: "C/E",
+            },
+            {
+                id: 3,
+                reference: "CESPE 2021 - Polícia Federal",
+                text: "Qual dos seguintes não é um fundamento da República Federativa do Brasil, segundo a Constituição Federal?",
+                options: ["Soberania", "Cidadania", "Pluralismo político", "Livre iniciativa"],
+                correctAnswer: "Livre iniciativa",
+                explanation: "A 'Livre Iniciativa' é um dos Fundamentos da Ordem Econômica (Art. 170 da CF), e não um dos Fundamentos da República (Art. 1º da CF).",
+                materia: "Direito Constitucional",
+                assunto: "Fundamentos da República",
+                tipo: "Multipla Escolha",
+            },
+             {
+                id: 4,
+                reference: "FGV 2022 - OAB",
+                text: "A anulação de um ato administrativo com efeitos favoráveis para o destinatário exige:",
+                options: ["Notificação prévia do interessado", "Decisão judicial", "Concordância do Ministério Público", "Autorização legislativa"],
+                correctAnswer: "Notificação prévia do interessado",
+                explanation: "Para anular atos administrativos que beneficiem os administrados, é indispensável a prévia oitiva do interessado, garantindo o direito ao contraditório e à ampla defesa (Súmula Vinculante nº 3 do STF).",
+                materia: "Direito Administrativo",
+                assunto: "Atos Administrativos",
+                tipo: "Multipla Escolha",
+            }
+        ];
+        
+        const filterOptions = {
+            materia: [
+                { name: "Direito Constitucional", assuntos: ["Fundamentos da República"] },
+                { name: "Direito Notarial", assuntos: ["Registros Públicos"] },
+                { name: "Direito Administrativo", assuntos: ["Atos Administrativos"] }
+            ],
+            allAssuntos: ["Fundamentos da República", "Registros Públicos", "Atos Administrativos"]
+        };
+
+        let currentQuestionIndex = 0;
+        let selectedAnswer = null;
+        let filteredQuestions = [];
+        let sessionStats = [];
+        let performanceChart = null;
+        
+        const questionsContainer = document.getElementById('questions-container');
+        const filterBtn = document.getElementById('filter-btn');
+        const materiaFilter = document.getElementById('materia-filter');
+        const assuntoFilter = document.getElementById('assunto-filter');
+        const tipoFilterGroup = document.getElementById('tipo-filter-group');
+        const searchInput = document.getElementById('search-input');
+        const clearFiltersBtn = document.getElementById('clear-filters-btn');
+        const prevQuestionBtn = document.getElementById('prev-question-btn');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const questionCounterTop = document.getElementById('question-counter-top');
+        const questionInfoContainer = document.getElementById('question-info-container');
+        const navigationControls = document.getElementById('navigation-controls');
+        const selectedFiltersContainer = document.getElementById('selected-filters-container');
+        const tabsContainer = document.getElementById('tabs-container');
+        const questionView = document.getElementById('question-view');
+        const statsView = document.getElementById('stats-view');
+        const statsContent = document.getElementById('stats-content');
+        
+        const vadeMecumView = document.getElementById('vade-mecum-view');
+        const cadernosView = document.getElementById('cadernos-view');
+        const mainNav = document.getElementById('main-nav');
+        const savedCadernosListContainer = document.getElementById('saved-cadernos-list-container');
+
+
+        // Modal elements
+        const saveModal = document.getElementById('save-modal');
+        const loadModal = document.getElementById('load-modal');
+        const saveFilterBtn = document.getElementById('save-filter-btn');
+        const savedFiltersListBtn = document.getElementById('saved-filters-list-btn');
+        const closeSaveModalBtn = document.getElementById('close-save-modal');
+        const closeLoadModalBtn = document.getElementById('close-load-modal');
+        const cancelSaveBtn = document.getElementById('cancel-save-btn');
+        const confirmSaveBtn = document.getElementById('confirm-save-btn');
+        const filterNameInput = document.getElementById('filter-name-input');
+        const savedFiltersListContainer = document.getElementById('saved-filters-list-container');
+        const searchSavedFiltersInput = document.getElementById('search-saved-filters-input');
+        
+        const cadernoModal = document.getElementById('caderno-modal');
+        const createCadernoBtn = document.getElementById('create-caderno-btn');
+        const closeCadernoModalBtn = document.getElementById('close-caderno-modal');
+        const cancelCadernoBtn = document.getElementById('cancel-caderno-btn');
+        const confirmCadernoBtn = document.getElementById('confirm-caderno-btn');
+        const cadernoNameInput = document.getElementById('caderno-name-input');
+
+
+        function applyFilters() {
+            sessionStats = [];
+            const selectedMaterias = JSON.parse(materiaFilter.dataset.value || '[]');
+            const selectedAssuntos = JSON.parse(assuntoFilter.dataset.value || '[]');
+            const activeTipoBtn = tipoFilterGroup.querySelector('.active-filter');
+            const selectedTipo = activeTipoBtn ? activeTipoBtn.dataset.value : 'todos';
+            const searchTerm = searchInput.value.toLowerCase();
+
+
+            filteredQuestions = mockQuestions.filter(q => {
+                const materiaMatch = selectedMaterias.length === 0 || selectedMaterias.includes(q.materia);
+                const assuntoMatch = selectedAssuntos.length === 0 || selectedAssuntos.includes(q.assunto);
+                const tipoMatch = selectedTipo === 'todos' || q.tipo === selectedTipo;
+                const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm);
+                return materiaMatch && assuntoMatch && tipoMatch && searchMatch;
+            });
+            
+            currentQuestionIndex = 0;
+            displayQuestion();
+            updateSelectedFiltersDisplay();
+            updateStatsPanel();
+        }
+
+        function updateSelectedFiltersDisplay() {
+            selectedFiltersContainer.innerHTML = '';
+            let hasFilters = false;
+
+            const createFilterTag = (type, value, label) => {
+                hasFilters = true;
+                const tag = document.createElement('div');
+                tag.className = 'flex items-center bg-gray-100 border border-gray-300 rounded-md pl-2 pr-1 py-1';
+                tag.innerHTML = `
+                    <span class="font-bold mr-2">${label}:</span>
+                    <span>${value}</span>
+                    <button data-filter-type="${type}" data-filter-value="${value}" class="remove-filter-btn ml-2 text-gray-500 hover:text-gray-800">
+                        <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                `;
+                selectedFiltersContainer.appendChild(tag);
+            };
+
+            const selectedMaterias = JSON.parse(materiaFilter.dataset.value || '[]');
+            selectedMaterias.forEach(m => createFilterTag('materia', m, 'Disciplina'));
+
+            const selectedAssuntos = JSON.parse(assuntoFilter.dataset.value || '[]');
+            selectedAssuntos.forEach(a => createFilterTag('assunto', a, 'Assunto'));
+            
+            const activeTipoBtn = tipoFilterGroup.querySelector('.active-filter');
+            if (activeTipoBtn && activeTipoBtn.dataset.value !== 'todos') {
+                createFilterTag('tipo', activeTipoBtn.dataset.value, 'Tipo');
+            }
+
+            if (searchInput.value) {
+                createFilterTag('search', searchInput.value, 'Palavra-chave');
+            }
+
+            if (!hasFilters) {
+                selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Seus filtros aparecerão aqui</span>`;
+            }
+        }
+
+
+        function updateNavigation() {
+            if (filteredQuestions.length > 0) {
+                navigationControls.classList.remove('hidden');
+                questionCounterTop.classList.remove('hidden');
+                questionInfoContainer.classList.remove('hidden');
+                
+                const answeredCount = sessionStats.length;
+                const correctCount = sessionStats.filter(s => s.isCorrect).length;
+                const incorrectCount = answeredCount - correctCount;
+
+                let statsHtml = '';
+                if (answeredCount > 0) {
+                    statsHtml = `
+                        <span class="text-sm text-gray-500 ml-2">
+                            (${answeredCount} Resolvidas, 
+                            <span class="text-green-600 font-medium">${correctCount} Acertos</span> e 
+                            <span class="text-red-600 font-medium">${incorrectCount} Erros</span>)
+                        </span>
+                    `;
+                }
+
+                questionCounterTop.innerHTML = `
+                    <span class="text-xl text-gray-800">Questão ${currentQuestionIndex + 1} de ${filteredQuestions.length}</span>
+                    ${statsHtml}
+                `;
+                
+                prevQuestionBtn.disabled = currentQuestionIndex === 0;
+                nextQuestionBtn.disabled = currentQuestionIndex === filteredQuestions.length - 1;
+            } else {
+                navigationControls.classList.add('hidden');
+                questionCounterTop.classList.add('hidden');
+                questionInfoContainer.classList.add('hidden');
+            }
+        }
+
+        function displayQuestion() {
+            questionsContainer.innerHTML = '';
+            questionInfoContainer.innerHTML = '';
+            selectedAnswer = null;
+            updateNavigation();
+            
+            if (filteredQuestions.length === 0) {
+                 questionsContainer.innerHTML = `<div class="text-center"><h3 class="text-xl font-bold">Nenhuma questão encontrada</h3><p class="text-gray-600 mt-2">Tente ajustar seus filtros para encontrar mais resultados.</p></div>`;
+                 return;
+            }
+            
+            const question = filteredQuestions[currentQuestionIndex];
+            questionInfoContainer.innerHTML = `
+                <p>Matéria: <a href="#" class="text-blue-600 hover:underline">${question.materia}</a></p>
+                <p>Assunto: <a href="#" class="text-blue-600 hover:underline">${question.assunto}</a></p>
+            `;
+
+            const answeredQuestion = sessionStats.find(s => s.questionId === question.id);
+
+            if (answeredQuestion) {
+                renderAnsweredQuestion(answeredQuestion.isCorrect, answeredQuestion.userAnswer);
+            } else if (currentQuestionIndex >= filteredQuestions.length) {
+                renderSessionSummary();
+            } else {
+                renderUnansweredQuestion();
+            }
+        }
+
+        function renderUnansweredQuestion() {
+            const question = filteredQuestions[currentQuestionIndex];
+            
+            const optionsHtml = question.options.map((option, index) => {
+                let letterContent = '';
+                if (question.tipo === 'Multipla Escolha' || question.tipo === 'C/E') {
+                    const letter = question.tipo === 'C/E' ? option.charAt(0) : String.fromCharCode(65 + index);
+                    letterContent = `<span class="option-letter text-gray-700">${letter}</span>`;
+                }
+                
+                const checkIcon = question.tipo === 'C/E' 
+                    ? `<svg class="check-icon hidden w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`
+                    : '';
+                
+                const scissorIconSVG = `
+                    <svg class="h-5 w-5 text-blue-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 6.5a2 2 0 114 0 2 2 0 01-4 0zM3.5 17.5a2 2 0 114 0 2 2 0 01-4 0z"></path>
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 8.5L18 15.5"></path>
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 15.5L18 8.5"></path>
+                    </svg>`;
+
+                return `
+                    <div data-option="${option}" class="option-item group flex items-center p-2 rounded-md cursor-pointer transition duration-200">
+                       <div class="action-icon-container w-8 h-8 flex-shrink-0 flex items-center justify-center mr-1">
+                            <div class="discard-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-100 rounded-full p-1.5">
+                                ${scissorIconSVG}
+                            </div>
+                        </div>
+                       <div class="option-circle flex-shrink-0 w-8 h-8 border-2 border-gray-300 rounded-full flex items-center justify-center mr-4 transition-all duration-200">
+                           ${letterContent}
+                           ${checkIcon}
+                       </div>
+                       <span class="option-text text-gray-800">${option}</span>
+                    </div>
+                `;
+            }).join('');
+
+            questionsContainer.innerHTML = `
+                <p class="text-gray-800 text-lg mb-6">${question.text}</p>
+                <div id="options-container" class="space-y-2">
+                    ${optionsHtml}
+                </div>
+                <div id="card-footer" class="mt-6 flex items-center">
+                    <button id="submit-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-md hover:bg-green-600 transition-colors duration-300 disabled:bg-green-300 disabled:cursor-not-allowed" disabled>Resolver</button>
+                </div>
+            `;
+            
+            document.querySelectorAll('.option-item').forEach(item => {
+                item.addEventListener('click', handleOptionSelect);
+                item.querySelector('.discard-btn').addEventListener('click', handleDiscardOption);
+            });
+            document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+        }
+        
+        function renderAnsweredQuestion(isCorrect, userAnswer) {
+             const question = filteredQuestions[currentQuestionIndex];
+             renderUnansweredQuestion(); 
+             
+             document.querySelectorAll('.option-item').forEach(item => {
+                const actionIconContainer = item.querySelector('.action-icon-container');
+                actionIconContainer.innerHTML = ''; 
+
+                item.removeEventListener('click', handleOptionSelect);
+                item.style.cursor = 'default';
+                item.classList.add('is-answered');
+
+                const optionValue = item.getAttribute('data-option');
+                if (optionValue === question.correctAnswer) {
+                    item.classList.add('correct-answer');
+                    actionIconContainer.innerHTML = `<i class="fas fa-check text-green-500 text-xl"></i>`;
+                } else if (optionValue === userAnswer && !isCorrect) {
+                    item.classList.add('incorrect-answer');
+                    actionIconContainer.innerHTML = `<i class="fas fa-times text-red-500 text-xl"></i>`;
+                }
+            });
+
+            const cardFooter = document.getElementById('card-footer');
+            cardFooter.innerHTML = ''; 
+            cardFooter.className = 'mt-6 flex items-center justify-start w-full';
+
+            const correctOptionIndex = question.options.findIndex(opt => opt === question.correctAnswer);
+            let correctOptionLetter = '';
+            if (question.tipo === 'Multipla Escolha') {
+                correctOptionLetter = String.fromCharCode(65 + correctOptionIndex);
+            } else { // C/E
+                correctOptionLetter = question.correctAnswer.charAt(0);
+            }
+
+            const messageColor = isCorrect ? 'text-green-600' : 'text-red-600';
+            
+            let feedbackHtml = `<div class="flex items-center space-x-4">`;
+
+            if (isCorrect) {
+                feedbackHtml += `<span class="${messageColor} font-bold text-lg">Correta!</span>`;
+            } else {
+                feedbackHtml += `
+                    <span class="${messageColor} font-bold text-lg">Errada!</span>
+                    <span class="text-gray-500 text-lg">Opção correta:</span>
+                    <div class="option-circle flex-shrink-0 w-6 h-6 border-2 border-green-500 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-xs font-bold">${correctOptionLetter}</div>
+                `;
+            }
+            
+            const mockPercentage = (Math.random() * (85 - 55) + 55).toFixed(1);
+
+            feedbackHtml += `
+                <span class="text-lg text-gray-600">${mockPercentage}% acertaram</span>
+                <button id="show-comment-btn" class="text-blue-600 hover:underline">Ver resolução</button>
+            `;
+
+            feedbackHtml += `</div>`;
+            
+            cardFooter.innerHTML = feedbackHtml;
+            
+            document.getElementById('show-comment-btn').addEventListener('click', showOrToggleComment);
+        }
+        
+        function renderSessionSummary() {
+            questionsContainer.innerHTML = '';
+            navigationControls.classList.add('hidden');
+            questionCounterTop.classList.add('hidden');
+            questionInfoContainer.classList.add('hidden');
+            
+            const totalAnswered = sessionStats.length;
+            if (totalAnswered === 0) {
+                 questionsContainer.innerHTML = `<div class="text-center"><h3 class="text-xl font-bold">Nenhuma questão encontrada</h3><p class="text-gray-600 mt-2">Tente ajustar seus filtros para encontrar mais resultados.</p></div>`;
+                 return;
+            }
+            
+            const totalCorrect = sessionStats.filter(s => s.isCorrect).length;
+            const accuracy = totalAnswered > 0 ? (totalCorrect / totalAnswered * 100).toFixed(0) : 0;
+            
+            let summaryHTML = `<div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Sessão Concluída!</h3>
+                <p class="text-lg text-gray-600 mb-6">Seu aproveitamento foi de <span class="font-bold ${accuracy >= 60 ? 'text-green-600' : 'text-red-600'}">${accuracy}%</span>.</p>
+                <button id="restart-session-btn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-blue-700 transition duration-300">Refazer Questões</button>
+            </div>`;
+            
+            questionsContainer.innerHTML = summaryHTML;
+            document.getElementById('restart-session-btn').addEventListener('click', applyFilters);
+        }
+
+        function handleDiscardOption(event) {
+            event.stopPropagation();
+            const targetItem = event.currentTarget.closest('.option-item');
+            if (targetItem) {
+                targetItem.classList.toggle('discarded');
+                if (targetItem.classList.contains('selected')) {
+                    targetItem.classList.remove('selected');
+                    selectedAnswer = null;
+                    document.getElementById('submit-btn').disabled = true;
+                }
+            }
+        }
+
+        function handleOptionSelect(event) {
+            const target = event.currentTarget;
+            if (target.classList.contains('discarded')) {
+                return;
+            }
+
+            document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
+            target.classList.add('selected');
+            selectedAnswer = target.getAttribute('data-option');
+            document.getElementById('submit-btn').disabled = false;
+        }
+
+        function checkAnswer() {
+            const question = filteredQuestions[currentQuestionIndex];
+            const isCorrect = selectedAnswer === question.correctAnswer;
+            
+            if (!sessionStats.some(s => s.questionId === question.id)) {
+                 sessionStats.push({
+                    questionId: question.id,
+                    isCorrect: isCorrect,
+                    materia: question.materia,
+                    assunto: question.assunto,
+                    userAnswer: selectedAnswer
+                });
+            }
+
+            renderAnsweredQuestion(isCorrect, selectedAnswer);
+            updateStatsPanel();
+            updateNavigation();
+        }
+
+        function showOrToggleComment() {
+            const questionCard = document.querySelector('#questions-container');
+            let explanationBox = document.getElementById('explanation-box');
+
+            if (explanationBox) {
+                explanationBox.classList.toggle('hidden');
+                return;
+            }
+
+            const question = filteredQuestions[currentQuestionIndex];
+            const answeredQuestion = sessionStats.find(s => s.questionId === question.id);
+            if (questionCard && question.explanation && answeredQuestion) {
+                explanationBox = document.createElement('div');
+                explanationBox.id = 'explanation-box';
+                const boxColorClass = answeredQuestion.isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800';
+                explanationBox.className = `mt-6 p-4 rounded-lg ${boxColorClass}`;
+                explanationBox.innerHTML = `
+                    <p class="leading-relaxed">
+                        <strong class="font-bold">Gabarito: ${question.correctAnswer}</strong>
+                        <br>
+                        ${question.explanation}
+                    </p>`;
+                questionCard.appendChild(explanationBox);
+            }
+        }
+        
+        function updateStatsPanel() {
+            const answeredCount = sessionStats.length;
+            const correctCount = sessionStats.filter(s => s.isCorrect).length;
+            const incorrectCount = answeredCount - correctCount;
+
+            const statsByMateria = sessionStats.reduce((acc, stat) => {
+                if (!acc[stat.materia]) {
+                    acc[stat.materia] = { correct: 0, total: 0, assuntos: {} };
+                }
+                if(!acc[stat.materia].assuntos[stat.assunto]) {
+                    acc[stat.materia].assuntos[stat.assunto] = { correct: 0, total: 0 };
+                }
+
+                acc[stat.materia].total++;
+                acc[stat.materia].assuntos[stat.assunto].total++;
+                if (stat.isCorrect) {
+                    acc[stat.materia].correct++;
+                    acc[stat.materia].assuntos[stat.assunto].correct++;
+                }
+                return acc;
+            }, {});
+
+            let materiaStatsHtml = '<div class="space-y-4">';
+            let materiaIndex = 0;
+            for (const materia in statsByMateria) {
+                const disciplinaStats = statsByMateria[materia];
+                const disciplinaAccuracy = (disciplinaStats.correct / disciplinaStats.total * 100).toFixed(0);
+                const targetId = `assuntos-${materia.replace(/\s+/g, '-')}-${materiaIndex}`;
+                materiaStatsHtml += `
+                    <div>
+                        <div class="flex justify-between items-center text-gray-800 cursor-pointer expand-btn" data-target="${targetId}">
+                             <div class="flex items-center">
+                                <i class="fas fa-plus-circle text-gray-800 mr-2"></i>
+                                <span>${materia}</span>
+                            </div>
+                            <span class="font-semibold">${disciplinaStats.correct} / ${disciplinaStats.total} (${disciplinaAccuracy}%)</span>
+                        </div>
+                        <div id="${targetId}" class="pl-6 mt-2 space-y-2 border-l-2 border-gray-200 hidden">`;
+                
+                for (const assunto in disciplinaStats.assuntos) {
+                    const assuntoStats = disciplinaStats.assuntos[assunto];
+                    const assuntoAccuracy = (assuntoStats.correct / assuntoStats.total * 100).toFixed(0);
+                    materiaStatsHtml += `
+                        <div class="flex justify-between items-center text-gray-600 text-sm">
+                            <span>${assunto}</span>
+                            <span class="font-semibold">${assuntoStats.correct} / ${assuntoStats.total} (${assuntoAccuracy}%)</span>
+                        </div>
+                    `;
+                }
+
+                materiaStatsHtml += '</div></div>';
+                materiaIndex++;
+            }
+            materiaStatsHtml += '</div>';
+
+
+            statsContent.innerHTML = `
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="relative w-full max-w-xs mx-auto">
+                        <canvas id="performanceChart"></canvas>
+                        <div id="chart-center-text" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">Desempenho por Disciplina</h4>
+                        ${materiaStatsHtml}
+                    </div>
+                 </div>
+            `;
+
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+
+            if (answeredCount > 0) {
+                const correctPercentage = (correctCount / answeredCount * 100);
+                const incorrectPercentage = (incorrectCount / answeredCount * 100);
+                
+                document.getElementById('chart-center-text').innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-3xl font-bold" style="color: #63dd63;">${correctPercentage.toFixed(0)}%</span>
+                        <span class="text-3xl font-bold" style="color: #f03024;">${incorrectPercentage.toFixed(0)}%</span>
+                    </div>
+                `;
+                
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                performanceChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Acertos', 'Erros'],
+                        datasets: [{
+                            data: [correctCount, incorrectCount],
+                            backgroundColor: ['#63dd63', '#f03024'],
+                            hoverBackgroundColor: ['#81e681', '#f35950'],
+                            borderColor: ['#ffffff'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: '55%',
+                        animation: {
+                            duration: 0
+                        },
+                        plugins: {
+                            legend: {
+                                display: true
+                            },
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    title: function(context) {
+                                        return '';
+                                    },
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw;
+                                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? (value / total * 100).toFixed(0) : 0;
+                                        return `${label}: ${percentage}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                 statsContent.innerHTML = `<div class="text-center text-gray-500 py-10">Responda a pelo menos uma questão para ver suas estatísticas.</div>`;
+            }
+        }
+
+        function handleToggleButtonGroups() {
+            tipoFilterGroup.addEventListener('click', (event) => {
+                if (event.target.classList.contains('filter-btn-toggle')) {
+                    tipoFilterGroup.querySelectorAll('.filter-btn-toggle').forEach(btn => {
+                        btn.classList.remove('active-filter');
+                    });
+                    event.target.classList.add('active-filter');
+                    updateSelectedFiltersDisplay();
+                }
+            });
+        }
+
+        function updateAssuntoFilter(disciplinas) {
+            const assuntoContainer = document.getElementById('assunto-filter');
+            const assuntoButton = assuntoContainer.querySelector('.custom-select-button');
+            const valueSpan = assuntoContainer.querySelector('.custom-select-value');
+            const optionsContainer = assuntoContainer.querySelector('.custom-select-options');
+            
+            const previouslySelectedAssuntos = JSON.parse(assuntoContainer.dataset.value || '[]');
+            valueSpan.textContent = 'Assunto';
+            valueSpan.classList.add('text-gray-500');
+            assuntoContainer.dataset.value = '[]';
+
+            if (disciplinas.length === 0) {
+                assuntoButton.disabled = true;
+                optionsContainer.innerHTML = `<div class="p-2 text-center text-gray-400 text-sm">Selecione uma disciplina</div>`;
+            } else {
+                assuntoButton.disabled = false;
+                let newHtml = '';
+                const validPreviouslySelected = [];
+
+                disciplinas.forEach(disciplina => {
+                    const materiaObj = filterOptions.materia.find(m => m.name === disciplina);
+                    if (materiaObj && materiaObj.assuntos.length > 0) {
+                        newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
+                        
+                        materiaObj.assuntos.forEach(assunto => {
+                            const isChecked = previouslySelectedAssuntos.includes(assunto) ? 'checked' : '';
+                            if (isChecked) {
+                                validPreviouslySelected.push(assunto);
+                            }
+                            newHtml += `
+                                <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                                    <input type="checkbox" data-value="${assunto}" class="custom-select-option rounded" ${isChecked}>
+                                    <span>${assunto}</span>
+                                </label>
+                            `;
+                        });
+                    }
+                });
+                
+                optionsContainer.innerHTML = newHtml;
+
+                assuntoContainer.dataset.value = JSON.stringify(validPreviouslySelected);
+                if (validPreviouslySelected.length === 1) {
+                     valueSpan.textContent = validPreviouslySelected[0];
+                     valueSpan.classList.remove('text-gray-500');
+                } else if (validPreviouslySelected.length > 1) {
+                    valueSpan.textContent = `${validPreviouslySelected.length} Assuntos selecionados`;
+                    valueSpan.classList.remove('text-gray-500');
+                }
+            }
+        }
+        
+        function setupCustomSelect(container) {
+            const button = container.querySelector('.custom-select-button');
+            const valueSpan = container.querySelector('.custom-select-value');
+            const panel = container.querySelector('.custom-select-panel');
+            const searchInput = container.querySelector('.custom-select-search');
+            const optionsContainer = container.querySelector('.custom-select-options');
+            const originalText = valueSpan.textContent;
+
+            const filterId = container.id.replace('-filter', '');
+            let options = [];
+            if (filterId === 'materia') {
+                options = filterOptions.materia.map(m => m.name);
+            } else if (filterId === 'assunto') {
+                options = [];
+            }
+            
+            optionsContainer.innerHTML = options.map(opt => `
+                <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" data-value="${opt}" class="custom-select-option rounded">
+                    <span>${opt}</span>
+                </label>
+            `).join('');
+
+            button.addEventListener('click', () => {
+                if (!button.disabled) {
+                    panel.classList.toggle('hidden');
+                }
+            });
+            
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                optionsContainer.querySelectorAll('label, .font-bold').forEach(el => {
+                    if(el.classList.contains('font-bold')) { 
+                         el.style.display = ''; 
+                    } else {
+                        const text = el.textContent.toLowerCase();
+                        el.style.display = text.includes(searchTerm) ? '' : 'none';
+                    }
+                });
+            });
+
+            optionsContainer.addEventListener('change', () => {
+                const selected = [];
+                const selectedText = [];
+                optionsContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => {
+                    selected.push(cb.dataset.value);
+                    selectedText.push(cb.nextElementSibling.textContent);
+                });
+
+                container.dataset.value = JSON.stringify(selected);
+
+                if (selected.length === 0) {
+                    valueSpan.textContent = originalText;
+                    valueSpan.classList.add('text-gray-500');
+                } else if (selected.length === 1) {
+                    valueSpan.textContent = selectedText[0];
+                    valueSpan.classList.remove('text-gray-500');
+                } else {
+                    valueSpan.textContent = `${selected.length} ${originalText.toLowerCase()}s selecionados`;
+                    valueSpan.classList.remove('text-gray-500');
+                }
+                
+                if (container.id === 'materia-filter') {
+                    updateAssuntoFilter(selected);
+                }
+                updateSelectedFiltersDisplay();
+            });
+        }
+
+        function clearAllFilters() {
+            searchInput.value = '';
+            const materiaContainer = document.getElementById('materia-filter');
+            materiaContainer.dataset.value = '[]';
+            materiaContainer.querySelector('.custom-select-value').textContent = 'Disciplina';
+            materiaContainer.querySelector('.custom-select-value').classList.add('text-gray-500');
+            materiaContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => cb.checked = false);
+            updateAssuntoFilter([]);
+            tipoFilterGroup.querySelector('.active-filter').classList.remove('active-filter');
+            tipoFilterGroup.querySelector('[data-value="todos"]').classList.add('active-filter');
+            applyFilters();
+        }
+
+
+        filterBtn.addEventListener('click', applyFilters);
+
+        prevQuestionBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        });
+
+        nextQuestionBtn.addEventListener('click', () => {
+             if (currentQuestionIndex < filteredQuestions.length -1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            } else if (currentQuestionIndex === filteredQuestions.length -1) {
+                renderSessionSummary();
+            }
+        });
+
+        selectedFiltersContainer.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('.remove-filter-btn');
+            if (!removeBtn) return;
+
+            const type = removeBtn.dataset.filterType;
+            const value = removeBtn.dataset.filterValue;
+            
+            switch (type) {
+                case 'materia':
+                case 'assunto':
+                    const filterContainer = document.getElementById(`${type}-filter`);
+                    const checkbox = filterContainer.querySelector(`.custom-select-option[data-value="${value}"]`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                        filterContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    break;
+                case 'tipo':
+                    tipoFilterGroup.querySelector('.active-filter').classList.remove('active-filter');
+                    tipoFilterGroup.querySelector(`[data-value="todos"]`).classList.add('active-filter');
+                    break;
+                case 'search':
+                    searchInput.value = '';
+                    break;
+            }
+            applyFilters();
+        });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.custom-select-container').forEach(setupCustomSelect);
+            updateAssuntoFilter([]); 
+            searchInput.addEventListener('input', updateSelectedFiltersDisplay);
+            clearFiltersBtn.addEventListener('click', clearAllFilters);
+            
+            tabsContainer.addEventListener('click', (event) => {
+                const targetTab = event.target.dataset.tab;
+                if (targetTab) {
+                    tabsContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    event.target.classList.add('active');
+
+                    if (targetTab === 'question') {
+                        questionView.classList.remove('hidden');
+                        statsView.classList.add('hidden');
+                        if (filteredQuestions.length > 0) {
+                            questionCounterTop.classList.remove('hidden');
+                            questionInfoContainer.classList.remove('hidden');
+                        }
+                    } else if (targetTab === 'stats') {
+                        questionView.classList.add('hidden');
+                        statsView.classList.remove('hidden');
+                        questionCounterTop.classList.add('hidden');
+                        questionInfoContainer.classList.add('hidden');
+                    }
+                }
+            });
+
+            statsView.addEventListener('click', function(event) {
+                const expandBtn = event.target.closest('.expand-btn');
+                if (!expandBtn) return;
+                
+                const targetId = expandBtn.dataset.target;
+                const targetElement = document.getElementById(targetId);
+                const icon = expandBtn.querySelector('i');
+
+                if (targetElement) {
+                    targetElement.classList.toggle('hidden');
+                    icon.classList.toggle('fa-plus-circle');
+                    icon.classList.toggle('fa-minus-circle');
+                }
+            });
+
+             saveFilterBtn.addEventListener('click', () => {
+                saveModal.classList.remove('hidden');
+            });
+            closeSaveModalBtn.addEventListener('click', () => {
+                saveModal.classList.add('hidden');
+            });
+            cancelSaveBtn.addEventListener('click', () => {
+                saveModal.classList.add('hidden');
+            });
+            confirmSaveBtn.addEventListener('click', () => {
+                const name = filterNameInput.value.trim();
+                if (!name) return;
+                
+                const currentFilters = {
+                    name: name,
+                    materias: JSON.parse(materiaFilter.dataset.value || '[]'),
+                    assuntos: JSON.parse(assuntoFilter.dataset.value || '[]'),
+                    tipo: tipoFilterGroup.querySelector('.active-filter')?.dataset.value || 'todos',
+                    search: searchInput.value
+                };
+                
+                let savedFilters = JSON.parse(localStorage.getItem('savedFilters')) || [];
+                savedFilters = savedFilters.filter(f => f.name !== name);
+                savedFilters.push(currentFilters);
+                localStorage.setItem('savedFilters', JSON.stringify(savedFilters));
+
+                filterNameInput.value = '';
+                saveModal.classList.add('hidden');
+            });
+            
+            createCadernoBtn.addEventListener('click', () => {
+                cadernoModal.classList.remove('hidden');
+            });
+            closeCadernoModalBtn.addEventListener('click', () => {
+                cadernoModal.classList.add('hidden');
+            });
+            cancelCadernoBtn.addEventListener('click', () => {
+                cadernoModal.classList.add('hidden');
+            });
+            confirmCadernoBtn.addEventListener('click', () => {
+                const name = cadernoNameInput.value.trim();
+                if (!name || filteredQuestions.length === 0) return;
+                
+                const caderno = {
+                    name: name,
+                    questionIds: filteredQuestions.map(q => q.id)
+                };
+
+                let savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
+                savedCadernos = savedCadernos.filter(c => c.name !== name);
+                savedCadernos.push(caderno);
+                localStorage.setItem('savedCadernos', JSON.stringify(savedCadernos));
+
+                cadernoNameInput.value = '';
+                cadernoModal.classList.add('hidden');
+            });
+
+            function displaySavedFilters() {
+                const searchTerm = searchSavedFiltersInput.value.toLowerCase();
+                const savedFilters = JSON.parse(localStorage.getItem('savedFilters')) || [];
+                const filtered = savedFilters.filter(f => f.name.toLowerCase().includes(searchTerm));
+
+                if (filtered.length === 0) {
+                    savedFiltersListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum filtro encontrado.</p>`;
+                } else {
+                    savedFiltersListContainer.innerHTML = filtered.map(f => `
+                        <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
+                            <button class="load-filter-btn text-left" data-name="${f.name}">${f.name}</button>
+                            <button class="delete-filter-btn text-red-500 hover:text-red-700" data-name="${f.name}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            savedFiltersListBtn.addEventListener('click', () => {
+                searchSavedFiltersInput.value = ''; // Limpa a busca ao abrir
+                displaySavedFilters();
+                loadModal.classList.remove('hidden');
+            });
+
+            closeLoadModalBtn.addEventListener('click', () => {
+                loadModal.classList.add('hidden');
+            });
+            
+            savedFiltersListContainer.addEventListener('click', (event) => {
+                const target = event.target;
+                const savedFilters = JSON.parse(localStorage.getItem('savedFilters')) || [];
+
+                if (target.closest('.load-filter-btn')) {
+                    const filterName = target.closest('.load-filter-btn').dataset.name;
+                    const filterToLoad = savedFilters.find(f => f.name === filterName);
+
+                    if (filterToLoad) {
+                        searchInput.value = filterToLoad.search;
+                        tipoFilterGroup.querySelector('.active-filter').classList.remove('active-filter');
+                        tipoFilterGroup.querySelector(`[data-value="${filterToLoad.tipo}"]`).classList.add('active-filter');
+                        const materiaContainer = document.getElementById('materia-filter');
+                        materiaContainer.querySelectorAll('.custom-select-option').forEach(cb => {
+                            cb.checked = filterToLoad.materias.includes(cb.dataset.value);
+                        });
+                        materiaContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+                        
+                        setTimeout(() => {
+                           const assuntoContainer = document.getElementById('assunto-filter');
+                           assuntoContainer.querySelectorAll('.custom-select-option').forEach(cb => {
+                                cb.checked = filterToLoad.assuntos.includes(cb.dataset.value);
+                           });
+                           assuntoContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+                        }, 0);
+
+                        loadModal.classList.add('hidden');
+                        applyFilters();
+                    }
+                } else if (target.closest('.delete-filter-btn')) {
+                    const filterName = target.closest('.delete-filter-btn').dataset.name;
+                    const updatedFilters = savedFilters.filter(f => f.name !== filterName);
+                    localStorage.setItem('savedFilters', JSON.stringify(updatedFilters));
+                    displaySavedFilters();
+                }
+            });
+            
+            window.addEventListener('click', function(e){   
+              document.querySelectorAll('.custom-select-container').forEach(container => {
+                  if (!container.contains(e.target)){
+                    container.querySelector('.custom-select-panel').classList.add('hidden');
+                  }
+              });
+              if (!loadModal.querySelector('div').contains(e.target) && !savedFiltersListBtn.contains(e.target) && !loadModal.classList.contains('hidden')) {
+                  loadModal.classList.add('hidden');
+              }
+               if (!saveModal.querySelector('div').contains(e.target) && !saveFilterBtn.contains(e.target) && !saveModal.classList.contains('hidden')) {
+                  saveModal.classList.add('hidden');
+              }
+            });
+
+            applyFilters();
+            handleToggleButtonGroups();
+        });
+
+    </script>
+</body>
+</html>
+
