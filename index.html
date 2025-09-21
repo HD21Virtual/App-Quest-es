@@ -126,8 +126,8 @@
                     </nav>
                 </div>
                 <div class="hidden md:block">
-                    <div class="ml-4 flex items-center md:ml-6">
-                        <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Minha Conta</a>
+                    <div id="user-account-container" class="ml-4 flex items-center md:ml-6">
+                        <!-- Será preenchido pelo JavaScript -->
                     </div>
                 </div>
                 <div class="-mr-2 flex md:hidden">
@@ -148,7 +148,9 @@
                 <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Cadernos</a>
                 <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Matérias</a>
                 <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Estatísticas</a>
-                <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Minha Conta</a>
+                 <div id="user-account-container-mobile" class="border-t border-gray-200 mt-2 pt-2">
+                    <!-- Será preenchido pelo JavaScript -->
+                 </div>
             </div>
         </div>
     </header>
@@ -298,6 +300,46 @@
         </div>
 
     </main>
+
+    <!-- Modal de Autenticação -->
+    <div id="auth-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <button id="close-auth-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div id="auth-content">
+                <h3 class="text-2xl font-bold text-gray-900 text-center">Aceder à sua Conta</h3>
+                <p class="text-sm text-gray-500 mt-2 mb-6 text-center">Guarde o seu progresso e continue de onde parou.</p>
+                
+                <form id="auth-form" class="space-y-4">
+                    <input type="email" id="email-input" placeholder="Email" required class="w-full p-2 border border-gray-300 rounded-md">
+                    <input type="password" id="password-input" placeholder="Palavra-passe" required class="w-full p-2 border border-gray-300 rounded-md">
+                    <p id="auth-error" class="text-red-500 text-sm text-center hidden"></p>
+                    <div class="flex justify-center space-x-4">
+                        <button type="button" id="login-btn" class="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Entrar</button>
+                        <button type="button" id="register-btn" class="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Registar</button>
+                    </div>
+                </form>
+
+                <div class="relative flex py-5 items-center">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-400 text-sm">OU</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <button id="google-login-btn" class="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <svg class="w-5 h-5 mr-2" viewBox="0 0 48 48">
+                        <path fill="#4285F4" d="M24 9.5c3.2 0 6.1 1.1 8.4 3.2l6.3-6.3C34.9 2.5 29.8 0 24 0 14.9 0 7.2 5.5 3 13.5l7.3 5.7C12.1 13.3 17.6 9.5 24 9.5z"></path>
+                        <path fill="#34A853" d="M46.2 25.4c0-1.7-.2-3.4-.5-5H24v9.3h12.5c-.5 3-2.1 5.6-4.6 7.3l7.3 5.7c4.2-3.9 6.8-9.6 6.8-16.3z"></path>
+                        <path fill="#FBBC05" d="M10.3 28.2c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7l-7.3-5.7C1.1 17.6 0 20.7 0 24s1.1 6.4 3 9.5l7.3-5.3z"></path>
+                        <path fill="#EA4335" d="M24 48c5.8 0 10.9-1.9 14.5-5.2l-7.3-5.7c-1.9 1.3-4.3 2.1-7.2 2.1-6.4 0-11.9-3.8-13.7-9.1L3 37.5C7.2 42.5 14.9 48 24 48z"></path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    Continuar com o Google
+                </button>
+            </div>
+        </div>
+    </div>
     
     <!-- Modal para Salvar Filtro -->
     <div id="save-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
@@ -356,8 +398,26 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            getDocs, 
+            query, 
+            addDoc,
+            doc,
+            setDoc,
+            deleteDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Configuração do seu projeto Firebase
         const firebaseConfig = {
@@ -385,6 +445,9 @@
         let allQuestions = []; // Armazenará todas as questões do DB
         let sessionStats = [];
         let performanceChart = null;
+        let currentUser = null;
+        let unsubCadernos; // Para anular a subscrição do listener de cadernos
+        let unsubFiltros; // Para anular a subscrição do listener de filtros
         
         const questionsContainer = document.getElementById('questions-container');
         const filterBtn = document.getElementById('filter-btn');
@@ -414,8 +477,19 @@
         const filterCard = document.getElementById('filter-card');
         const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
 
+        // Modal de Autenticação
+        const authModal = document.getElementById('auth-modal');
+        const closeAuthModalBtn = document.getElementById('close-auth-modal');
+        const userAccountContainer = document.getElementById('user-account-container');
+        const userAccountContainerMobile = document.getElementById('user-account-container-mobile');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const authError = document.getElementById('auth-error');
 
-        // Modal elements
+        // Modal para Salvar Filtro
         const saveModal = document.getElementById('save-modal');
         const loadModal = document.getElementById('load-modal');
         const saveFilterBtn = document.getElementById('save-filter-btn');
@@ -428,6 +502,7 @@
         const savedFiltersListContainer = document.getElementById('saved-filters-list-container');
         const searchSavedFiltersInput = document.getElementById('search-saved-filters-input');
         
+        // Modal para Criar Caderno
         const cadernoModal = document.getElementById('caderno-modal');
         const createCadernoBtn = document.getElementById('create-caderno-btn');
         const closeCadernoModalBtn = document.getElementById('close-caderno-modal');
@@ -572,6 +647,12 @@
             selectedAnswer = null;
             updateNavigation();
             
+            if (!currentUser) {
+                questionsContainer.innerHTML = `<div class="text-center"><h3 class="text-xl font-bold">Bem-vindo!</h3><p class="text-gray-600 mt-2">Por favor, <button id="login-from-empty" class="text-blue-600 underline">inicie sessão</button> para começar a resolver questões.</p></div>`;
+                document.getElementById('login-from-empty').addEventListener('click', () => authModal.classList.remove('hidden'));
+                return;
+            }
+
             if (filteredQuestions.length === 0) {
                  questionsContainer.innerHTML = `<div class="text-center"><h3 class="text-xl font-bold">Nenhuma questão encontrada</h3><p class="text-gray-600 mt-2">Tente ajustar seus filtros para encontrar mais resultados.</p></div>`;
                  return;
@@ -1171,54 +1252,63 @@
                          matchingLink.classList.remove('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
                     });
 
-                    if (viewId === 'cadernos-view') {
-                        displaySavedCadernos();
+                    if (viewId === 'cadernos-view' && !currentUser) {
+                        savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Por favor, inicie sessão para ver os seus cadernos.</p>';
                     }
                     mobileMenu.classList.add('hidden');
                 });
             });
 
-            function displaySavedCadernos() {
-                const savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
-                if (savedCadernos.length === 0) {
-                    savedCadernosListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum caderno criado ainda.</p>`;
-                } else {
-                    savedCadernosListContainer.innerHTML = savedCadernos.map(caderno => `
-                        <div class="flex justify-between items-center p-4 border-b">
-                            <div>
-                                <h4 class="font-bold text-lg">${caderno.name}</h4>
-                                <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+            function setupCadernosListener(userId) {
+                const cadernosCollection = collection(db, 'users', userId, 'cadernos');
+                unsubCadernos = onSnapshot(cadernosCollection, (snapshot) => {
+                    const savedCadernos = [];
+                    snapshot.forEach(doc => {
+                        savedCadernos.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    if (savedCadernos.length === 0) {
+                        savedCadernosListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum caderno criado ainda.</p>`;
+                    } else {
+                        savedCadernosListContainer.innerHTML = savedCadernos.map(caderno => `
+                            <div class="flex justify-between items-center p-4 border-b">
+                                <div>
+                                    <h4 class="font-bold text-lg">${caderno.name}</h4>
+                                    <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="estudar-caderno-btn bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600" data-id="${caderno.id}">Estudar</button>
+                                    <button class="delete-caderno-btn text-red-500 hover:text-red-700" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                                </div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button class="estudar-caderno-btn bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600" data-name="${caderno.name}">Estudar</button>
-                                <button class="delete-caderno-btn text-red-500 hover:text-red-700" data-name="${caderno.name}"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
+                        `).join('');
+                    }
+                });
             }
             
-            savedCadernosListContainer.addEventListener('click', (event) => {
+            savedCadernosListContainer.addEventListener('click', async (event) => {
                 const target = event.target;
+                if (!currentUser) return;
+
                 if (target.closest('.estudar-caderno-btn')) {
-                    const cadernoName = target.closest('.estudar-caderno-btn').dataset.name;
-                    const savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
-                    const cadernoToLoad = savedCadernos.find(c => c.name === cadernoName);
-                    if (cadernoToLoad) {
+                    const cadernoId = target.closest('.estudar-caderno-btn').dataset.id;
+                    const cadernosCollection = collection(db, 'users', currentUser.uid, 'cadernos');
+                    const snapshot = await getDocs(cadernosCollection);
+                    const cadernoDoc = snapshot.docs.find(doc => doc.id === cadernoId);
+
+                    if (cadernoDoc) {
+                        const cadernoToLoad = cadernoDoc.data();
                         document.querySelector('.nav-link[data-view="vade-mecum-view"]').click();
                         
                         filteredQuestions = allQuestions.filter(q => cadernoToLoad.questionIds.includes(q.id));
                         currentQuestionIndex = 0;
                         displayQuestion();
                         updateStatsPanel();
-                        selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Estudando o caderno: <strong>${cadernoName}</strong></span>`;
+                        selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Estudando o caderno: <strong>${cadernoToLoad.name}</strong></span>`;
                     }
                 } else if (target.closest('.delete-caderno-btn')) {
-                    const cadernoName = target.closest('.delete-caderno-btn').dataset.name;
-                    let savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
-                    savedCadernos = savedCadernos.filter(c => c.name !== cadernoName);
-                    localStorage.setItem('savedCadernos', JSON.stringify(savedCadernos));
-                    displaySavedCadernos(); 
+                    const cadernoId = target.closest('.delete-caderno-btn').dataset.id;
+                    await deleteDoc(doc(db, 'users', currentUser.uid, 'cadernos', cadernoId));
                 }
             });
 
@@ -1261,17 +1351,14 @@
             });
 
              saveFilterBtn.addEventListener('click', () => {
+                if (!currentUser) { alert("Por favor, inicie sessão para salvar filtros."); return; }
                 saveModal.classList.remove('hidden');
             });
-            closeSaveModalBtn.addEventListener('click', () => {
-                saveModal.classList.add('hidden');
-            });
-            cancelSaveBtn.addEventListener('click', () => {
-                saveModal.classList.add('hidden');
-            });
-            confirmSaveBtn.addEventListener('click', () => {
+            closeSaveModalBtn.addEventListener('click', () => saveModal.classList.add('hidden'));
+            cancelSaveBtn.addEventListener('click', () => saveModal.classList.add('hidden'));
+            confirmSaveBtn.addEventListener('click', async () => {
                 const name = filterNameInput.value.trim();
-                if (!name) return;
+                if (!name || !currentUser) return;
                 
                 const currentFilters = {
                     name: name,
@@ -1281,80 +1368,81 @@
                     search: searchInput.value
                 };
                 
-                let savedFilters = JSON.parse(localStorage.getItem('savedFilters')) || [];
-                savedFilters = savedFilters.filter(f => f.name !== name);
-                savedFilters.push(currentFilters);
-                localStorage.setItem('savedFilters', JSON.stringify(savedFilters));
+                const filtrosCollection = collection(db, 'users', currentUser.uid, 'filtros');
+                await addDoc(filtrosCollection, currentFilters);
 
                 filterNameInput.value = '';
                 saveModal.classList.add('hidden');
             });
             
             createCadernoBtn.addEventListener('click', () => {
+                 if (!currentUser) { alert("Por favor, inicie sessão para criar cadernos."); return; }
                 cadernoModal.classList.remove('hidden');
             });
-            closeCadernoModalBtn.addEventListener('click', () => {
-                cadernoModal.classList.add('hidden');
-            });
-            cancelCadernoBtn.addEventListener('click', () => {
-                cadernoModal.classList.add('hidden');
-            });
-            confirmCadernoBtn.addEventListener('click', () => {
+            closeCadernoModalBtn.addEventListener('click', () => cadernoModal.classList.add('hidden'));
+            cancelCadernoBtn.addEventListener('click', () => cadernoModal.classList.add('hidden'));
+            confirmCadernoBtn.addEventListener('click', async () => {
                 const name = cadernoNameInput.value.trim();
-                if (!name || filteredQuestions.length === 0) return;
+                if (!name || filteredQuestions.length === 0 || !currentUser) return;
                 
                 const caderno = {
                     name: name,
                     questionIds: filteredQuestions.map(q => q.id)
                 };
 
-                let savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
-                savedCadernos = savedCadernos.filter(c => c.name !== name);
-                savedCadernos.push(caderno);
-                localStorage.setItem('savedCadernos', JSON.stringify(savedCadernos));
+                const cadernosCollection = collection(db, 'users', currentUser.uid, 'cadernos');
+                await addDoc(cadernosCollection, caderno);
 
                 cadernoNameInput.value = '';
                 cadernoModal.classList.add('hidden');
             });
 
-            function displaySavedFilters() {
-                const searchTerm = searchSavedFiltersInput.value.toLowerCase();
-                const savedFilters = JSON.parse(localStorage.getItem('savedFilters')) || [];
-                const filtered = savedFilters.filter(f => f.name.toLowerCase().includes(searchTerm));
+            function setupFiltrosListener(userId) {
+                const filtrosCollection = collection(db, 'users', userId, 'filtros');
+                unsubFiltros = onSnapshot(filtrosCollection, (snapshot) => {
+                    const savedFilters = [];
+                    snapshot.forEach(doc => {
+                        savedFilters.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    const searchTerm = searchSavedFiltersInput.value.toLowerCase();
+                    const filtered = savedFilters.filter(f => f.name.toLowerCase().includes(searchTerm));
 
-                if (filtered.length === 0) {
-                    savedFiltersListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum filtro encontrado.</p>`;
-                } else {
-                    savedFiltersListContainer.innerHTML = filtered.map(f => `
-                        <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
-                            <button class="load-filter-btn text-left" data-name="${f.name}">${f.name}</button>
-                            <button class="delete-filter-btn text-red-500 hover:text-red-700" data-name="${f.name}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    `).join('');
-                }
+                    if (filtered.length === 0) {
+                        savedFiltersListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum filtro encontrado.</p>`;
+                    } else {
+                        savedFiltersListContainer.innerHTML = filtered.map(f => `
+                            <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
+                                <button class="load-filter-btn text-left" data-id="${f.id}">${f.name}</button>
+                                <button class="delete-filter-btn text-red-500 hover:text-red-700" data-id="${f.id}">
+                                    <i class="fas fa-trash-alt pointer-events-none"></i>
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+                });
             }
             
             savedFiltersListBtn.addEventListener('click', () => {
-                searchSavedFiltersInput.value = ''; // Limpa a busca ao abrir
-                displaySavedFilters();
+                 if (!currentUser) { alert("Por favor, inicie sessão para ver os seus filtros."); return; }
+                searchSavedFiltersInput.value = ''; 
                 loadModal.classList.remove('hidden');
             });
 
-            closeLoadModalBtn.addEventListener('click', () => {
-                loadModal.classList.add('hidden');
-            });
+            closeLoadModalBtn.addEventListener('click', () => loadModal.classList.add('hidden'));
             
-            savedFiltersListContainer.addEventListener('click', (event) => {
+            savedFiltersListContainer.addEventListener('click', async (event) => {
                 const target = event.target;
-                const savedFilters = JSON.parse(localStorage.getItem('savedFilters')) || [];
+                if (!currentUser) return;
 
                 if (target.closest('.load-filter-btn')) {
-                    const filterName = target.closest('.load-filter-btn').dataset.name;
-                    const filterToLoad = savedFilters.find(f => f.name === filterName);
+                    const filterId = target.closest('.load-filter-btn').dataset.id;
+                    const filtrosCollection = collection(db, 'users', currentUser.uid, 'filtros');
+                    const snapshot = await getDocs(filtrosCollection);
+                    const filterDoc = snapshot.docs.find(doc => doc.id === filterId);
 
-                    if (filterToLoad) {
+                    if (filterDoc) {
+                        const filterToLoad = filterDoc.data();
                         searchInput.value = filterToLoad.search;
                         tipoFilterGroup.querySelector('.active-filter').classList.remove('active-filter');
                         tipoFilterGroup.querySelector(`[data-value="${filterToLoad.tipo}"]`).classList.add('active-filter');
@@ -1376,10 +1464,8 @@
                         applyFilters();
                     }
                 } else if (target.closest('.delete-filter-btn')) {
-                    const filterName = target.closest('.delete-filter-btn').dataset.name;
-                    const updatedFilters = savedFilters.filter(f => f.name !== filterName);
-                    localStorage.setItem('savedFilters', JSON.stringify(updatedFilters));
-                    displaySavedFilters();
+                    const filterId = target.closest('.delete-filter-btn').dataset.id;
+                    await deleteDoc(doc(db, 'users', currentUser.uid, 'filtros', filterId));
                 }
             });
             
@@ -1389,27 +1475,100 @@
                     container.querySelector('.custom-select-panel').classList.add('hidden');
                   }
               });
-              if (!loadModal.querySelector('div').contains(e.target) && !savedFiltersListBtn.contains(e.target) && !loadModal.classList.contains('hidden')) {
+              if (loadModal && !loadModal.querySelector('div').contains(e.target) && !savedFiltersListBtn.contains(e.target) && !loadModal.classList.contains('hidden')) {
                   loadModal.classList.add('hidden');
               }
-               if (!saveModal.querySelector('div').contains(e.target) && !saveFilterBtn.contains(e.target) && !saveModal.classList.contains('hidden')) {
+               if (saveModal && !saveModal.querySelector('div').contains(e.target) && !saveFilterBtn.contains(e.target) && !saveModal.classList.contains('hidden')) {
                   saveModal.classList.add('hidden');
+              }
+              if (authModal && authModal.contains(e.target) && !authModal.querySelector('div').contains(e.target)) {
+                  authModal.classList.add('hidden');
               }
             });
 
-            onAuthStateChanged(auth, (user) => {
+            // --- LÓGICA DE AUTENTICAÇÃO ---
+
+            function updateUserUI(user) {
+                const mobileContainer = userAccountContainerMobile;
+                userAccountContainer.innerHTML = '';
+                mobileContainer.innerHTML = '';
+
                 if (user) {
-                    // Usuário está logado, busca as questões
+                    const loggedInHTML = `<div class="flex items-center"><span class="text-gray-600 text-sm mr-4">${user.email}</span><button id="logout-btn" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
+                    const loggedInHTMLMobile = `<div class="flex items-center justify-between"><span class="text-gray-600 text-sm">${user.email}</span><button id="logout-btn-mobile" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
+                    userAccountContainer.innerHTML = loggedInHTML;
+                    mobileContainer.innerHTML = loggedInHTMLMobile;
+
+                    document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+                    document.getElementById('logout-btn-mobile').addEventListener('click', () => signOut(auth));
+                } else {
+                    const loggedOutHTML = `<button id="show-login-modal-btn" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Minha Conta</button>`;
+                    userAccountContainer.innerHTML = loggedOutHTML;
+                    mobileContainer.innerHTML = loggedOutHTML;
+
+                    document.getElementById('show-login-modal-btn').addEventListener('click', () => authModal.classList.remove('hidden'));
+                    mobileContainer.querySelector('#show-login-modal-btn').addEventListener('click', () => authModal.classList.remove('hidden'));
+                }
+            }
+            
+            closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+
+            const handleAuth = async (authFunction) => {
+                authError.classList.add('hidden');
+                try {
+                    await authFunction(auth, emailInput.value, passwordInput.value);
+                    authModal.classList.add('hidden');
+                } catch (error) {
+                    authError.textContent = error.message;
+                    authError.classList.remove('hidden');
+                }
+            };
+            
+            loginBtn.addEventListener('click', () => handleAuth(signInWithEmailAndPassword));
+            registerBtn.addEventListener('click', () => handleAuth(createUserWithEmailAndPassword));
+
+            googleLoginBtn.addEventListener('click', async () => {
+                authError.classList.add('hidden');
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+                    authModal.classList.add('hidden');
+                } catch (error) {
+                    authError.textContent = error.message;
+                    authError.classList.remove('hidden');
+                }
+            });
+
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                if (unsubCadernos) unsubCadernos(); // Anula a subscrição anterior
+                if (unsubFiltros) unsubFiltros();   // Anula a subscrição anterior
+
+                if (user) {
+                    updateUserUI(user);
+                    authModal.classList.add('hidden');
+                    
+                    document.querySelector('.nav-link[data-view="inicio-view"]').click();
+                    
                     fetchAllQuestions().then(() => {
                         document.querySelectorAll('.custom-select-container').forEach(setupCustomSelect);
                         updateAssuntoFilter([]);
                         applyFilters();
                     });
+                    
+                    setupCadernosListener(user.uid);
+                    setupFiltrosListener(user.uid);
+
                 } else {
-                    // Usuário não está logado, tenta login anônimo
-                    signInAnonymously(auth).catch((error) => {
-                        console.error("Erro na autenticação anônima:", error);
-                    });
+                    updateUserUI(null);
+                    inicioView.classList.add('hidden');
+                    vadeMecumView.classList.add('hidden');
+                    cadernosView.classList.add('hidden');
+                    allQuestions = [];
+                    filteredQuestions = [];
+                    displayQuestion();
+                    savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Inicie sessão para ver os seus cadernos.</p>';
+                    savedFiltersListContainer.innerHTML = '<p class="text-center text-gray-500">Inicie sessão para ver os seus filtros.</p>';
                 }
             });
             
