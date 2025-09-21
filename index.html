@@ -117,8 +117,8 @@
                     </div>
                     <nav id="main-nav" class="hidden md:block ml-10">
                         <div class="flex items-baseline space-x-4">
-                            <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Início</a>
-                            <a href="#" data-view="vade-mecum-view" class="nav-link text-blue-700 bg-blue-100 px-3 py-2 rounded-md text-sm font-medium">Questões</a>
+                            <a href="#" data-view="inicio-view" class="nav-link text-blue-700 bg-blue-100 px-3 py-2 rounded-md text-sm font-medium">Início</a>
+                            <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Questões</a>
                             <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Cadernos</a>
                             <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Matérias</a>
                             <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
@@ -143,7 +143,8 @@
         <!-- Menu Mobile -->
         <div id="mobile-menu" class="md:hidden hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#" data-view="vade-mecum-view" class="nav-link text-blue-700 bg-blue-100 block px-3 py-2 rounded-md text-base font-medium">Questões</a>
+                <a href="#" data-view="inicio-view" class="nav-link text-blue-700 bg-blue-100 block px-3 py-2 rounded-md text-base font-medium">Início</a>
+                <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Questões</a>
                 <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Cadernos</a>
                 <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Matérias</a>
                 <a href="#" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Estatísticas</a>
@@ -154,12 +155,23 @@
 
     <!-- Conteúdo Principal -->
     <main class="py-6 lg:py-10">
-        <div id="vade-mecum-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="inicio-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white p-8 rounded-lg shadow-sm text-center">
+                <h2 class="text-3xl font-bold text-gray-800">Bem-vindo ao QuestõesApp!</h2>
+                <p class="mt-4 text-gray-600">A sua plataforma para praticar e aprimorar os seus conhecimentos. Comece por selecionar "Questões" no menu para filtrar e resolver exercícios, ou aceda aos seus "Cadernos" para rever.</p>
+            </div>
+        </div>
+
+        <div id="vade-mecum-view" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center mb-6">
                  <h2 class="text-2xl font-bold text-gray-800">Vade Mecum de Questões</h2>
+                 <button id="toggle-filters-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600 bg-white border border-gray-300 px-4 py-2 rounded-md shadow-sm">
+                    <i class="fas fa-eye-slash mr-2"></i>
+                    Ocultar Filtros
+                 </button>
             </div>
             <!-- Seção de Filtros Reestruturada -->
-            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+            <div id="filter-card" class="bg-white p-6 rounded-lg shadow-sm mb-8">
                 <div class="flex justify-end mb-4">
                     <button id="saved-filters-list-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600 bg-gray-100 border border-gray-300 px-4 py-2 rounded-md shadow-sm">
                         <i class="far fa-bookmark mr-2"></i>
@@ -342,66 +354,35 @@
         </div>
     </div>
 
-    <script>
-        const mockQuestions = [
-            {
-                id: 1,
-                reference: "IESES 2018 - Tabelião (TJ-CE)",
-                text: "O registro lavrado fora das horas regulamentares ou em dias em que não houver expediente será anulável.",
-                options: ["Certo", "Errado"],
-                correctAnswer: "Certo",
-                explanation: "Correto. Conforme o Art. 9º da Lei de Registros Públicos (Lei 6.015/73), o ato praticado fora do horário regulamentar é considerado anulável.",
-                materia: "Direito Notarial",
-                assunto: "Registros Públicos",
-                tipo: "C/E",
-            },
-            {
-                id: 2,
-                reference: "IESES 2012 - Tabelião (TJ-RO)",
-                text: "Em todas as serventias, todos os títulos apresentados no horário regulamentar, que não forem registrados até a hora do encerramento do serviço, deverão aguardar o dia seguinte, no qual serão registrados, preferencialmente, aos apresentados nesse dia.",
-                options: ["Certo", "Errado"],
-                correctAnswer: "Errado",
-                explanation: "Incorreto. O parágrafo único do Art. 10 da Lei 6.015/73 estabelece que os títulos remanescentes devem ser registrados no dia seguinte, COM PREFERÊNCIA sobre os títulos apresentados nesse novo dia.",
-                materia: "Direito Notarial",
-                assunto: "Registros Públicos",
-                tipo: "C/E",
-            },
-            {
-                id: 3,
-                reference: "CESPE 2021 - Polícia Federal",
-                text: "Qual dos seguintes não é um fundamento da República Federativa do Brasil, segundo a Constituição Federal?",
-                options: ["Soberania", "Cidadania", "Pluralismo político", "Livre iniciativa"],
-                correctAnswer: "Livre iniciativa",
-                explanation: "A 'Livre Iniciativa' é um dos Fundamentos da Ordem Econômica (Art. 170 da CF), e não um dos Fundamentos da República (Art. 1º da CF).",
-                materia: "Direito Constitucional",
-                assunto: "Fundamentos da República",
-                tipo: "Multipla Escolha",
-            },
-             {
-                id: 4,
-                reference: "FGV 2022 - OAB",
-                text: "A anulação de um ato administrativo com efeitos favoráveis para o destinatário exige:",
-                options: ["Notificação prévia do interessado", "Decisão judicial", "Concordância do Ministério Público", "Autorização legislativa"],
-                correctAnswer: "Notificação prévia do interessado",
-                explanation: "Para anular atos administrativos que beneficiem os administrados, é indispensável a prévia oitiva do interessado, garantindo o direito ao contraditório e à ampla defesa (Súmula Vinculante nº 3 do STF).",
-                materia: "Direito Administrativo",
-                assunto: "Atos Administrativos",
-                tipo: "Multipla Escolha",
-            }
-        ];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuração do seu projeto Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbDQfS3VTVlXEBdHKKwx-ToTWTGFOcYAE",
+            authDomain: "vade-mecum-de-questoes.firebaseapp.com",
+            projectId: "vade-mecum-de-questoes",
+            storageBucket: "vade-mecum-de-questoes.appspot.com",
+            messagingSenderId: "667396734608",
+            appId: "1:667396734608:web:96f67c131ccbd798792215"
+        };
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         
-        const filterOptions = {
-            materia: [
-                { name: "Direito Constitucional", assuntos: ["Fundamentos da República"] },
-                { name: "Direito Notarial", assuntos: ["Registros Públicos"] },
-                { name: "Direito Administrativo", assuntos: ["Atos Administrativos"] }
-            ],
-            allAssuntos: ["Fundamentos da República", "Registros Públicos", "Atos Administrativos"]
+        let filterOptions = {
+            materia: [],
+            allAssuntos: []
         };
 
         let currentQuestionIndex = 0;
         let selectedAnswer = null;
         let filteredQuestions = [];
+        let allQuestions = []; // Armazenará todas as questões do DB
         let sessionStats = [];
         let performanceChart = null;
         
@@ -423,12 +404,15 @@
         const statsView = document.getElementById('stats-view');
         const statsContent = document.getElementById('stats-content');
         
+        const inicioView = document.getElementById('inicio-view');
         const vadeMecumView = document.getElementById('vade-mecum-view');
         const cadernosView = document.getElementById('cadernos-view');
         const mainNav = document.getElementById('main-nav');
         const savedCadernosListContainer = document.getElementById('saved-cadernos-list-container');
         const mobileMenu = document.getElementById('mobile-menu');
         const hamburgerBtn = document.getElementById('hamburger-btn');
+        const filterCard = document.getElementById('filter-card');
+        const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
 
 
         // Modal elements
@@ -452,6 +436,40 @@
         const cadernoNameInput = document.getElementById('caderno-name-input');
 
 
+        async function fetchAllQuestions() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "questions"));
+                allQuestions = [];
+                const materiaMap = new Map();
+
+                querySnapshot.forEach((doc) => {
+                    const question = { id: doc.id, ...doc.data() };
+                    allQuestions.push(question);
+
+                    if (question.materia && question.assunto) {
+                        if (!materiaMap.has(question.materia)) {
+                            materiaMap.set(question.materia, new Set());
+                        }
+                        materiaMap.get(question.materia).add(question.assunto);
+                    }
+                });
+
+                // Build the filterOptions object dynamically
+                filterOptions.materia = [];
+                const allAssuntosSet = new Set();
+                for (const [materia, assuntosSet] of materiaMap.entries()) {
+                    const assuntos = Array.from(assuntosSet).sort();
+                    filterOptions.materia.push({ name: materia, assuntos: assuntos });
+                    assuntos.forEach(assunto => allAssuntosSet.add(assunto));
+                }
+                filterOptions.materia.sort((a, b) => a.name.localeCompare(b.name));
+                filterOptions.allAssuntos = Array.from(allAssuntosSet).sort();
+
+            } catch (error) {
+                console.error("Erro ao buscar questões: ", error);
+            }
+        }
+
         function applyFilters() {
             sessionStats = [];
             const selectedMaterias = JSON.parse(materiaFilter.dataset.value || '[]');
@@ -460,8 +478,7 @@
             const selectedTipo = activeTipoBtn ? activeTipoBtn.dataset.value : 'todos';
             const searchTerm = searchInput.value.toLowerCase();
 
-
-            filteredQuestions = mockQuestions.filter(q => {
+            filteredQuestions = allQuestions.filter(q => {
                 const materiaMatch = selectedMaterias.length === 0 || selectedMaterias.includes(q.materia);
                 const assuntoMatch = selectedAssuntos.length === 0 || selectedAssuntos.includes(q.assunto);
                 const tipoMatch = selectedTipo === 'todos' || q.tipo === selectedTipo;
@@ -579,8 +596,12 @@
 
         function renderUnansweredQuestion() {
             const question = filteredQuestions[currentQuestionIndex];
-            
-            const optionsHtml = question.options.map((option, index) => {
+            const options = Array.isArray(question.options) ? question.options : [];
+            if(options.length === 0) {
+                 console.warn("Questão sem opções válidas:", question);
+            }
+
+            const optionsHtml = options.map((option, index) => {
                 let letterContent = '';
                 if (question.tipo === 'Multipla Escolha' || question.tipo === 'C/E') {
                     const letter = question.tipo === 'C/E' ? option.charAt(0) : String.fromCharCode(65 + index);
@@ -1113,11 +1134,95 @@
 
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.custom-select-container').forEach(setupCustomSelect);
-            updateAssuntoFilter([]); 
             searchInput.addEventListener('input', updateSelectedFiltersDisplay);
             clearFiltersBtn.addEventListener('click', clearAllFilters);
             
+            hamburgerBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            toggleFiltersBtn.addEventListener('click', () => {
+                filterCard.classList.toggle('hidden');
+                if (filterCard.classList.contains('hidden')) {
+                    toggleFiltersBtn.innerHTML = `<i class="fas fa-eye mr-2"></i> Mostrar Filtros`;
+                } else {
+                    toggleFiltersBtn.innerHTML = `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
+                }
+            });
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const viewId = link.dataset.view;
+
+                    inicioView.classList.add('hidden');
+                    vadeMecumView.classList.add('hidden');
+                    cadernosView.classList.add('hidden');
+
+                    document.getElementById(viewId).classList.remove('hidden');
+
+                     document.querySelectorAll('.nav-link').forEach(navLink => {
+                        navLink.classList.remove('text-blue-700', 'bg-blue-100');
+                        navLink.classList.add('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
+                    });
+                    
+                    document.querySelectorAll(`.nav-link[data-view="${viewId}"]`).forEach(matchingLink => {
+                         matchingLink.classList.add('text-blue-700', 'bg-blue-100');
+                         matchingLink.classList.remove('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
+                    });
+
+                    if (viewId === 'cadernos-view') {
+                        displaySavedCadernos();
+                    }
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            function displaySavedCadernos() {
+                const savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
+                if (savedCadernos.length === 0) {
+                    savedCadernosListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum caderno criado ainda.</p>`;
+                } else {
+                    savedCadernosListContainer.innerHTML = savedCadernos.map(caderno => `
+                        <div class="flex justify-between items-center p-4 border-b">
+                            <div>
+                                <h4 class="font-bold text-lg">${caderno.name}</h4>
+                                <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="estudar-caderno-btn bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600" data-name="${caderno.name}">Estudar</button>
+                                <button class="delete-caderno-btn text-red-500 hover:text-red-700" data-name="${caderno.name}"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            savedCadernosListContainer.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.closest('.estudar-caderno-btn')) {
+                    const cadernoName = target.closest('.estudar-caderno-btn').dataset.name;
+                    const savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
+                    const cadernoToLoad = savedCadernos.find(c => c.name === cadernoName);
+                    if (cadernoToLoad) {
+                        document.querySelector('.nav-link[data-view="vade-mecum-view"]').click();
+                        
+                        filteredQuestions = allQuestions.filter(q => cadernoToLoad.questionIds.includes(q.id));
+                        currentQuestionIndex = 0;
+                        displayQuestion();
+                        updateStatsPanel();
+                        selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Estudando o caderno: <strong>${cadernoName}</strong></span>`;
+                    }
+                } else if (target.closest('.delete-caderno-btn')) {
+                    const cadernoName = target.closest('.delete-caderno-btn').dataset.name;
+                    let savedCadernos = JSON.parse(localStorage.getItem('savedCadernos')) || [];
+                    savedCadernos = savedCadernos.filter(c => c.name !== cadernoName);
+                    localStorage.setItem('savedCadernos', JSON.stringify(savedCadernos));
+                    displaySavedCadernos(); 
+                }
+            });
+
+
             tabsContainer.addEventListener('click', (event) => {
                 const targetTab = event.target.dataset.tab;
                 if (targetTab) {
@@ -1292,7 +1397,22 @@
               }
             });
 
-            applyFilters();
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // Usuário está logado, busca as questões
+                    fetchAllQuestions().then(() => {
+                        document.querySelectorAll('.custom-select-container').forEach(setupCustomSelect);
+                        updateAssuntoFilter([]);
+                        applyFilters();
+                    });
+                } else {
+                    // Usuário não está logado, tenta login anônimo
+                    signInAnonymously(auth).catch((error) => {
+                        console.error("Erro na autenticação anônima:", error);
+                    });
+                }
+            });
+            
             handleToggleButtonGroups();
         });
 
