@@ -26,7 +26,7 @@ body {
     border-color: #22c55e; /* Verde */
     background-color: #dcfce7; /* green-100 */
 }
- .correct-answer .option-circle .option-letter {
+.correct-answer .option-circle .option-letter {
     color: #16a34a; /* green-700 */
 }
 .correct-answer .option-text {
@@ -56,7 +56,7 @@ body {
     opacity: 0.4;
 }
 .discarded .discard-btn {
-     opacity: 0.4 !important; /* Força a opacidade mesmo no hover */
+    opacity: 0.4 !important; /* Força a opacidade mesmo no hover */
 }
 
 /* Estilos para botões de filtro toggle */
