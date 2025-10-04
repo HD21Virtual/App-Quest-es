@@ -1,6 +1,6 @@
 // Importando todos os módulos da aplicação
 import { initAuth } from './services/auth.js';
-import { initializeAppListeners, setupGlobalEventListeners, updateUserUI } from './modules/ui.js';
+import { initializeAppListeners, setupGlobalEventListeners, updateUserUI, navigateToView } from './modules/ui.js';
 import { fetchAllQuestionsAndSetupFilters } from './modules/filters.js';
 import { 
     setupAllFirestoreListeners, 
@@ -10,20 +10,24 @@ import { resetState, setState } from './services/state.js';
 
 /**
  * Função principal que é executada quando o usuário está logado.
+ * É uma função assíncrona para garantir que as operações essenciais terminem antes de continuar.
  * @param {object} user - O objeto de usuário do Firebase.
  */
-function onUserLoggedIn(user) {
+async function onUserLoggedIn(user) {
     console.log("User logged in:", user.uid);
-    // CHAVE DA CORREÇÃO: Atualiza a UI para mostrar o estado de "logado"
-    updateUserUI(user); 
-    
+    updateUserUI(user);
     setState({ currentUser: user });
 
-    // Busca todas as questões e configura os filtros
-    fetchAllQuestionsAndSetupFilters();
+    // 1. Espera (await) que a lista principal de questões seja totalmente carregada.
+    // Isso é crucial para que o resto da aplicação tenha os dados necessários.
+    await fetchAllQuestionsAndSetupFilters();
     
-    // Inicia todos os listeners do Firestore para dados do usuário
+    // 2. Apenas DEPOIS que as questões foram carregadas, inicia os listeners
+    // para os outros dados do usuário (cadernos, revisões, etc.).
     setupAllFirestoreListeners(user.uid);
+    
+    // 3. Navega para a tela inicial para exibir os dados.
+    navigateToView('inicio-view');
 }
 
 /**
