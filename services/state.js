@@ -1,78 +1,82 @@
-import { updateUserUI, showInitialView, clearUserSpecificUI } from '../modules/ui.js';
-import { displayQuestion } from '../modules/questions.js';
+import { navigateToView, clearUserSpecificUI } from '../modules/ui.js';
 
-// O estado inicial da aplicação
-const initialState = {
-    // Opções de filtro carregadas do DB
-    filterOptions: {
-        materia: [],
-        allAssuntos: []
-    },
-    // Estado do usuário
+let state = {
+    // Auth & User
     currentUser: null,
-    // Dados das questões
+    
+    // Data
     allQuestions: [],
+    filterOptions: { materia: [], allAssuntos: [] },
+
+    // Question Solving
     filteredQuestions: [],
     currentQuestionIndex: 0,
     selectedAnswer: null,
-    // Dados do usuário do DB
+    sessionStats: [],
+    isReviewSession: false,
+    
+    // Cadernos
     userFolders: [],
     userCadernos: [],
-    userAnswers: new Map(),
-    userReviewItemsMap: new Map(),
-    userCadernoState: new Map(),
-    savedFilters: [],
-    historicalSessions: [],
-    // Estado da sessão atual
-    sessionStats: [],
-    // Estado da UI
     currentFolderId: null,
     currentCadernoId: null,
+    editingId: null,
+    editingType: null, // 'folder' ou 'caderno'
     isAddingQuestionsMode: { active: false, cadernoId: null },
-    isReviewSession: false,
+    isNavigatingBackFromAddMode: false,
+
+    // Firestore data maps
+    userAnswers: new Map(),
+    userCadernoState: new Map(),
+    userReviewItemsMap: new Map(),
+    historicalSessions: [],
 };
 
-// A variável 'state' que guardará o estado atual da aplicação
-let state = { ...initialState };
-
 /**
- * Retorna uma cópia do estado atual.
- * @returns {object} O estado atual da aplicação.
+ * Retorna uma cópia do estado atual para evitar mutações diretas.
  */
 export function getState() {
     return { ...state };
 }
 
 /**
- * Define um novo valor para uma ou mais propriedades do estado.
- * @param {object} newState - Um objeto com as propriedades a serem atualizadas.
+ * Atualiza o estado global.
+ * @param {object} newState - Um objeto com as chaves do estado a serem atualizadas.
  */
 export function setState(newState) {
     state = { ...state, ...newState };
 }
 
 /**
- * Atualiza o estado e opcionalmente chama uma função de callback.
- * Útil para garantir que a UI seja atualizada após a mudança de estado.
- * @param {object} newState - O novo estado a ser mesclado.
- * @param {Function} [callback] - Uma função a ser chamada após a atualização.
- */
-export function updateState(newState, callback) {
-    setState(newState);
-    if (callback) {
-        callback();
-    }
-}
-
-/**
- * Reseta o estado da aplicação para o valor inicial.
- * Chamado principalmente no logout do usuário.
+ * Reseta o estado da aplicação para os valores iniciais (usado no logout).
  */
 export function resetState() {
-    state = { ...initialState };
-    // Atualiza a UI para refletir o estado de logout
-    updateUserUI(null);
-    showInitialView();
+    state = {
+        currentUser: null,
+        allQuestions: [],
+        filterOptions: { materia: [], allAssuntos: [] },
+        filteredQuestions: [],
+        currentQuestionIndex: 0,
+        selectedAnswer: null,
+        sessionStats: [],
+        isReviewSession: false,
+        userFolders: [],
+        userCadernos: [],
+        currentFolderId: null,
+        currentCadernoId: null,
+        editingId: null,
+        editingType: null,
+        isAddingQuestionsMode: { active: false, cadernoId: null },
+        isNavigatingBackFromAddMode: false,
+        userAnswers: new Map(),
+        userCadernoState: new Map(),
+        userReviewItemsMap: new Map(),
+        historicalSessions: [],
+    };
+    
+    // Limpa a UI de dados específicos do usuário
     clearUserSpecificUI();
-    displayQuestion(); // Mostra a tela de "faça login"
+    // Navega para a view inicial
+    navigateToView('inicio-view');
 }
+
