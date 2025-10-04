@@ -1,5 +1,5 @@
 import { elements, navigateToView } from './ui.js';
-import { getState } from '../state.js';
+import { getState } from '../services/state.js';
 import { clearAllFilters, setMateriaFilter, setAssuntoFilter } from './filters.js';
 
 let selectedMateria = null;
@@ -110,3 +110,4 @@ export function setupMateriasListeners() {
         renderMateriasView();
     });
 }
+
