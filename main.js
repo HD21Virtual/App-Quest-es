@@ -1,6 +1,6 @@
 // Importando todos os módulos da aplicação
 import { initAuth } from './services/auth.js';
-import { initializeAppListeners, setupGlobalEventListeners } from './modules/ui.js';
+import { initializeAppListeners, setupGlobalEventListeners, updateUserUI } from './modules/ui.js';
 import { fetchAllQuestionsAndSetupFilters } from './modules/filters.js';
 import { 
     setupAllFirestoreListeners, 
@@ -14,6 +14,9 @@ import { resetState, setState } from './services/state.js';
  */
 function onUserLoggedIn(user) {
     console.log("User logged in:", user.uid);
+    // CHAVE DA CORREÇÃO: Atualiza a UI para mostrar o estado de "logado"
+    updateUserUI(user); 
+    
     setState({ currentUser: user });
 
     // Busca todas as questões e configura os filtros
@@ -30,7 +33,7 @@ function onUserLoggedOut() {
     console.log("User logged out");
     // Limpa todos os listeners para evitar vazamento de memória e erros
     cleanupAllFirestoreListeners();
-    // Reseta o estado da aplicação para o estado inicial
+    // Reseta o estado da aplicação para o estado inicial (isso também atualiza a UI)
     resetState();
 }
 
@@ -52,3 +55,4 @@ function main() {
 
 // Inicia a aplicação quando o script é carregado
 main();
+
