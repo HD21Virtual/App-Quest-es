@@ -1372,7 +1372,7 @@ function getLast7DaysLabels() {
     for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(today.getDate() - i);
-        
+                
         if (i === 0) {
             labels.push('Hoje');
         } else if (i === 1) {
@@ -1381,7 +1381,7 @@ function getLast7DaysLabels() {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const dayOfWeek = dayNames[date.getDay()];
-            labels.push(`${dayOfWeek}`);
+            labels.push(`${day}/${month} (${dayOfWeek})`);
         }
     }
     return labels;
@@ -1393,6 +1393,10 @@ async function renderWeeklyChart() {
     if (!ctx) return;
 
     // Busca os dados reais do Firestore.
+    const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
+    const allLabels = getLast7DaysLabels();
+
+    // Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
     const filteredLabels = [];
     const filteredData = [];
     questionsSolvedData.forEach((count, index) => {
@@ -1401,10 +1405,6 @@ async function renderWeeklyChart() {
             filteredData.push(count);
         }
     });
-
-    // Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
-    const filteredLabels = allLabels;
-    const filteredData = questionsSolvedData;
 
     // Destrói o gráfico anterior se ele já existir, para evitar sobreposição.
     if (window.weeklyChartInstance) {
@@ -2859,4 +2859,5 @@ if(resetAllProgressBtn) {
         confirmationModal.classList.remove('hidden');
     });
 }
+
 
