@@ -1,4 +1,4 @@
-console.log("Módulo de UI v3 Carregado. Se você vir esta mensagem, a versão correta do arquivo foi carregada.");
+console.log("Módulo de UI v4 Carregado. Se você vir esta mensagem, a versão correta do arquivo foi carregada.");
 
 import { signOutUser } from '../services/auth.js';
 import { getState, setState } from '../services/state.js';
@@ -39,8 +39,12 @@ export const elements = {
     vadeMecumTitle: document.getElementById('vade-mecum-title'),
     selectedFiltersContainer: document.getElementById('selected-filters-container'),
 
-    // Cadernos
+    // Cadernos e Conteúdo dinâmico
     savedCadernosListContainer: document.getElementById('saved-cadernos-list-container'),
+    savedFiltersListContainer: document.getElementById('saved-filters-list-container'),
+    statsMainContent: document.getElementById('stats-main-content'),
+    reviewCard: document.getElementById('review-card'),
+    questionsContainer: document.querySelector('#vade-mecum-content-area #questions-container'),
 };
 
 /**
@@ -133,6 +137,27 @@ export function navigateToView(viewId) {
 
     // Esconde o menu mobile após a navegação
     elements.mobileMenu.classList.add('hidden');
+}
+
+/**
+ * Limpa os elementos da UI que contêm dados específicos do usuário (usado no logout).
+ */
+export function clearUserSpecificUI() {
+    if (elements.questionsContainer) {
+        elements.questionsContainer.innerHTML = '';
+    }
+    if (elements.savedCadernosListContainer) {
+        elements.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus cadernos.</p>';
+    }
+    if (elements.savedFiltersListContainer) {
+        elements.savedFiltersListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus filtros.</p>';
+    }
+     if (elements.statsMainContent) {
+        elements.statsMainContent.innerHTML = '<p class="text-center text-gray-500">Faça login para ver suas estatísticas.</p>';
+    }
+    if (elements.reviewCard) {
+        elements.reviewCard.classList.add('hidden');
+    }
 }
 
 
