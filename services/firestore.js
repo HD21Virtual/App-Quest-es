@@ -112,7 +112,7 @@ export async function saveSessionStats() {
 
 /**
  * Inicia um listener do Firestore e armazena sua função de unsubscribe.
- * @param {Query} query - A consulta do Firestore.
+ * @param {import("firebase/firestore").Query} query - A consulta do Firestore.
  * @param {Function} callback - A função a ser chamada com o snapshot.
  */
 function setupListener(query, callback) {
@@ -154,17 +154,19 @@ export function setupAllFirestoreListeners(userId) {
         updateState({ userAnswers }, displayQuestion);
     });
     
-     // Outros listeners...
+    // Listener para Filtros Salvos
     setupListener(query(collection(db, 'users', userId, 'filtros')), (snapshot) => {
         const savedFilters = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         updateState({ savedFilters }, updateSavedFiltersList);
     });
     
+    // Listener para Sessões de Estudo
     setupListener(query(collection(db, 'users', userId, 'sessions'), orderBy('createdAt', 'desc')), (snapshot) => {
         const historicalSessions = snapshot.docs.map(doc => doc.data());
         updateState({ historicalSessions }, updateStatsPageUI);
     });
 
+    // Listener para Itens de Revisão (SRS)
     setupListener(query(collection(db, 'users', userId, 'reviewItems')), (snapshot) => {
         const userReviewItemsMap = new Map(getState().userReviewItemsMap);
         snapshot.docChanges().forEach((change) => {
@@ -185,3 +187,4 @@ export function cleanupAllFirestoreListeners() {
     unsubscribers.forEach(unsubscribe => unsubscribe());
     unsubscribers = [];
 }
+
