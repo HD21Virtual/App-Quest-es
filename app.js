@@ -1393,8 +1393,14 @@ async function renderWeeklyChart() {
     if (!ctx) return;
 
     // Busca os dados reais do Firestore.
-    const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
-    const allLabels = getLast7DaysLabels();
+    const filteredLabels = [];
+    const filteredData = [];
+    questionsSolvedData.forEach((count, index) => {
+        if (count > 0) {
+            filteredLabels.push(allLabels[index]);
+            filteredData.push(count);
+        }
+    });
 
     // Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
     const filteredLabels = allLabels;
@@ -2853,3 +2859,4 @@ if(resetAllProgressBtn) {
         confirmationModal.classList.remove('hidden');
     });
 }
+
