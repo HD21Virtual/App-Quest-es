@@ -1,3 +1,5 @@
+console.log("Módulo de UI v3 Carregado. Se você vir esta mensagem, a versão correta do arquivo foi carregada.");
+
 import { signOutUser } from '../services/auth.js';
 import { getState, setState } from '../services/state.js';
 import { applyFilters, clearAllFilters } from './filters.js';
