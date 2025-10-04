@@ -19,6 +19,7 @@ const handleAuth = async (authFunction) => {
         await authFunction(auth, elements.emailInput.value, elements.passwordInput.value);
         elements.authModal.classList.add('hidden');
     } catch (error) {
+        console.error("Auth Error:", error);
         elements.authError.textContent = error.message;
         elements.authError.classList.remove('hidden');
     }
@@ -30,10 +31,15 @@ const handleAuth = async (authFunction) => {
  * @param {Function} onLogout - Callback a ser executado quando o usuário faz logout.
  */
 export function initAuth(onLogin, onLogout) {
+    console.log("Auth service initialized. Setting up onAuthStateChanged listener...");
+
     onAuthStateChanged(auth, (user) => {
+        console.log("onAuthStateChanged event fired.");
         if (user) {
+            console.log("User object received:", user);
             onLogin(user);
         } else {
+            console.log("User object is null. Treating as logged out.");
             onLogout();
         }
     });
@@ -48,6 +54,7 @@ export function initAuth(onLogin, onLogout) {
             await signInWithPopup(auth, provider);
             elements.authModal.classList.add('hidden');
         } catch (error) {
+            console.error("Google Auth Error:", error);
             elements.authError.textContent = error.message;
             elements.authError.classList.remove('hidden');
         }
@@ -60,3 +67,4 @@ export function initAuth(onLogin, onLogout) {
 export function signOutUser() {
     signOut(auth);
 }
+
