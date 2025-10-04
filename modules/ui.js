@@ -1,9 +1,10 @@
 import { signOutUser } from '../services/auth.js';
 import { getState, setState } from '../services/state.js';
-import { clearAllFilters, exitAddMode } from './filters.js';
-import { renderFoldersAndCadernos, renderMateriasView, setSelectedMateria } from './cadernos.js';
+import { applyFilters, clearAllFilters } from './filters.js';
+import { renderFoldersAndCadernos, exitAddMode as exitAddModeCadernos } from './cadernos.js';
+import { renderMateriasView, setSelectedMateria } from './materias.js';
 
-// Mapeamento de todos os elementos DOM usados na aplicação para fácil acesso.
+// Mapeamento centralizado de todos os elementos do DOM para fácil acesso
 export const elements = {
     // Views principais
     inicioView: document.getElementById('inicio-view'),
@@ -12,10 +13,9 @@ export const elements = {
     materiasView: document.getElementById('materias-view'),
     revisaoView: document.getElementById('revisao-view'),
     estatisticasView: document.getElementById('estatisticas-view'),
-    allViews: () => [elements.inicioView, elements.vadeMecumView, elements.cadernosView, elements.materiasView, elements.revisaoView, elements.estatisticasView],
-
+    
     // Navegação
-    mainNav: document.getElementById('main-nav'),
+    navLinks: document.querySelectorAll('.nav-link'),
     mobileMenu: document.getElementById('mobile-menu'),
     hamburgerBtn: document.getElementById('hamburger-btn'),
 
@@ -34,62 +34,16 @@ export const elements = {
     // Filtros
     filterCard: document.getElementById('filter-card'),
     toggleFiltersBtn: document.getElementById('toggle-filters-btn'),
-    materiaFilter: document.getElementById('materia-filter'),
-    assuntoFilter: document.getElementById('assunto-filter'),
-    tipoFilterGroup: document.getElementById('tipo-filter-group'),
-    searchInput: document.getElementById('search-input'),
-    clearFiltersBtn: document.getElementById('clear-filters-btn'),
-    selectedFiltersContainer: document.getElementById('selected-filters-container'),
-    savedFiltersListBtn: document.getElementById('saved-filters-list-btn'),
-
-    // Conteúdo das questões
-    vadeMecumContentArea: document.getElementById('vade-mecum-content-area'),
     vadeMecumTitle: document.getElementById('vade-mecum-title'),
-    tabsContainer: document.getElementById('tabs-container'),
+    selectedFiltersContainer: document.getElementById('selected-filters-container'),
 
     // Cadernos
     savedCadernosListContainer: document.getElementById('saved-cadernos-list-container'),
-    cadernosViewTitle: document.getElementById('cadernos-view-title'),
-    cadernosViewActions: document.getElementById('cadernos-view-actions'),
-    backToFoldersBtn: document.getElementById('back-to-folders-btn'),
-    addCadernoToFolderBtn: document.getElementById('add-caderno-to-folder-btn'),
-    addQuestionsToCadernoBtn: document.getElementById('add-questions-to-caderno-btn'),
-    createFolderBtn: document.getElementById('create-folder-btn'),
-    
-    // Modo de Adição de Questões
-    addQuestionsBanner: document.getElementById('add-questions-banner'),
-    addQuestionsBannerText: document.getElementById('add-questions-banner-text'),
-    cancelAddQuestionsBtn: document.getElementById('cancel-add-questions-btn'),
-
-    // Matérias
-    materiasViewTitle: document.getElementById('materias-view-title'),
-    materiasListContainer: document.getElementById('materias-list-container'),
-    assuntosListContainer: document.getElementById('assuntos-list-container'),
-    backToMateriasBtn: document.getElementById('back-to-materias-btn'),
 };
 
 /**
- * Mostra uma view específica e esconde as outras.
- * @param {string} viewId O ID da view a ser mostrada.
- */
-function showView(viewId) {
-    elements.allViews().forEach(v => v.classList.add('hidden'));
-    document.getElementById(viewId).classList.remove('hidden');
-
-    document.querySelectorAll('.nav-link').forEach(navLink => {
-        navLink.classList.remove('text-blue-700', 'bg-blue-100');
-        navLink.classList.add('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
-    });
-
-    document.querySelectorAll(`.nav-link[data-view="${viewId}"]`).forEach(matchingLink => {
-        matchingLink.classList.add('text-blue-700', 'bg-blue-100');
-        matchingLink.classList.remove('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
-    });
-}
-
-/**
- * Atualiza a UI para refletir o estado de login/logout do usuário.
- * @param {object|null} user O objeto do usuário do Firebase ou null.
+ * Atualiza a interface do usuário (canto superior direito) para refletir o estado de login.
+ * @param {object|null} user - O objeto de usuário do Firebase ou null se deslogado.
  */
 export function updateUserUI(user) {
     const mobileContainer = elements.userAccountContainerMobile;
@@ -109,88 +63,101 @@ export function updateUserUI(user) {
         elements.userAccountContainer.innerHTML = loggedOutHTML;
         mobileContainer.innerHTML = loggedOutHTML;
 
-        document.getElementById('show-login-modal-btn').addEventListener('click', () => elements.authModal.classList.remove('hidden'));
-        mobileContainer.querySelector('#show-login-modal-btn').addEventListener('click', () => elements.authModal.classList.remove('hidden'));
+        const showLoginModal = () => elements.authModal.classList.remove('hidden');
+        document.getElementById('show-login-modal-btn').addEventListener('click', showLoginModal);
+        mobileContainer.querySelector('#show-login-modal-btn').addEventListener('click', showLoginModal);
     }
-}
-
-export function showInitialView() {
-    showView('inicio-view');
-}
-
-export function clearUserSpecificUI() {
-    elements.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus cadernos.</p>';
-    document.getElementById('saved-filters-list-container').innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus filtros.</p>';
-    document.getElementById('stats-main-content').innerHTML = '<p class="text-center text-gray-500">Inicie sessão para ver as suas estatísticas.</p>';
-    document.getElementById('review-card').classList.add('hidden');
 }
 
 
 /**
- * Configura os listeners de eventos para a navegação principal e menu mobile.
+ * Controla a navegação entre as diferentes "páginas" da aplicação.
+ * @param {string} viewId - O ID do elemento da view a ser exibida.
  */
-export function initializeAppListeners() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            const viewId = link.dataset.view;
-            const { isAddingQuestionsMode } = getState();
+export function navigateToView(viewId) {
+    const { isAddingQuestionsMode, isReviewSession } = getState();
 
-            if (isAddingQuestionsMode.active) exitAddMode();
-            
-            if (viewId === 'cadernos-view') {
-                 setState({ currentFolderId: null, currentCadernoId: null });
-            }
+    // Se o usuário clicar para sair da view de questões enquanto estiver no modo de adição, cancela o modo.
+    if (isAddingQuestionsMode.active && viewId !== 'vade-mecum-view') {
+        exitAddModeCadernos();
+    }
+    
+    // Esconde todas as views
+    Object.values(elements).forEach(element => {
+        if (element && element.id && element.id.endsWith('-view')) {
+            element.classList.add('hidden');
+        }
+    });
 
-            showView(viewId);
+    // Mostra a view solicitada
+    const targetView = document.getElementById(viewId);
+    if (targetView) {
+        targetView.classList.remove('hidden');
+    }
 
-            if (viewId === 'vade-mecum-view') {
+    // Atualiza o estado visual dos links de navegação
+    elements.navLinks.forEach(navLink => {
+        navLink.classList.toggle('text-blue-700', navLink.dataset.view === viewId);
+        navLink.classList.toggle('bg-blue-100', navLink.dataset.view === viewId);
+        navLink.classList.toggle('text-gray-500', navLink.dataset.view !== viewId);
+    });
+
+    // Lógica específica para cada view ao ser carregada
+    switch (viewId) {
+        case 'vade-mecum-view':
+            if (isAddingQuestionsMode.active) {
+                applyFilters();
+            } else if (!isReviewSession) {
+                // Se não for uma sessão de revisão, reseta tudo para o padrão
                 setState({ isReviewSession: false });
                 elements.vadeMecumTitle.textContent = "Vade Mecum de Questões";
                 elements.toggleFiltersBtn.classList.remove('hidden');
                 elements.filterCard.classList.remove('hidden');
                 clearAllFilters();
-            } else if (viewId === 'cadernos-view') {
-                renderFoldersAndCadernos();
-            } else if (viewId === 'materias-view') {
-                setSelectedMateria(null);
-                renderMateriasView();
             }
+            break;
+        case 'cadernos-view':
+             if (!getState().isNavigatingBackFromAddMode) {
+                setState({ currentFolderId: null, currentCadernoId: null });
+            }
+            setState({ isNavigatingBackFromAddMode: false });
+            renderFoldersAndCadernos();
+            break;
+        case 'materias-view':
+            setSelectedMateria(null);
+            renderMateriasView();
+            break;
+    }
 
-            elements.mobileMenu.classList.add('hidden');
+    // Esconde o menu mobile após a navegação
+    elements.mobileMenu.classList.add('hidden');
+}
+
+
+/**
+ * Configura os listeners de eventos que controlam a navegação principal da aplicação.
+ */
+export function initializeAppListeners() {
+    elements.navLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateToView(link.dataset.view);
         });
-    });
-
-    elements.hamburgerBtn.addEventListener('click', () => {
-        elements.mobileMenu.classList.toggle('hidden');
-    });
-
-    elements.toggleFiltersBtn.addEventListener('click', () => {
-        elements.filterCard.classList.toggle('hidden');
-        elements.toggleFiltersBtn.innerHTML = elements.filterCard.classList.contains('hidden')
-            ? `<i class="fas fa-eye mr-2"></i> Mostrar Filtros`
-            : `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
     });
 }
 
 /**
- * Configura listeners de eventos globais, como cliques fora de modais.
+ * Configura listeners de eventos globais (fechar modais, etc.).
  */
 export function setupGlobalEventListeners() {
-    window.addEventListener('click', function(e) {
-        // Fecha custom selects
-        document.querySelectorAll('.custom-select-container').forEach(container => {
-            if (!container.contains(e.target)) {
-                container.querySelector('.custom-select-panel').classList.add('hidden');
-            }
-        });
-        
-        // Fecha modais
-        const authModal = document.getElementById('auth-modal');
-        if (authModal && !authModal.classList.contains('hidden') && authModal.contains(e.target) && !authModal.querySelector('div').contains(e.target)) {
-            authModal.classList.add('hidden');
-        }
+    elements.hamburgerBtn.addEventListener('click', () => {
+        elements.mobileMenu.classList.toggle('hidden');
     });
 
-     elements.closeAuthModalBtn.addEventListener('click', () => elements.authModal.classList.add('hidden'));
+    elements.closeAuthModalBtn.addEventListener('click', () => {
+        elements.authModal.classList.add('hidden');
+    });
+
+    // Adicione outros listeners globais aqui conforme necessário
 }
+
