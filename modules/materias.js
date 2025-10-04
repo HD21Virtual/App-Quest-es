@@ -1,32 +1,27 @@
+import { getState, setState } from '../services/state.js';
 import { elements, navigateToView } from './ui.js';
-import { getState } from '../services/state.js';
-import { clearAllFilters, setMateriaFilter, setAssuntoFilter } from './filters.js';
+import { clearAllFilters, applyFilters } from './filters.js';
 
 let selectedMateria = null;
 
 /**
- * Define a matéria atualmente selecionada.
- * @param {object|null} materia - O objeto da matéria ou null.
- */
-export function setSelectedMateria(materia) {
-    selectedMateria = materia;
-}
-
-/**
- * Renderiza a view de Matérias, mostrando a lista de matérias ou os assuntos de uma matéria selecionada.
+ * Renderiza a visualização de matérias ou de assuntos, dependendo do estado.
  */
 export function renderMateriasView() {
-    const { filterOptions } = getState();
-    const { materiasListContainer, assuntosListContainer, backToMateriasBtn } = elements.materiasViewElements;
-    const { materiasViewTitle } = elements.materiasViewElements;
+    const { currentUser, filterOptions } = getState();
 
+    if (!currentUser) {
+        elements.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Por favor, faça login para ver as matérias.</p>';
+        elements.assuntosListContainer.classList.add('hidden');
+        return;
+    }
 
     if (selectedMateria) {
         // Exibe os assuntos da matéria selecionada
-        materiasViewTitle.textContent = selectedMateria.name;
-        materiasListContainer.classList.add('hidden');
-        assuntosListContainer.classList.remove('hidden');
-        backToMateriasBtn.classList.remove('hidden');
+        elements.materiasViewTitle.textContent = selectedMateria.name;
+        elements.materiasListContainer.classList.add('hidden');
+        elements.assuntosListContainer.classList.remove('hidden');
+        elements.backToMateriasBtn.classList.remove('hidden');
 
         const assuntosHtml = selectedMateria.assuntos.map(assunto => `
             <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer assunto-item" data-assunto-name="${assunto}">
@@ -36,17 +31,17 @@ export function renderMateriasView() {
                 </div>
             </div>
         `).join('');
-        assuntosListContainer.innerHTML = `<div class="space-y-2">${assuntosHtml}</div>`;
+        elements.assuntosListContainer.innerHTML = `<div class="space-y-2">${assuntosHtml}</div>`;
 
     } else {
         // Exibe todas as matérias
-        materiasViewTitle.textContent = 'Matérias';
-        materiasListContainer.classList.remove('hidden');
-        assuntosListContainer.classList.add('hidden');
-        backToMateriasBtn.classList.add('hidden');
+        elements.materiasViewTitle.textContent = 'Matérias';
+        elements.materiasListContainer.classList.remove('hidden');
+        elements.assuntosListContainer.classList.add('hidden');
+        elements.backToMateriasBtn.classList.add('hidden');
 
-        if (!filterOptions || filterOptions.materia.length === 0) {
-             materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma matéria encontrada.</p>';
+        if (filterOptions.materia.length === 0) {
+             elements.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma matéria encontrada.</p>';
              return;
         }
 
@@ -64,50 +59,64 @@ export function renderMateriasView() {
                 </div>
             </div>
         `).join('');
-        materiasListContainer.innerHTML = materiasHtml;
+        elements.materiasListContainer.innerHTML = materiasHtml;
     }
 }
 
 /**
- * Configura os listeners de eventos para a view de Matérias.
+ * Trata o clique em uma matéria, exibindo seus assuntos.
+ * @param {Event} event - O evento de clique.
  */
-export function setupMateriasListeners() {
-    const { materiasListContainer, assuntosListContainer, backToMateriasBtn } = elements.materiasViewElements;
-
-    materiasListContainer.addEventListener('click', (event) => {
-        const materiaItem = event.target.closest('.materia-item');
-        if (materiaItem) {
-            const materiaName = materiaItem.dataset.materiaName;
-            const { filterOptions } = getState();
-            selectedMateria = filterOptions.materia.find(m => m.name === materiaName);
-            renderMateriasView();
-        }
-    });
-
-    assuntosListContainer.addEventListener('click', (event) => {
-        const assuntoItem = event.target.closest('.assunto-item');
-        if (assuntoItem) {
-            const assuntoName = assuntoItem.dataset.assuntoName;
-            const materiaName = selectedMateria.name;
-
-            // 1. Navega para a view de Questões
-            navigateToView('vade-mecum-view');
-            
-            // 2. Aplica os filtros
-            setTimeout(() => {
-                clearAllFilters();
-                setMateriaFilter([materiaName]);
-                // Outro timeout para garantir que a lista de assuntos foi atualizada
-                setTimeout(() => {
-                    setAssuntoFilter([assuntoName]);
-                }, 50);
-            }, 50);
-        }
-    });
-
-    backToMateriasBtn.addEventListener('click', () => {
-        selectedMateria = null;
+export function handleMateriaClick(event) {
+    const materiaItem = event.target.closest('.materia-item');
+    if (materiaItem) {
+        const materiaName = materiaItem.dataset.materiaName;
+        const { filterOptions } = getState();
+        selectedMateria = filterOptions.materia.find(m => m.name === materiaName);
         renderMateriasView();
-    });
+    }
+}
+
+/**
+ * Trata o clique em um assunto, navegando para a tela de questões e aplicando os filtros.
+ * @param {Event} event - O evento de clique.
+ */
+export function handleAssuntoClick(event) {
+    const assuntoItem = event.target.closest('.assunto-item');
+    if (assuntoItem && selectedMateria) {
+        const assuntoName = assuntoItem.dataset.assuntoName;
+        const materiaName = selectedMateria.name;
+
+        navigateToView('vade-mecum-view');
+        
+        setTimeout(() => {
+            clearAllFilters();
+
+            const materiaContainer = document.getElementById('materia-filter');
+            const materiaCheckbox = materiaContainer.querySelector(`.custom-select-option[data-value="${materiaName}"]`);
+            if (materiaCheckbox) {
+                materiaCheckbox.checked = true;
+                materiaContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            setTimeout(() => {
+                const assuntoContainer = document.getElementById('assunto-filter');
+                const assuntoCheckbox = assuntoContainer.querySelector(`.custom-select-option[data-value="${assuntoName}"]`);
+                if (assuntoCheckbox) {
+                    assuntoCheckbox.checked = true;
+                    assuntoContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                applyFilters();
+            }, 50); 
+        }, 50);
+    }
+}
+
+/**
+ * Volta para a lista de matérias.
+ */
+export function handleBackToMaterias() {
+    selectedMateria = null;
+    renderMateriasView();
 }
 
