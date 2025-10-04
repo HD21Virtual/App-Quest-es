@@ -1,3 +1,5 @@
+alert("Módulo de Autenticação v2 Carregado. Se você vir esta mensagem, o cache foi limpo com sucesso.");
+
 import { 
     onAuthStateChanged, 
     createUserWithEmailAndPassword,
