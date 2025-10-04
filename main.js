@@ -1,62 +1,35 @@
-// Importando todos os módulos da aplicação
-import { initAuth } from './services/auth.js';
-import { initializeAppListeners, setupGlobalEventListeners, updateUserUI, navigateToView } from './modules/ui.js';
-import { fetchAllQuestionsAndSetupFilters } from './modules/filters.js';
-import { 
-    setupAllFirestoreListeners, 
-    cleanupAllFirestoreListeners 
-} from './services/firestore.js';
-import { resetState, setState } from './services/state.js';
+import { initializeApp } from './config/firebase.js';
+import { initAuth, onUserLoggedIn, onUserLoggedOut } from './services/auth.js';
+import { fetchAllQuestions, setupAllFirestoreListeners, cleanupAllFirestoreListeners } from './services/firestore.js';
+import { setState, resetState } from './services/state.js';
+import { setupEventListeners, updateUserUI } from './modules/ui.js';
 
 /**
- * Função principal que é executada quando o usuário está logado.
- * É uma função assíncrona para garantir que as operações essenciais terminem antes de continuar.
- * @param {object} user - O objeto de usuário do Firebase.
+ * Função principal que inicializa a aplicação.
  */
-async function onUserLoggedIn(user) {
-    console.log("User logged in:", user.uid);
-    updateUserUI(user);
-    setState({ currentUser: user });
+async function main() {
+    initializeApp();
+    setupEventListeners();
 
-    // 1. Espera (await) que a lista principal de questões seja totalmente carregada.
-    // Isso é crucial para que o resto da aplicação tenha os dados necessários.
-    await fetchAllQuestionsAndSetupFilters();
-    
-    // 2. Apenas DEPOIS que as questões foram carregadas, inicia os listeners
-    // para os outros dados do usuário (cadernos, revisões, etc.).
-    setupAllFirestoreListeners(user.uid);
-    
-    // 3. Navega para a tela inicial para exibir os dados.
-    navigateToView('inicio-view');
+    // Ouve as mudanças no estado de autenticação
+    initAuth((user) => {
+        if (user) {
+            // Usuário está logado
+            updateUserUI(user);
+            setState({ currentUser: user });
+            
+            // Garante que as questões sejam carregadas antes do resto dos dados
+            fetchAllQuestions().then(() => {
+                onUserLoggedIn(user);
+            });
+        } else {
+            // Usuário está deslogado
+            updateUserUI(null);
+            onUserLoggedOut();
+        }
+    });
 }
 
-/**
- * Função principal que é executada quando o usuário faz logout.
- */
-function onUserLoggedOut() {
-    console.log("User logged out");
-    // Limpa todos os listeners para evitar vazamento de memória e erros
-    cleanupAllFirestoreListeners();
-    // Reseta o estado da aplicação para o estado inicial (isso também atualiza a UI)
-    resetState();
-}
-
-/**
- * Inicializa a aplicação.
- */
-function main() {
-    // Registra o plugin de datalabels para o Chart.js
-    Chart.register(ChartDataLabels);
-    
-    // Configura os event listeners globais e de navegação
-    setupGlobalEventListeners();
-    initializeAppListeners();
-
-    // Inicia o serviço de autenticação, passando as funções de callback
-    // para quando o estado de autenticação do usuário mudar.
-    initAuth(onUserLoggedIn, onUserLoggedOut);
-}
-
-// Inicia a aplicação quando o script é carregado
-main();
+// Inicia a aplicação quando o DOM estiver pronto.
+document.addEventListener('DOMContentLoaded', main);
 
