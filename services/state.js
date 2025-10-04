@@ -43,7 +43,7 @@ export function getState() {
  * Atualiza o estado global.
  * @param {object} newState - Um objeto com as chaves do estado a serem atualizadas.
  */
-export function updateState(newState) {
+export function setState(newState) {
     state = { ...state, ...newState };
 }
 
