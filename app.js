@@ -629,7 +629,6 @@ function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = false) {
     } else {
          const mockPercentage = (Math.random() * (85 - 55) + 55).toFixed(1);
          feedbackHtml += `
-            <span class="text-lg text-gray-600">${mockPercentage}% acertaram</span>
             <button id="show-comment-btn" class="text-blue-600 hover:underline">Ver resolução</button>
          `;
          if (currentCadernoId) {
@@ -2859,5 +2858,6 @@ if(resetAllProgressBtn) {
         confirmationModal.classList.remove('hidden');
     });
 }
+
 
 
