@@ -4,14 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma de Questões - Início</title>
+    <!-- Incluindo o Tailwind CSS para estilização rápida -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluindo Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Incluindo Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <link rel="stylesheet" href="style.css">
+    
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="style.css"> 
+
 </head>
 <body class="bg-f0f2f5">
 
+    <!-- Menu Superior Fixo (Header) -->
     <header class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
@@ -35,7 +42,8 @@
                 </div>
                 <div class="hidden md:block">
                     <div id="user-account-container" class="ml-4 flex items-center md:ml-6">
-                        </div>
+                        <!-- Será preenchido pelo JavaScript -->
+                    </div>
                 </div>
                 <div class="-mr-2 flex md:hidden">
                     <button id="hamburger-btn" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -47,6 +55,7 @@
                 </div>
             </div>
         </div>
+        <!-- Menu Mobile -->
         <div id="mobile-menu" class="md:hidden hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <a href="#" data-view="inicio-view" class="nav-link text-blue-700 bg-blue-100 block px-3 py-2 rounded-md text-base font-medium">Início</a>
@@ -56,13 +65,16 @@
                 <a href="#" data-view="revisao-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Revisão</a>
                 <a href="#" data-view="estatisticas-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Estatísticas</a>
                  <div id="user-account-container-mobile" class="border-t border-gray-200 mt-2 pt-2">
-                    </div>
+                    <!-- Será preenchido pelo JavaScript -->
+                 </div>
             </div>
         </div>
     </header>
 
+    <!-- Conteúdo Principal -->
     <main class="py-6 lg:py-10">
         <div id="inicio-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Cards de Desempenho Geral -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-lg shadow-sm text-center">
                     <h3 class="text-sm font-medium text-gray-500">Questões Resolvidas</h3>
@@ -81,6 +93,12 @@
                     <p id="stats-geral-accuracy" class="mt-1 text-3xl font-semibold" style="color: #0070C0;">0%</p>
                 </div>
             </div>
+            <!-- Gráfico de Desempenho por Disciplina (Semanal) -->
+            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+        <div style="height: 400px;">
+             <canvas id="weeklyPerformanceChart"></canvas>
+        </div>
+    </div>
             <div class="bg-white p-6 rounded-lg shadow-sm">
                 <div style="height: 400px;">
                      <canvas id="homePerformanceChart"></canvas>
@@ -89,6 +107,7 @@
         </div>
 
         <div id="vade-mecum-view" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Banner de Adição de Questões -->
             <div id="add-questions-banner" class="hidden bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded-md shadow-sm" role="alert">
                 <div class="flex justify-between items-center">
                     <div>
@@ -106,6 +125,7 @@
                     Ocultar Filtros
                  </button>
             </div>
+            <!-- Seção de Filtros Reestruturada -->
             <div id="filter-card" class="bg-white p-6 rounded-lg shadow-sm mb-8">
                 <div class="flex justify-end mb-4">
                     <button id="saved-filters-list-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600 bg-gray-100 border border-gray-300 px-4 py-2 rounded-md shadow-sm">
@@ -114,6 +134,7 @@
                     </button>
                 </div>
                 <div class="space-y-4">
+                    <!-- Linha 1: Dropdowns -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -122,31 +143,36 @@
                             <input type="text" id="search-input" placeholder="Pesquisar" class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         
+                        <!-- Custom Select: Disciplina -->
                         <div id="materia-filter" class="relative custom-select-container">
                              <button class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-md bg-white text-gray-500 flex justify-between items-center">
                                  <span class="custom-select-value">Disciplina</span>
                                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                              </button>
                              <div class="custom-select-panel hidden absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                                 <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-md" placeholder="Pesquisar..."></div>
-                                 <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
-                                     </div>
+                                <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-md" placeholder="Pesquisar..."></div>
+                                <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
+                                    <!-- Opções serão inseridas pelo JS -->
+                                </div>
                              </div>
                         </div>
 
+                        <!-- Custom Select: Assunto -->
                         <div id="assunto-filter" class="relative custom-select-container">
                              <button class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-md bg-white text-gray-500 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                                  <span class="custom-select-value">Assunto</span>
                                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                              </button>
                              <div class="custom-select-panel hidden absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                                 <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-md" placeholder="Pesquisar..."></div>
-                                 <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
-                                    </div>
+                                <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-md" placeholder="Pesquisar..."></div>
+                                <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
+                                   <!-- Opções serão inseridas pelo JS -->
+                                </div>
                              </div>
                         </div>
                     </div>
 
+                    <!-- Linha 2: Tipo de questão -->
                     <div class="pt-4 border-t mt-4">
                          <div class="flex items-center flex-wrap gap-x-4 gap-y-2">
                             <span class="text-sm font-medium text-gray-700">Tipo de questão:</span>
@@ -158,18 +184,20 @@
                          </div>
                     </div>
                     
+                    <!-- Ações do Filtro -->
                     <div class="flex flex-col md:flex-row justify-between items-center pt-4 border-t border-gray-200 mt-4">
                          <div id="selected-filters-container" class="flex flex-wrap gap-2 items-center text-sm text-gray-700 flex-1">
-                             </div>
+                             <!-- Tags de filtro aparecerão aqui -->
+                         </div>
                          <div class="flex items-center space-x-4 mt-4 md:mt-0">
                              <button id="clear-filters-btn" class="text-sm text-gray-600 hover:text-blue-600">Limpar filtro</button>
                              <button id="save-filter-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600">
-                                 <i class="far fa-save mr-1 font-normal"></i>
-                                 Salvar filtro
+                                <i class="far fa-save mr-1 font-normal"></i>
+                                Salvar filtro
                              </button>
                              <button id="create-caderno-btn" class="flex items-center text-sm text-gray-600 hover:text-blue-600">
-                                 <i class="fas fa-book mr-1 font-normal"></i>
-                                 Criar Caderno
+                                <i class="fas fa-book mr-1 font-normal"></i>
+                                Criar Caderno
                              </button>
                              <button id="filter-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300">Filtrar questões</button>
                          </div>
@@ -177,7 +205,9 @@
                 </div>
             </div>
             
+            <!-- Main Content Area for Vade Mecum -->
             <div id="vade-mecum-content-area">
+                <!-- Abas de Navegação e Container -->
                 <div id="tabs-and-main-content">
                     <div class="mb-4">
                         <nav id="tabs-container" class="flex space-x-1">
@@ -193,12 +223,14 @@
                         <div class="flex justify-between items-center p-4 border-b border-gray-200 text-sm">
                             <div id="question-info-container" class="text-gray-600 space-y-1 hidden"></div>
                             <div id="question-toolbar" class="flex items-center space-x-4 text-gray-600 hidden">
-                                 </div>
+                                 <!-- Toolbar será inserida aqui -->
+                            </div>
                         </div>
                          <div class="p-6">
                             <div id="question-view">
                                 <div id="questions-container" class="space-y-6">
-                                    </div>
+                                    <!-- As questões serão inseridas aqui pelo JavaScript -->
+                                </div>
                                 <div id="navigation-controls" class="flex justify-start items-center mt-8 space-x-4 hidden">
                                     <button id="prev-question-btn" class="p-3 border rounded-md bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -210,7 +242,8 @@
                             </div>
                             <div id="stats-view" class="hidden">
                                  <div id="stats-content">
-                                     </div>
+                                    <!-- O conteúdo das estatísticas será inserido aqui -->
+                                 </div>
                             </div>
                          </div>
                     </div>
@@ -241,7 +274,8 @@
                  </div>
             </div>
             <div id="saved-cadernos-list-container">
-                </div>
+                <!-- Pastas e cadernos serão inseridos aqui -->
+            </div>
         </div>
 
         <div id="materias-view" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -253,9 +287,11 @@
                 </button>
             </div>
             <div id="materias-list-container" class="space-y-4">
-                </div>
+                <!-- Matérias will be inserted here -->
+            </div>
             <div id="assuntos-list-container" class="hidden">
-                 </div>
+                 <!-- Assuntos will be inserted here -->
+            </div>
         </div>
 
         <div id="revisao-view" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -278,16 +314,19 @@
                 </button>
             </div>
             <div id="stats-main-content">
+                <!-- Desempenho por Matéria e Histórico -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Desempenho por Matéria</h3>
                         <div id="stats-by-materia-container" class="space-y-4">
-                           </div>
+                           <!-- Conteúdo dinâmico -->
+                        </div>
                     </div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Histórico de Sessões</h3>
                         <div id="stats-session-history-container" class="space-y-3 max-h-96 overflow-y-auto">
-                            </div>
+                            <!-- Conteúdo dinâmico -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -295,6 +334,7 @@
 
     </main>
 
+    <!-- Modal de Autenticação -->
     <div id="auth-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
             <button id="close-auth-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
@@ -334,6 +374,7 @@
         </div>
     </div>
     
+    <!-- Modal para Salvar Filtro -->
     <div id="save-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
             <button id="close-save-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
@@ -351,7 +392,8 @@
         </div>
     </div>
     
-     <div id="caderno-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+     <!-- Modal para Criar Caderno -->
+    <div id="caderno-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
             <button id="close-caderno-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -362,7 +404,8 @@
                 <input type="text" id="caderno-name-input" placeholder="Nome do caderno" class="w-full p-2 border border-gray-300 rounded-md mb-2">
                 <select id="folder-select" class="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white">
                     <option value="">Salvar em (opcional)</option>
-                    </select>
+                    <!-- Pastas serão inseridas aqui -->
+                </select>
                 <div class="flex justify-center space-x-4">
                     <button id="cancel-caderno-btn" class="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Cancelar</button>
                     <button id="confirm-caderno-btn" class="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Criar caderno</button>
@@ -371,6 +414,7 @@
         </div>
     </div>
 
+    <!-- Modal para Criar/Editar Pasta ou Caderno -->
     <div id="name-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
             <button id="close-name-modal" class="absolute top-0 right-0 mt-4 mr-4 text-gray-400 hover:text-gray-600">
@@ -388,7 +432,8 @@
         </div>
     </div>
 
-     <div id="load-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+     <!-- Modal para Carregar Filtros Salvos -->
+    <div id="load-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-lg shadow-lg rounded-md bg-white">
              <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-gray-900">Filtros salvos</h3>
@@ -400,10 +445,12 @@
                 <input type="text" id="search-saved-filters-input" placeholder="Procurar por filtros" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
              </div>
              <div id="saved-filters-list-container" class="mt-4 space-y-2 max-h-80 overflow-y-auto">
-                </div>
+                <!-- Lista de filtros salvos será inserida aqui -->
+             </div>
         </div>
     </div>
 
+    <!-- Modal de Confirmação -->
     <div id="confirmation-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div class="text-center">
@@ -424,6 +471,7 @@
         </div>
     </div>
 
+    <!-- Modal para Estatísticas Específicas -->
     <div id="stats-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-6 border w-full max-w-2xl shadow-lg rounded-md bg-white">
              <div class="flex justify-between items-center mb-4">
@@ -433,10 +481,12 @@
                 </button>
              </div>
              <div id="stats-modal-content" class="space-y-4">
-                </div>
+                <!-- Conteúdo das estatísticas será inserido aqui -->
+             </div>
         </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <!-- Link para o arquivo JavaScript externo (Tipo Module) -->
+    <script type="module" src="app.js"></script>
 </body>
 </html>
