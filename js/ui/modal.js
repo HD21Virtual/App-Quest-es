@@ -2,7 +2,6 @@ import DOM from '../dom-elements.js';
 import { state } from '../state.js';
 import { createItem, createFilter, updateItem, deleteItem, resetAllUserData } from '../services/firestore.js';
 import { applyFilters } from '../features/filter.js';
-import { closeConfirmationModal } from './modal.js';
 
 /**
  * @file js/ui/modal.js
@@ -120,3 +119,4 @@ export async function handleConfirmation(type) {
             break;
     }
 }
+
