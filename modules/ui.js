@@ -178,6 +178,19 @@ export function setupEventListeners() {
     setupCustomSelectListeners('materia-filter');
     setupCustomSelectListeners('assunto-filter');
 
+    elements.tipoFilterGroup.addEventListener('click', (event) => {
+        const target = event.target.closest('.filter-btn-toggle');
+        if (target) {
+            elements.tipoFilterGroup.querySelectorAll('.filter-btn-toggle').forEach(btn => btn.classList.remove('active-filter'));
+            target.classList.add('active-filter');
+            
+            if (getState().isAddingQuestionsMode.active) {
+                applyFilters();
+            }
+            updateSelectedFiltersDisplay();
+        }
+    });
+
     // Salvar/Carregar Filtros
     document.getElementById('save-filter-btn').addEventListener('click', () => {
         if(getState().currentUser) elements.saveModal.classList.remove('hidden');
@@ -637,3 +650,4 @@ export async function showItemStats(itemType, questionIds, itemName) {
         <p>Total de Respostas: ${totalAttempts} (${totalCorrect} acertos, ${totalIncorrect} erros)</p>
     `;
 }
+
