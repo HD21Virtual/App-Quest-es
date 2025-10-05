@@ -21,7 +21,8 @@ import { updateNavigation, navigateToView } from './ui.js';
             return Timestamp.fromDate(date);
         }
 
-        async function handleSrsFeedback(event) {
+        export async function handleSrsFeedback(event) {
+            const { filteredQuestions, currentQuestionIndex, currentUser, sessionStats, selectedAnswer } = getState();
             const feedback = event.target.closest('.srs-feedback-btn').dataset.feedback;
             const question = filteredQuestions[currentQuestionIndex];
             const isCorrect = selectedAnswer === question.correctAnswer;
@@ -136,5 +137,6 @@ import { updateNavigation, navigateToView } from './ui.js';
                 updateStatsPanel();
             }
         });
+
 
 
