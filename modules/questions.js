@@ -1,6 +1,6 @@
 import { getState, setState } from '../services/state.js';
 import { handleSrsFeedback } from './srs.js';
-import { updateNavigation } from './ui.js';
+import { updateNavigation, elements } from './ui.js';
 
 /**
  * Renderiza a questão atual na tela, seja ela respondida ou não.
@@ -124,6 +124,53 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             btn.addEventListener('click', handleSrsFeedback);
         });
     }
+}
+
+/**
+ * Renderiza uma lista de questões para o modo "Adicionar ao Caderno".
+ * @param {Array} questions - A lista de questões a ser renderizada.
+ * @param {Array} existingQuestionIds - IDs das questões que já estão no caderno.
+ */
+export function renderQuestionListForAdding(questions, existingQuestionIds) {
+    const questionsContainer = elements.vadeMecumContentArea.querySelector('#questions-container');
+    const mainContentContainer = elements.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+    if (!questionsContainer || !mainContentContainer) return;
+    
+    mainContentContainer.classList.add('hidden');
+
+    if (questions.length === 0) {
+        questionsContainer.innerHTML = `<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm">Nenhuma questão encontrada com os filtros atuais.</div>`;
+        return;
+    }
+
+    const listHtml = questions.map(q => {
+        const isAlreadyIn = existingQuestionIds.includes(q.id);
+        const highlightClass = isAlreadyIn ? 'already-in-caderno opacity-70' : '';
+        const badgeHtml = isAlreadyIn 
+            ? `<span class="text-xs font-semibold bg-blue-200 text-blue-800 px-2 py-1 rounded-full">No Caderno</span>`
+            : '';
+
+        const tempDiv = document.createElement('div');
+        tempDiv.textContent = q.text;
+        const shortText = (tempDiv.textContent.length > 200 ? tempDiv.textContent.substring(0, 200) + '...' : tempDiv.textContent)
+                           .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        return `
+            <div class="p-4 border-b border-gray-200 ${highlightClass}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-800">${shortText}</p>
+                        <p class="text-xs text-gray-500 mt-1">${q.materia} &bull; ${q.assunto}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-4">
+                        ${badgeHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    questionsContainer.innerHTML = `<div class="bg-white rounded-lg shadow-sm">${listHtml}</div>`;
 }
 
 /**
