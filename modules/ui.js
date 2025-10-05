@@ -289,6 +289,8 @@ export function navigateToView(viewId, isUserClick = false) {
         renderFoldersAndCadernos();
     } else if (viewId === 'materias-view') {
         renderMateriasView();
+    } else if (viewId === 'revisao-view') {
+        setState({ isReviewSession: false });
     } else if (viewId === 'estatisticas-view'){
         updateStatsPageUI();
     }
@@ -635,4 +637,3 @@ export async function showItemStats(itemType, questionIds, itemName) {
         <p>Total de Respostas: ${totalAttempts} (${totalCorrect} acertos, ${totalIncorrect} erros)</p>
     `;
 }
-
