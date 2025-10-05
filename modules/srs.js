@@ -137,5 +137,12 @@ async function handleSrsFeedback(event) {
         });
 }
 
+startReviewBtn.addEventListener('click', async () => {
+        if(!currentUser) return;
+            
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+
 
 
