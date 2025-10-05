@@ -7,7 +7,7 @@ import { handleSrsFeedback } from './srs.js';
 import { logout, registerWithEmail, signInWithEmail, signInWithGoogle } from '../services/auth.js';
 import { saveCadernoState } from '../services/firestore.js';
 import { db } from '../config/firebase.js';
-import { doc, addDoc, updateDoc, deleteDoc, collection, writeBatch, arrayUnion } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import { doc, addDoc, updateDoc, deleteDoc, collection, writeBatch, arrayUnion, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import { generateStatsForQuestions, updateStatsPageUI, updateStatsPanel } from './stats.js';
 
 // Mapeamento de todos os elementos da UI para fácil acesso.
@@ -83,6 +83,77 @@ export const elements = {
 let createCadernoWithFilteredQuestions = false;
 let deletingId = null;
 let deletingType = null;
+
+/**
+ * Configura a interatividade de um componente de select customizado.
+ * @param {string} containerId - O ID do container do select.
+ */
+function setupCustomSelectListeners(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const button = container.querySelector('.custom-select-button');
+    const valueSpan = container.querySelector('.custom-select-value');
+    const panel = container.querySelector('.custom-select-panel');
+    const searchInput = container.querySelector('.custom-select-search');
+    const optionsContainer = container.querySelector('.custom-select-options');
+    const originalText = valueSpan.textContent;
+
+    // Abrir/Fechar o painel
+    button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!button.disabled) {
+            panel.classList.toggle('hidden');
+        }
+    });
+
+    // Fechar o painel se clicar fora
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+
+    // Pesquisar nas opções
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        optionsContainer.querySelectorAll('label, .font-bold').forEach(el => {
+            const text = el.textContent.toLowerCase();
+            el.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Lidar com a seleção de checkboxes
+    optionsContainer.addEventListener('change', () => {
+        const selected = [];
+        const selectedText = [];
+        optionsContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => {
+            selected.push(cb.dataset.value);
+            selectedText.push(cb.nextElementSibling.textContent);
+        });
+
+        container.dataset.value = JSON.stringify(selected);
+
+        if (selected.length === 0) {
+            valueSpan.textContent = originalText;
+            valueSpan.classList.add('text-gray-500');
+        } else if (selected.length === 1) {
+            valueSpan.textContent = selectedText[0];
+            valueSpan.classList.remove('text-gray-500');
+        } else {
+            valueSpan.textContent = `${selected.length} selecionados`;
+            valueSpan.classList.remove('text-gray-500');
+        }
+        
+        if (container.id === 'materia-filter') {
+            updateAssuntoFilter(selected);
+        }
+        updateSelectedFiltersDisplay();
+        if (getState().isAddingQuestionsMode.active) {
+            applyFilters();
+        }
+    });
+}
 
 /**
  * Configura todos os event listeners da aplicação.
