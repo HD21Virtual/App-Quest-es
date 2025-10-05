@@ -1,6 +1,6 @@
 import { getState, setState } from '../services/state.js';
 import { handleSrsFeedback } from './srs.js';
-import { updateNavigation, elements } from './ui.js';
+import { updateNavigation } from './ui.js';
 
 /**
  * Renderiza a questão atual na tela, seja ela respondida ou não.
@@ -11,20 +11,36 @@ export async function displayQuestion() {
     
     const questionsContainer = activeContainer.querySelector('#questions-container');
     const questionInfoContainer = activeContainer.querySelector('#question-info-container');
+    const questionToolbar = activeContainer.querySelector('#question-toolbar'); // Adicionado
 
-    if (!questionsContainer || !questionInfoContainer) return;
+    if (!questionsContainer || !questionInfoContainer || !questionToolbar) return;
 
     questionsContainer.innerHTML = '';
     questionInfoContainer.innerHTML = '';
+    questionToolbar.innerHTML = ''; // Limpa a toolbar
     setState({ selectedAnswer: null });
     await updateNavigation();
 
     if (filteredQuestions.length === 0) return;
     
     const question = filteredQuestions[currentQuestionIndex];
+    
+    // CORREÇÃO: Adiciona o HTML para as informações e a toolbar
+    questionInfoContainer.classList.remove('hidden');
+    questionToolbar.classList.remove('hidden');
+
     questionInfoContainer.innerHTML = `
-        <p>Matéria: <span class="font-semibold text-gray-700">${question.materia}</span></p>
-        <p>Assunto: <span class="font-semibold text-gray-700">${question.assunto}</span></p>
+        <p>Matéria: <a href="#" class="text-blue-600 hover:underline">${question.materia}</a></p>
+        <p>Assunto: <a href="#" class="text-blue-600 hover:underline">${question.assunto}</a></p>
+    `;
+
+    questionToolbar.innerHTML = `
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-graduation-cap mr-2"></i>Gabarito Comentado</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-comment-dots mr-2"></i>Comentários</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-edit mr-2"></i>Criar Anotações</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-book mr-2"></i>Cadernos</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-chart-bar mr-2"></i>Desempenho</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-flag mr-2"></i>Notificar Erro</button>
     `;
 
     const answeredInSession = sessionStats.find(s => s.questionId === question.id);
@@ -132,8 +148,9 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
  * @param {Array} existingQuestionIds - IDs das questões que já estão no caderno.
  */
 export function renderQuestionListForAdding(questions, existingQuestionIds) {
-    const questionsContainer = elements.vadeMecumContentArea.querySelector('#questions-container');
-    const mainContentContainer = elements.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+    const { vadeMecumContentArea } = getState().elements;
+    const questionsContainer = vadeMecumContentArea.querySelector('#questions-container');
+    const mainContentContainer = vadeMecumContentArea.querySelector('#tabs-and-main-content');
     if (!questionsContainer || !mainContentContainer) return;
     
     mainContentContainer.classList.add('hidden');
@@ -178,8 +195,8 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
  * @param {Event} event - O evento de clique.
  */
 export function handleOptionSelect(event) {
-    const target = event.target.closest('.option-item');
-    if (!target || target.classList.contains('is-answered') || target.classList.contains('discarded')) return;
+    const target = event.currentTarget;
+    if (target.classList.contains('discarded')) return;
 
     const activeContainer = getState().currentCadernoId ? document.getElementById('saved-cadernos-list-container') : document.getElementById('vade-mecum-content-area');
     activeContainer.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
@@ -215,3 +232,4 @@ export function checkAnswer() {
     const isCorrect = selectedAnswer === question.correctAnswer;
     renderAnsweredQuestion(isCorrect, selectedAnswer, true);
 }
+
