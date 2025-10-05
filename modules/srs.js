@@ -12,27 +12,27 @@ const startReviewBtn = document.getElementById('start-review-btn');
 
 const reviewIntervals = [1, 3, 7, 15, 30, 90]; // Days
 
-        function getNextReviewDate(stage) {
-            const index = Math.min(stage, reviewIntervals.length - 1);
-            const daysToAdd = reviewIntervals[index];
-            const date = new Date();
-            date.setDate(date.getDate() + daysToAdd);
-            return Timestamp.fromDate(date);
+function getNextReviewDate(stage) {
+        const index = Math.min(stage, reviewIntervals.length - 1);
+        const daysToAdd = reviewIntervals[index];
+        const date = new Date();
+        date.setDate(date.getDate() + daysToAdd);
+        return Timestamp.fromDate(date);
+}
+
+async function handleSrsFeedback(event) {
+        const feedback = event.target.closest('.srs-feedback-btn').dataset.feedback;
+        const question = filteredQuestions[currentQuestionIndex];
+        const isCorrect = selectedAnswer === question.correctAnswer;
+            
+        if (!sessionStats.some(s => s.questionId === question.id)) {
+                sessionStats.push({
+                questionId: question.id, isCorrect: isCorrect, materia: question.materia,
+                assunto: question.assunto, userAnswer: selectedAnswer
+                });
         }
 
-        async function handleSrsFeedback(event) {
-            const feedback = event.target.closest('.srs-feedback-btn').dataset.feedback;
-            const question = filteredQuestions[currentQuestionIndex];
-            const isCorrect = selectedAnswer === question.correctAnswer;
-            
-            if (!sessionStats.some(s => s.questionId === question.id)) {
-                 sessionStats.push({
-                    questionId: question.id, isCorrect: isCorrect, materia: question.materia,
-                    assunto: question.assunto, userAnswer: selectedAnswer
-                });
-            }
-
-            if (currentUser) {
+        if (currentUser) {
                 const reviewRef = doc(db, 'users', currentUser.uid, 'reviewItems', question.id);
                 const reviewItem = userReviewItemsMap.get(question.id);
                 let currentStage = reviewItem ? reviewItem.stage : 0;
@@ -136,5 +136,6 @@ const reviewIntervals = [1, 3, 7, 15, 30, 90]; // Days
             }
         });
 }
+
 
 
