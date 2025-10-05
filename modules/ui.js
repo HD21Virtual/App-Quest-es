@@ -3,7 +3,6 @@ import { applyFilters, saveCurrentFilter, loadSavedFilter, deleteSavedFilter, cl
 import { displayQuestion, checkAnswer, handleOptionSelect, handleDiscardOption } from './questions.js';
 import { renderFoldersAndCadernos, handleCadernosViewClick } from './cadernos.js';
 import { renderMateriasView, handleMateriaClick, handleAssuntoClick, handleBackToMaterias } from './materias.js';
-import { handleSrsFeedback } from './srs.js';
 import { logout, registerWithEmail, signInWithEmail, signInWithGoogle } from '../services/auth.js';
 import { saveCadernoState } from '../services/firestore.js';
 import { db } from '../config/firebase.js';
@@ -176,7 +175,6 @@ export function setupEventListeners() {
     elements.selectedFiltersContainer.addEventListener('click', handleRemoveFilterTag);
     elements.toggleFiltersBtn.addEventListener('click', toggleFilterCard);
     
-    // Configura a interatividade dos filtros customizados
     setupCustomSelectListeners('materia-filter');
     setupCustomSelectListeners('assunto-filter');
 
@@ -196,7 +194,7 @@ export function setupEventListeners() {
         const deleteBtn = e.target.closest('.delete-filter-btn');
         if (deleteBtn) deleteSavedFilter(deleteBtn.dataset.id);
     });
-    elements.searchSavedFiltersInput.addEventListener('input', () => import('../services/firestore.js').then(m => m.setupAllFirestoreListeners(getState().currentUser.uid))); // Re-filtra a lista
+    elements.searchSavedFiltersInput.addEventListener('input', () => import('../services/firestore.js').then(m => m.setupAllFirestoreListeners(getState().currentUser.uid)));
 
     // Navegação de questões
     document.addEventListener('click', handleQuestionNavigation);
@@ -272,10 +270,8 @@ export function navigateToView(viewId, isUserClick = false) {
         }
     });
 
-    // Lógica específica da view
     if (viewId === 'vade-mecum-view') {
         if (state.isReviewSession) {
-            // Configura a UI para o modo de revisão
             elements.vadeMecumView.querySelector('#vade-mecum-title').textContent = "Sessão de Revisão";
             elements.toggleFiltersBtn.classList.add('hidden');
             elements.filterCard.classList.add('hidden');
@@ -283,8 +279,7 @@ export function navigateToView(viewId, isUserClick = false) {
             displayQuestion();
             updateStatsPanel();
         } else if (!state.isAddingQuestionsMode.active) {
-            // Configura a UI para o modo normal (Vade Mecum)
-            setState({ isReviewSession: false }); // Garante que o modo revisão seja desativado
+            setState({ isReviewSession: false });
             elements.vadeMecumView.querySelector('#vade-mecum-title').textContent = "Vade Mecum de Questões";
             elements.toggleFiltersBtn.classList.remove('hidden');
             elements.filterCard.classList.remove('hidden');
@@ -301,11 +296,6 @@ export function navigateToView(viewId, isUserClick = false) {
     elements.mobileMenu.classList.add('hidden');
 }
 
-
-/**
- * Atualiza a interface do usuário com base no estado de login.
- * @param {object|null} user - O objeto de usuário do Firebase ou nulo.
- */
 export function updateUserUI(user) {
     const container = document.getElementById('user-account-container');
     const mobileContainer = document.getElementById('user-account-container-mobile');
@@ -326,9 +316,6 @@ export function updateUserUI(user) {
     }
 }
 
-/**
- * Limpa elementos da UI que são específicos de um usuário logado.
- */
 export function clearUserSpecificUI() {
     elements.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus cadernos.</p>';
     elements.savedFiltersListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus filtros.</p>';
@@ -336,9 +323,6 @@ export function clearUserSpecificUI() {
     elements.reviewCard.classList.add('hidden');
 }
 
-/**
- * Atualiza os controles de navegação de questões.
- */
 export async function updateNavigation() {
     const { filteredQuestions, currentQuestionIndex, currentCadernoId, sessionStats } = getState();
     const activeContainer = currentCadernoId ? elements.savedCadernosListContainer : elements.vadeMecumContentArea;
@@ -374,9 +358,6 @@ export async function updateNavigation() {
         }
     }
 }
-
-
-// --- Funções de Manipulação de Eventos ---
 
 async function handleFilterButtonClick() {
     const { isAddingQuestionsMode, currentUser, filteredQuestions } = getState();
@@ -445,8 +426,6 @@ function handleDynamicClicks(event) {
     const discardBtn = target.closest('.discard-btn');
     if (discardBtn) handleDiscardOption(event);
     if (target.closest('#submit-btn')) checkAnswer();
-    const srsBtn = target.closest('.srs-feedback-btn');
-    if (srsBtn) handleSrsFeedback(event);
     if (target.id === 'login-from-empty') elements.authModal.classList.remove('hidden');
 
     // Abas de conteúdo
