@@ -1101,7 +1101,7 @@ function clearAllFilters() {
     applyFilters();
 }
 
-async function getWeeklySolvedQuestionsData() {
+async function getWeeklySolvedQuestionsData(currentSessionStats = []) {
     const weeklyCounts = Array(7).fill(0);
     if (!currentUser) return weeklyCounts;
 
@@ -1123,17 +1123,21 @@ async function getWeeklySolvedQuestionsData() {
 
             const sessionDate = session.createdAt.toDate();
             sessionDate.setHours(0, 0, 0, 0);
-
-            // Lógica corrigida para calcular o índice do dia corretamente.
-            const timeDiff = today.getTime() - sessionDate.getTime();
-            const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24)); // Diferença em dias completos a partir de hoje (0 = hoje, 1 = ontem, etc.)
             
-            const index = 6 - dayDiff; // Converte para o índice do array (0 = 6 dias atrás, 6 = hoje)
+            const timeDiff = today.getTime() - sessionDate.getTime();
+            const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+            
+            const index = 6 - dayDiff;
 
             if (index >= 0 && index < 7) {
                 weeklyCounts[index] += session.totalQuestions || 0;
             }
         });
+
+        // Adiciona as questões da sessão atual (não salva) à contagem de hoje
+        if (currentSessionStats.length > 0) {
+            weeklyCounts[6] += currentSessionStats.length;
+        }
 
     } catch (error) {
         console.error("Erro ao buscar dados de atividades da semana:", error);
@@ -1313,7 +1317,7 @@ function updateStatsPageUI() {
     }
 
     // Home Page Chart (Semanal)
-    renderWeeklyChart();
+    renderWeeklyChart(sessionStats);
 
     // Update stats page (if visible)
     const byMateriaContainer = document.getElementById('stats-by-materia-container');
@@ -1388,23 +1392,16 @@ function getLast7DaysLabels() {
 }
 
 // Função para renderizar o gráfico semanal
-async function renderWeeklyChart() {
+async function renderWeeklyChart(currentSessionStats = []) {
     const ctx = document.getElementById('weeklyPerformanceChart');
     if (!ctx) return;
 
-    // Busca os dados reais do Firestore.
-    const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
+    // Busca os dados reais do Firestore e combina com a sessão atual
+    const questionsSolvedData = await getWeeklySolvedQuestionsData(currentSessionStats); 
     const allLabels = getLast7DaysLabels();
 
-    // Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
-    const filteredLabels = [];
-    const filteredData = [];
-    questionsSolvedData.forEach((count, index) => {
-        if (count > 0) {
-            filteredLabels.push(allLabels[index]);
-            filteredData.push(count);
-        }
-    });
+    const filteredLabels = allLabels;
+    const filteredData = questionsSolvedData;
 
     // Destrói o gráfico anterior se ele já existir, para evitar sobreposição.
     if (window.weeklyChartInstance) {
@@ -1470,7 +1467,8 @@ async function renderWeeklyChart() {
                         color: '#e5e7eb'
                     },
                     ticks: {
-                        color: '#6b7280'
+                        color: '#6b7280',
+                        stepSize: 1
                     }
                 }
             }
@@ -1533,18 +1531,11 @@ async function renderFoldersAndCadernos() {
         createFolderBtn.classList.add('hidden');
         addQuestionsToCadernoBtn.classList.remove('hidden');
         
-        // A UI de navegação/resolução de questões deve ser recriada para cada caderno
-        // Para simplificar, estamos reutilizando a estrutura, mas é importante garantir que os listeners
-        // de navegação sejam reatribuídos para os novos botões/elementos do caderno.
-        // Como a estrutura é a mesma do vade mecum, podemos usar o mesmo HTML.
-
         const tempContainer = document.createElement('div');
         const mainContentHtml = vadeMecumView.querySelector('#tabs-and-main-content').outerHTML;
         tempContainer.innerHTML = mainContentHtml;
         savedCadernosListContainer.appendChild(tempContainer.firstChild);
 
-
-        // Esconde/mostra os elementos corretos para o contexto do caderno
         const tabsContainerCaderno = savedCadernosListContainer.querySelector('#tabs-container');
         const questionView = savedCadernosListContainer.querySelector('#question-view');
         const statsView = savedCadernosListContainer.querySelector('#stats-view');
@@ -1583,7 +1574,6 @@ async function renderFoldersAndCadernos() {
             }
         });
         
-        // Prepara a sessão de estudo
         filteredQuestions = allQuestions.filter(q => caderno.questionIds.includes(q.id));
         const savedState = userCadernoState.get(currentCadernoId);
         currentQuestionIndex = (savedState && savedState.lastQuestionIndex < filteredQuestions.length) ? savedState.lastQuestionIndex : 0;
@@ -1804,7 +1794,6 @@ async function handleSrsFeedback(event) {
         userReviewItemsMap.set(question.id, reviewData); // Update local map immediately
 
         await saveUserAnswer(question.id, selectedAnswer, isCorrect);
-        // A lógica de updateQuestionHistory só deve ser chamada se o feedback não for 'again' para evitar inflar o histórico de erros na repetição.
         const historyIsCorrect = (feedback !== 'again') && isCorrect;
         await updateQuestionHistory(question.id, historyIsCorrect);
     }
@@ -1859,13 +1848,11 @@ startReviewBtn.addEventListener('click', async () => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     
-    // CORREÇÃO: A lógica de filtro aqui deve ser a mesma do `updateReviewCard`
-    // para garantir que o número de questões seja consistente.
     const questionsToReview = Array.from(userReviewItemsMap.values())
         .filter(item => {
             if (!item.nextReview) return false;
             const reviewDate = item.nextReview.toDate();
-            reviewDate.setHours(0, 0, 0, 0); // Normaliza a data para o início do dia
+            reviewDate.setHours(0, 0, 0, 0);
             return reviewDate <= now;
         });
 
@@ -1946,7 +1933,6 @@ filterBtn.addEventListener('click', async () => {
      }
 });
 
-// Event listener para botões de navegação, agora delegado para funcionar nos dois contextos
 document.addEventListener('click', async (event) => {
     if(event.target.closest('#prev-question-btn')) {
          if (currentQuestionIndex > 0) {
@@ -2052,8 +2038,6 @@ document.querySelectorAll('.nav-link').forEach(link => {
              if (isAddingQuestionsMode.active) {
                 applyFilters();
             } else if (isReviewSession && !isUserClick) {
-                // This is a programmatic click from the review button.
-                // The state is already set up in startReviewBtn listener, so we don't reset it.
             } else {
                 isReviewSession = false;
                 vadeMecumTitle.textContent = "Vade Mecum de Questões";
@@ -2092,15 +2076,10 @@ assuntosListContainer.addEventListener('click', (event) => {
         const assuntoName = assuntoItem.dataset.assuntoName;
         const materiaName = selectedMateria.name;
 
-        // 1. Navigate to 'Questões' view by programmatically clicking the link
         document.querySelector('.nav-link[data-view="vade-mecum-view"]').click();
         
-        // Use a short timeout to ensure the view has switched and scripts are ready
         setTimeout(() => {
-            // 2. Clear any existing filters first to ensure a clean state
             clearAllFilters();
-
-            // 3. Set the materia filter programmatically
             const materiaContainer = document.getElementById('materia-filter');
             const materiaCheckbox = materiaContainer.querySelector(`.custom-select-option[data-value="${materiaName}"]`);
             if (materiaCheckbox) {
@@ -2108,8 +2087,6 @@ assuntosListContainer.addEventListener('click', (event) => {
                 materiaContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
             }
 
-            // 4. Set the assunto filter programmatically.
-            // Another timeout is needed because the 'assunto' list is populated after the 'materia' change event.
             setTimeout(() => {
                 const assuntoContainer = document.getElementById('assunto-filter');
                 const assuntoCheckbox = assuntoContainer.querySelector(`.custom-select-option[data-value="${assuntoName}"]`);
@@ -2117,7 +2094,6 @@ assuntosListContainer.addEventListener('click', (event) => {
                     assuntoCheckbox.checked = true;
                     assuntoContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
                 }
-                // 5. Apply the filter
                 applyFilters();
             }, 50); 
         }, 50);
@@ -2248,7 +2224,6 @@ savedCadernosListContainer.addEventListener('click', async (event) => {
             updateStatsPanel();
             selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Estudando o caderno: <strong>${cadernoToLoad.name}</strong></span>`;
         } else {
-            // Em vez de alert, usar o modal de confirmação ou um modal informativo
             showInfoModal("Atenção", "Este caderno não tem questões. Adicione algumas antes de estudar.");
         }
     } 
@@ -2266,10 +2241,9 @@ savedCadernosListContainer.addEventListener('click', async (event) => {
 function showInfoModal(title, message) {
      confirmationModalTitle.textContent = title;
      confirmationModalText.innerHTML = message;
-     document.querySelector('#confirmation-modal .mx-auto.flex.items-center.justify-center.h-12.w-12.rounded-full.bg-red-100').classList.add('hidden'); // Esconde o ícone de aviso/exclusão
-     document.querySelector('#confirmation-modal .flex.justify-center.space-x-4').classList.add('hidden'); // Esconde os botões de ação
+     document.querySelector('#confirmation-modal .mx-auto.flex.items-center.justify-center.h-12.w-12.rounded-full.bg-red-100').classList.add('hidden');
+     document.querySelector('#confirmation-modal .flex.justify-center.space-x-4').classList.add('hidden');
      
-     // Adiciona um botão "Fechar"
      const closeBtn = document.createElement('button');
      closeBtn.textContent = 'Fechar';
      closeBtn.className = 'px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700';
@@ -2534,7 +2508,6 @@ const closeConfirmationModal = () => {
     confirmationModal.classList.add('hidden');
     deletingId = null;
     deletingType = null;
-     // Garante que os botões padrões voltem a aparecer se tiver sido um modal informativo
     document.querySelector('#confirmation-modal .mx-auto.flex.items-center.justify-center.h-12.w-12.rounded-full.bg-red-100').classList.remove('hidden'); 
     const buttonContainer = document.querySelector('#confirmation-modal .flex.justify-center.space-x-4');
     buttonContainer.innerHTML = '';
@@ -2560,7 +2533,6 @@ confirmDeleteBtn.addEventListener('click', async () => {
         await deleteDoc(cadernoRef);
     } else if (deletingType === 'all-progress') {
         await resetAllUserData();
-        // O resetAllUserData já fecha o modal, então podemos retornar aqui.
         return;
     }
     
@@ -2670,7 +2642,6 @@ async function showItemStats(itemId, itemType, itemName) {
 async function resetAllUserData() {
     if (!currentUser) return;
 
-    // Show loading state in modal
     confirmationModalTitle.textContent = "Resetando...";
     confirmationModalText.innerHTML = `<div class="flex justify-center items-center p-4"><i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i></div>`;
     document.querySelector('#confirmation-modal .flex.justify-center.space-x-4').classList.add('hidden');
@@ -2684,7 +2655,6 @@ async function resetAllUserData() {
         
         if (snapshot.empty) continue;
 
-        // Firestore limits batches to 500 operations.
         const batchArray = [];
         batchArray.push(writeBatch(db));
         let operationCounter = 0;
@@ -2704,22 +2674,18 @@ async function resetAllUserData() {
         await Promise.all(batchArray.map(batch => batch.commit()));
     }
 
-    // Reset local state
     userAnswers.clear();
     userReviewItemsMap.clear();
     userCadernoState.clear();
     historicalSessions = [];
     sessionStats = [];
 
-    // Restore modal UI before closing
     document.querySelector('#confirmation-modal .flex.justify-center.space-x-4').classList.remove('hidden');
     closeConfirmationModal();
 
-    // Refresh UI
     updateStatsPageUI();
     updateReviewCard();
     
-    // If inside a caderno, refresh that view too
     if(currentCadernoId) {
         displayQuestion();
     }
@@ -2851,7 +2817,7 @@ const resetAllProgressBtn = document.getElementById('reset-all-progress-btn');
 if(resetAllProgressBtn) {
     resetAllProgressBtn.addEventListener('click', () => {
         if (!currentUser) return;
-        deletingId = null; // No specific ID
+        deletingId = null; 
         deletingType = 'all-progress';
         confirmationModalTitle.textContent = `Resetar Todo o Progresso`;
         confirmationModalText.innerHTML = `Tem certeza que deseja apagar **TODO** o seu histórico de resoluções e revisões? <br><br> <span class="font-bold text-red-600">Esta ação é irreversível e apagará todas as suas estatísticas.</span>`;
@@ -2859,6 +2825,3 @@ if(resetAllProgressBtn) {
         confirmationModal.classList.remove('hidden');
     });
 }
-
-
-
