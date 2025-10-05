@@ -97,6 +97,48 @@ function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = false) {
     }
 }
 
+export function renderQuestionListForAdding(questions, existingQuestionIds) {
+    const questionsContainer = DOM.vadeMecumContentArea.querySelector('#questions-container');
+    const mainContentContainer = DOM.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+    if (!questionsContainer || !mainContentContainer) return;
+    
+    // Oculta a estrutura de abas e do solucionador de questões
+    mainContentContainer.classList.add('hidden');
+
+    if (questions.length === 0) {
+        questionsContainer.innerHTML = `<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm">Nenhuma questão encontrada com os filtros atuais.</div>`;
+        return;
+    }
+
+    const listHtml = questions.map(q => {
+        const isAlreadyIn = existingQuestionIds.includes(q.id);
+        const highlightClass = isAlreadyIn ? 'already-in-caderno opacity-70' : '';
+        const badgeHtml = isAlreadyIn 
+            ? `<span class="text-xs font-semibold bg-blue-200 text-blue-800 px-2 py-1 rounded-full">No Caderno</span>`
+            : '';
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerText = q.text;
+        const shortText = tempDiv.innerHTML.substring(0, 200) + (q.text.length > 200 ? '...' : '');
+
+        return `
+            <div class="p-4 border-b border-gray-200 ${highlightClass}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-800">${shortText}</p>
+                        <p class="text-xs text-gray-500 mt-1">${q.materia} &bull; ${q.assunto}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-4">
+                        ${badgeHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    questionsContainer.innerHTML = `<div class="bg-white rounded-lg shadow-sm">${listHtml}</div>`;
+}
+
 async function checkAnswer() {
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const isCorrect = state.selectedAnswer === question.correctAnswer;
@@ -189,3 +231,4 @@ export function handleVadeMecumTabs(event) {
         updateStatsPanel(); // Atualiza o painel de estatísticas da sessão/caderno
     }
 }
+
