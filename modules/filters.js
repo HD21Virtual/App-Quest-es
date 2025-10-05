@@ -4,7 +4,23 @@ import { displayQuestion, renderQuestionListForAdding } from './questions.js';
 import { updateStatsPanel } from './stats.js';
 import { saveSessionStats } from '../services/firestore.js';
 import { db } from '../config/firebase.js';
-import { collection, addDoc, doc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, addDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+/**
+ * Popula as opções de checkbox no filtro de Disciplina com base no estado.
+ */
+export function populateMateriaFilterOptions() {
+    const { filterOptions } = getState();
+    const optionsContainer = elements.materiaFilter.querySelector('.custom-select-options');
+    if (optionsContainer) {
+        optionsContainer.innerHTML = filterOptions.materia.map(opt => `
+            <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                <input type="checkbox" data-value="${opt.name}" class="custom-select-option rounded">
+                <span>${opt.name}</span>
+            </label>
+        `).join('');
+    }
+}
 
 /**
  * Aplica os filtros selecionados e atualiza a lista de questões.
@@ -12,7 +28,6 @@ import { collection, addDoc, doc, deleteDoc, getDocs } from "https://www.gstatic
 export async function applyFilters() {
     const { isAddingQuestionsMode, sessionStats, isReviewSession, allQuestions, userCadernos } = getState();
     
-    // Salva a sessão anterior se houver uma e não estiver no modo de adição
     if (!isAddingQuestionsMode.active && sessionStats.length > 0 && !isReviewSession) {
         await saveSessionStats(); 
         setState({ sessionStats: [] });
@@ -36,7 +51,7 @@ export async function applyFilters() {
 
     if (isAddingQuestionsMode.active) {
         const caderno = userCadernos.find(c => c.id === isAddingQuestionsMode.cadernoId);
-        const existingIds = caderno ? caderno.questionIds : [];
+        const existingIds = caderno ? (caderno.questionIds || []) : [];
         const newQuestions = filtered.filter(q => !existingIds.includes(q.id));
 
         elements.filterBtn.textContent = newQuestions.length > 0 ? `Adicionar ${newQuestions.length} questões` : `Nenhuma questão nova`;
@@ -44,7 +59,8 @@ export async function applyFilters() {
         
         renderQuestionListForAdding(filtered, existingIds);
     } else {
-        elements.vadeMecumContentArea.querySelector('#tabs-and-main-content').classList.remove('hidden');
+        const mainContent = elements.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+        if(mainContent) mainContent.classList.remove('hidden');
         await displayQuestion();
         updateStatsPanel();
     }
@@ -55,7 +71,7 @@ export async function applyFilters() {
 /**
  * Atualiza a exibição das "tags" de filtros selecionados.
  */
-function updateSelectedFiltersDisplay() {
+export function updateSelectedFiltersDisplay() {
     elements.selectedFiltersContainer.innerHTML = '';
     let hasFilters = false;
 
@@ -97,14 +113,19 @@ export function clearAllFilters() {
     elements.searchInput.value = '';
     ['materia-filter', 'assunto-filter'].forEach(id => {
         const container = document.getElementById(id);
-        container.dataset.value = '[]';
-        container.querySelector('.custom-select-value').textContent = id === 'materia-filter' ? 'Disciplina' : 'Assunto';
-        container.querySelector('.custom-select-value').classList.add('text-gray-500');
-        container.querySelectorAll('.custom-select-option:checked').forEach(cb => cb.checked = false);
+        if (container) {
+            container.dataset.value = '[]';
+            const valueSpan = container.querySelector('.custom-select-value');
+            if (valueSpan) {
+                valueSpan.textContent = id === 'materia-filter' ? 'Disciplina' : 'Assunto';
+                valueSpan.classList.add('text-gray-500');
+            }
+            container.querySelectorAll('.custom-select-option:checked').forEach(cb => cb.checked = false);
+        }
     });
     updateAssuntoFilter([]);
     elements.tipoFilterGroup.querySelector('.active-filter')?.classList.remove('active-filter');
-    elements.tipoFilterGroup.querySelector('[data-value="todos"]').classList.add('active-filter');
+    elements.tipoFilterGroup.querySelector('[data-value="todos"]')?.classList.add('active-filter');
     applyFilters();
 }
 
@@ -115,10 +136,14 @@ export function clearAllFilters() {
 export function updateAssuntoFilter(disciplinas) {
     const { filterOptions } = getState();
     const container = document.getElementById('assunto-filter');
+    if (!container) return;
+
     const button = container.querySelector('.custom-select-button');
     const valueSpan = container.querySelector('.custom-select-value');
     const optionsContainer = container.querySelector('.custom-select-options');
     
+    if (!button || !valueSpan || !optionsContainer) return;
+
     valueSpan.textContent = 'Assunto';
     valueSpan.classList.add('text-gray-500');
     container.dataset.value = '[]';
@@ -143,7 +168,7 @@ export function updateAssuntoFilter(disciplinas) {
                 });
             }
         });
-        optionsContainer.innerHTML = newHtml;
+        optionsContainer.innerHTML = newHtml || `<div class="p-2 text-center text-gray-400 text-sm">Nenhum assunto encontrado</div>`;
     }
 }
 
@@ -183,14 +208,12 @@ export async function loadSavedFilter(filterId) {
         elements.tipoFilterGroup.querySelector('.active-filter')?.classList.remove('active-filter');
         elements.tipoFilterGroup.querySelector(`[data-value="${filterToLoad.tipo}"]`)?.classList.add('active-filter');
         
-        // Aplica filtro de matéria
         const materiaContainer = document.getElementById('materia-filter');
         materiaContainer.querySelectorAll('.custom-select-option').forEach(cb => {
             cb.checked = (filterToLoad.materias || []).includes(cb.dataset.value);
         });
         materiaContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
         
-        // Aplica filtro de assunto (com delay para garantir que as opções foram populadas)
         setTimeout(() => {
            const assuntoContainer = document.getElementById('assunto-filter');
            assuntoContainer.querySelectorAll('.custom-select-option').forEach(cb => {
