@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="style.css"> 
 
 </head>
-<body class="bg-f0f2f5">
+<body class="bg-gray-100">
 
     <!-- Menu Superior Fixo (Header) -->
     <header class="bg-white shadow-md">
@@ -82,23 +82,23 @@
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm text-center">
                     <h3 class="text-sm font-medium text-gray-500">Acertos</h3>
-                    <p id="stats-total-correct" class="mt-1 text-3xl font-semibold" style="color: #00B050;">0</p>
+                    <p id="stats-total-correct" class="mt-1 text-3xl font-semibold text-green-500">0</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm text-center">
                     <h3 class="text-sm font-medium text-gray-500">Erros</h3>
-                    <p id="stats-total-incorrect" class="mt-1 text-3xl font-semibold" style="color: #FF0000;">0</p>
+                    <p id="stats-total-incorrect" class="mt-1 text-3xl font-semibold text-red-500">0</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm text-center">
                     <h3 class="text-sm font-medium text-gray-500">Desempenho</h3>
-                    <p id="stats-geral-accuracy" class="mt-1 text-3xl font-semibold" style="color: #0070C0;">0%</p>
+                    <p id="stats-geral-accuracy" class="mt-1 text-3xl font-semibold text-blue-600">0%</p>
                 </div>
             </div>
             <!-- Gráfico de Desempenho por Disciplina (Semanal) -->
             <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
-        <div style="height: 400px;">
-             <canvas id="weeklyPerformanceChart"></canvas>
-        </div>
-    </div>
+                <div style="height: 400px;">
+                     <canvas id="weeklyPerformanceChart"></canvas>
+                </div>
+            </div>
             <div class="bg-white p-6 rounded-lg shadow-sm">
                 <div style="height: 400px;">
                      <canvas id="homePerformanceChart"></canvas>
