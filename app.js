@@ -1503,6 +1503,8 @@ async function saveSessionStats() {
     try {
         const sessionsCollection = collection(db, 'users', currentUser.uid, 'sessions');
         await addDoc(sessionsCollection, sessionData);
+        // Limpa as estatísticas da sessão após salvar para evitar duplicação
+        sessionStats = [];
     } catch (error) {
         console.error("Erro ao salvar a sessão:", error);
     }
@@ -2825,3 +2827,10 @@ if(resetAllProgressBtn) {
         confirmationModal.classList.remove('hidden');
     });
 }
+
+window.addEventListener('beforeunload', (event) => {
+    if (currentUser && sessionStats.length > 0) {
+        saveSessionStats();
+    }
+});
+
