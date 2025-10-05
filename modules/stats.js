@@ -226,7 +226,12 @@ async function renderHomeCharts(materiaTotals) {
                 ]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desempenho Geral por Disciplina' } },
+                responsive: true, maintainAspectRatio: false, plugins: { 
+                    title: { display: true, text: 'Desempenho Geral por Disciplina' },
+                    datalabels: {
+                        display: false // Desativando os datalabels neste gráfico
+                    }
+                },
                 scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
             }
         });
@@ -240,9 +245,23 @@ async function renderHomeCharts(materiaTotals) {
             type: 'line',
             data: {
                 labels: getLast7DaysLabels(),
-                datasets: [{ label: 'Questões Resolvidas', data: weeklyData, borderColor: '#3b82f6', tension: 0.3 }]
+                datasets: [{ label: 'Questões Resolvidas', data: weeklyData, borderColor: '#3b82f6', tension: 0.3, fill: false }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Atividade na Última Semana' } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    title: { display: true, text: 'Atividade na Última Semana' },
+                    datalabels: {
+                         display: true,
+                         align: 'top',
+                         color: '#3b82f6',
+                         font: {
+                            weight: 'bold'
+                         }
+                    }
+                } 
+            }
         });
     }
 }
@@ -320,4 +339,3 @@ function getLast7DaysLabels() {
     }
     return labels;
 }
-
