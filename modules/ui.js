@@ -1,5 +1,5 @@
 import { getState, setState } from '../services/state.js';
-import { applyFilters, saveCurrentFilter, loadSavedFilter, deleteSavedFilter, clearAllFilters } from './filters.js';
+import { applyFilters, saveCurrentFilter, loadSavedFilter, deleteSavedFilter, clearAllFilters, updateAssuntoFilter, updateSelectedFiltersDisplay } from './filters.js';
 import { displayQuestion, checkAnswer, handleOptionSelect, handleDiscardOption } from './questions.js';
 import { renderFoldersAndCadernos, handleCadernosViewClick } from './cadernos.js';
 import { renderMateriasView, handleMateriaClick, handleAssuntoClick, handleBackToMaterias } from './materias.js';
@@ -7,7 +7,7 @@ import { handleSrsFeedback } from './srs.js';
 import { logout, registerWithEmail, signInWithEmail, signInWithGoogle } from '../services/auth.js';
 import { saveCadernoState } from '../services/firestore.js';
 import { db } from '../config/firebase.js';
-import { doc, addDoc, updateDoc, deleteDoc, collection, writeBatch, getDocs, arrayUnion } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import { doc, addDoc, updateDoc, deleteDoc, collection, writeBatch, arrayUnion } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import { generateStatsForQuestions, updateStatsPageUI, updateStatsPanel } from './stats.js';
 
 // Mapeamento de todos os elementos da UI para fácil acesso.
@@ -105,6 +105,10 @@ export function setupEventListeners() {
     elements.selectedFiltersContainer.addEventListener('click', handleRemoveFilterTag);
     elements.toggleFiltersBtn.addEventListener('click', toggleFilterCard);
     
+    // Configura a interatividade dos filtros customizados
+    setupCustomSelectListeners('materia-filter');
+    setupCustomSelectListeners('assunto-filter');
+
     // Salvar/Carregar Filtros
     document.getElementById('save-filter-btn').addEventListener('click', () => {
         if(getState().currentUser) elements.saveModal.classList.remove('hidden');
