@@ -4,6 +4,7 @@ import { displayQuestion, renderQuestionListForAdding } from './question-viewer.
 import { updateStatsPanel } from './stats.js';
 import { updateSelectedFiltersDisplay } from '../ui/ui-helpers.js';
 import { saveSessionStats, updateItem } from '../services/firestore.js';
+import { arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 /**
  * @file js/features/filter.js
@@ -190,3 +191,4 @@ export function handleToggleButtonGroups() {
         }
     });
 }
+
