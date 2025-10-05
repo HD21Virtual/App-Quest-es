@@ -244,14 +244,15 @@ export function setupEventListeners() {
  * @param {boolean} isUserClick - Se a navegação foi iniciada por um clique do usuário.
  */
 export function navigateToView(viewId, isUserClick = false) {
-    if (getState().isAddingQuestionsMode.active && (viewId !== 'vade-mecum-view' || isUserClick)) {
+    const state = getState();
+    if (state.isAddingQuestionsMode.active && (viewId !== 'vade-mecum-view' || isUserClick)) {
         exitAddQuestionsMode();
     }
     
-    if (viewId === 'cadernos-view' && !getState().isNavigatingBackFromAddMode) {
+    if (viewId === 'cadernos-view' && !state.isNavigatingBackFromAddMode) {
         setState({ currentFolderId: null, currentCadernoId: null });
     }
-    if (getState().isNavigatingBackFromAddMode) {
+    if (state.isNavigatingBackFromAddMode) {
         setState({ isNavigatingBackFromAddMode: false });
     }
 
@@ -272,12 +273,23 @@ export function navigateToView(viewId, isUserClick = false) {
     });
 
     // Lógica específica da view
-    if (viewId === 'vade-mecum-view' && !getState().isAddingQuestionsMode.active) {
-        setState({ isReviewSession: false });
-        elements.vadeMecumView.querySelector('#vade-mecum-title').textContent = "Vade Mecum de Questões";
-        elements.toggleFiltersBtn.classList.remove('hidden');
-        elements.filterCard.classList.remove('hidden');
-        applyFilters(); 
+    if (viewId === 'vade-mecum-view') {
+        if (state.isReviewSession) {
+            // Configura a UI para o modo de revisão
+            elements.vadeMecumView.querySelector('#vade-mecum-title').textContent = "Sessão de Revisão";
+            elements.toggleFiltersBtn.classList.add('hidden');
+            elements.filterCard.classList.add('hidden');
+            elements.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Revisando ${state.filteredQuestions.length} questões.</span>`;
+            displayQuestion();
+            updateStatsPanel();
+        } else if (!state.isAddingQuestionsMode.active) {
+            // Configura a UI para o modo normal (Vade Mecum)
+            setState({ isReviewSession: false }); // Garante que o modo revisão seja desativado
+            elements.vadeMecumView.querySelector('#vade-mecum-title').textContent = "Vade Mecum de Questões";
+            elements.toggleFiltersBtn.classList.remove('hidden');
+            elements.filterCard.classList.remove('hidden');
+            applyFilters();
+        }
     } else if (viewId === 'cadernos-view') {
         renderFoldersAndCadernos();
     } else if (viewId === 'materias-view') {
@@ -440,7 +452,6 @@ function handleDynamicClicks(event) {
     // Abas de conteúdo
     const tabButton = target.closest('.tab-button');
     if (tabButton) {
-        // CORREÇÃO: Encontra o container pai correto que engloba as abas e o conteúdo.
         const container = tabButton.closest('#tabs-and-main-content');
         if (container) {
             container.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -468,7 +479,6 @@ function handleDynamicClicks(event) {
                             });
                         }
                     } else {
-                        // Mostra estatísticas da sessão atual para o Vade Mecum
                         updateStatsPanel(statsContainer);
                     }
                 }
