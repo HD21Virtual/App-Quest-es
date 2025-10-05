@@ -1,5 +1,5 @@
 import { getState, setState } from '../services/state.js';
-import { applyFilters, saveCurrentFilter, loadSavedFilter, deleteSavedFilter } from './filters.js';
+import { applyFilters, saveCurrentFilter, loadSavedFilter, deleteSavedFilter, clearAllFilters } from './filters.js';
 import { displayQuestion, checkAnswer, handleOptionSelect, handleDiscardOption } from './questions.js';
 import { renderFoldersAndCadernos, handleCadernosViewClick } from './cadernos.js';
 import { renderMateriasView, handleMateriaClick, handleAssuntoClick, handleBackToMaterias } from './materias.js';
@@ -8,7 +8,7 @@ import { logout, registerWithEmail, signInWithEmail, signInWithGoogle } from '..
 import { saveCadernoState } from '../services/firestore.js';
 import { db } from '../config/firebase.js';
 import { doc, addDoc, updateDoc, deleteDoc, collection, writeBatch, getDocs, arrayUnion } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-import { generateStatsForQuestions, updateStatsPageUI } from './stats.js';
+import { generateStatsForQuestions, updateStatsPageUI, updateStatsPanel } from './stats.js';
 
 // Mapeamento de todos os elementos da UI para fácil acesso.
 export const elements = {
@@ -98,7 +98,7 @@ export function setupEventListeners() {
 
     // Filtros
     elements.filterBtn.addEventListener('click', handleFilterButtonClick);
-    elements.clearFiltersBtn.addEventListener('click', () => import('../modules/filters.js').then(module => module.clearAllFilters()));
+    elements.clearFiltersBtn.addEventListener('click', clearAllFilters);
     elements.searchInput.addEventListener('input', () => {
         if (getState().isAddingQuestionsMode.active) applyFilters();
     });
@@ -188,7 +188,12 @@ export function navigateToView(viewId, isUserClick = false) {
     document.getElementById(viewId)?.classList.remove('hidden');
 
     document.querySelectorAll('.nav-link').forEach(navLink => {
-        navLink.classList.toggle('active-nav-link', navLink.dataset.view === viewId);
+        navLink.classList.remove('text-blue-700', 'bg-blue-100');
+        navLink.classList.add('text-gray-500', 'hover:bg-gray-100');
+        if (navLink.dataset.view === viewId) {
+            navLink.classList.add('text-blue-700', 'bg-blue-100');
+            navLink.classList.remove('text-gray-500', 'hover:bg-gray-100');
+        }
     });
 
     // Lógica específica da view
@@ -248,7 +253,7 @@ export function clearUserSpecificUI() {
  * Atualiza os controles de navegação de questões.
  */
 export async function updateNavigation() {
-    const { filteredQuestions, currentQuestionIndex, currentCadernoId, userCadernos, sessionStats } = getState();
+    const { filteredQuestions, currentQuestionIndex, currentCadernoId, sessionStats } = getState();
     const activeContainer = currentCadernoId ? elements.savedCadernosListContainer : elements.vadeMecumContentArea;
     
     const navigationControls = activeContainer.querySelector('#navigation-controls');
@@ -263,9 +268,7 @@ export async function updateNavigation() {
         questionCounterTop.classList.remove('hidden');
         
         let statsHtml = '';
-        if (currentCadernoId) {
-            // Lógica de stats para caderno...
-        } else {
+        if (!currentCadernoId) {
              const answeredCount = sessionStats.length;
              if (answeredCount > 0) {
                 const correctCount = sessionStats.filter(s => s.isCorrect).length;
@@ -278,7 +281,10 @@ export async function updateNavigation() {
     } else {
         navigationControls.classList.add('hidden');
         questionCounterTop.classList.add('hidden');
-        activeContainer.querySelector('#questions-container').innerHTML = `<div class="text-center p-6"><h3 class="text-xl">Nenhuma questão encontrada</h3><p class="text-gray-600 mt-2">Altere os filtros ou adicione questões ao caderno.</p></div>`;
+        const questionsContainer = activeContainer.querySelector('#questions-container');
+        if (questionsContainer) {
+            questionsContainer.innerHTML = `<div class="text-center p-6"><h3 class="text-xl">Nenhuma questão encontrada</h3><p class="text-gray-600 mt-2">Altere os filtros ou adicione questões ao caderno.</p></div>`;
+        }
     }
 }
 
@@ -307,18 +313,18 @@ async function handleFilterButtonClick() {
 function handleRemoveFilterTag(event) {
     const removeBtn = event.target.closest('.remove-filter-btn');
     if (!removeBtn) return;
-    const { type, value } = removeBtn.dataset;
-    if (type === 'materia' || type === 'assunto') {
-        const container = document.getElementById(`${type}-filter`);
-        const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
+    const { filterType, filterValue } = removeBtn.dataset;
+    if (filterType === 'materia' || filterType === 'assunto') {
+        const container = document.getElementById(`${filterType}-filter`);
+        const checkbox = container.querySelector(`.custom-select-option[data-value="${filterValue}"]`);
         if (checkbox) {
             checkbox.checked = false;
             container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
         }
-    } else if (type === 'tipo') {
+    } else if (filterType === 'tipo') {
         elements.tipoFilterGroup.querySelector('.active-filter')?.classList.remove('active-filter');
         elements.tipoFilterGroup.querySelector(`[data-value="todos"]`)?.classList.add('active-filter');
-    } else if (type === 'search') {
+    } else if (filterType === 'search') {
         elements.searchInput.value = '';
     }
     if (getState().isAddingQuestionsMode.active) applyFilters();
@@ -359,23 +365,38 @@ function handleDynamicClicks(event) {
     // Abas de conteúdo
     const tabButton = target.closest('.tab-button');
     if (tabButton) {
-        const container = target.closest('.bg-white');
-        container.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        tabButton.classList.add('active');
-        const isQuestionTab = tabButton.dataset.tab === 'question';
-        container.querySelector('#question-view').classList.toggle('hidden', !isQuestionTab);
-        container.querySelector('#stats-view').classList.toggle('hidden', isQuestionTab);
-        if (isQuestionTab) {
-            displayQuestion();
-        } else {
-            const statsContainer = container.querySelector('#stats-content');
-            statsContainer.innerHTML = `<div class="text-center p-8">Carregando...</div>`;
-            const { currentCadernoId, userCadernos } = getState();
-            const caderno = userCadernos.find(c => c.id === currentCadernoId);
-            if (caderno) {
-                generateStatsForQuestions(caderno.questionIds).then(stats => {
-                    import('./stats.js').then(module => module.updateStatsPanel(statsContainer, stats));
-                });
+        // CORREÇÃO: Encontra o container pai correto que engloba as abas e o conteúdo.
+        const container = tabButton.closest('#tabs-and-main-content');
+        if (container) {
+            container.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            tabButton.classList.add('active');
+            
+            const isQuestionTab = tabButton.dataset.tab === 'question';
+            const questionView = container.querySelector('#question-view');
+            const statsView = container.querySelector('#stats-view');
+            
+            if (questionView) questionView.classList.toggle('hidden', !isQuestionTab);
+            if (statsView) statsView.classList.toggle('hidden', isQuestionTab);
+
+            if (isQuestionTab) {
+                displayQuestion();
+            } else {
+                const statsContainer = container.querySelector('#stats-content');
+                if (statsContainer) {
+                    statsContainer.innerHTML = `<div class="text-center p-8">Carregando...</div>`;
+                    const { currentCadernoId, userCadernos } = getState();
+                    if (currentCadernoId) {
+                        const caderno = userCadernos.find(c => c.id === currentCadernoId);
+                        if (caderno) {
+                            generateStatsForQuestions(caderno.questionIds).then(stats => {
+                                updateStatsPanel(statsContainer, stats);
+                            });
+                        }
+                    } else {
+                        // Mostra estatísticas da sessão atual para o Vade Mecum
+                        updateStatsPanel(statsContainer);
+                    }
+                }
             }
         }
     }
