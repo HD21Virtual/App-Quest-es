@@ -1,84 +1,83 @@
 /**
  * @file js/state.js
- * @description Centraliza e gerencia o estado global da aplicação.
+ * @description Centraliza o estado da aplicação para ser compartilhado entre os módulos.
  */
 
-// Objeto principal que contém todo o estado da aplicação.
+// Central state object
 export const state = {
-    // Opções de filtro carregadas do banco de dados
-    filterOptions: {
-        materia: [],
-        allAssuntos: []
-    },
-    // Questões
+    currentUser: null,
     allQuestions: [],
     filteredQuestions: [],
     currentQuestionIndex: 0,
     selectedAnswer: null,
-    // Estatísticas e Sessão
     sessionStats: [],
     historicalSessions: [],
-    isReviewSession: false,
-    // Usuário
-    currentUser: null,
     userFolders: [],
     userCadernos: [],
     userAnswers: new Map(),
     userCadernoState: new Map(),
     userReviewItemsMap: new Map(),
-    // Estado da UI
-    currentFolderId: null, 
+    currentFolderId: null,
     currentCadernoId: null,
-    selectedMateria: null,
     editingId: null,
     editingType: null, // 'folder' ou 'caderno'
-    deletingId: null,
-    deletingType: null,
     isAddingQuestionsMode: { active: false, cadernoId: null },
     createCadernoWithFilteredQuestions: false,
+    deletingId: null,
+    deletingType: null,
     isNavigatingBackFromAddMode: false,
+    isReviewSession: false,
+    filterOptions: {
+        materia: [],
+        allAssuntos: []
+    },
+    unsubscribes: [] // Armazena as funções de unsubscribe do Firestore
 };
 
-// Array para armazenar as funções de 'unsubscribe' dos listeners do Firestore.
-let unsubscribes = [];
+// --- Funções para modificar o estado (Setters) ---
 
-/**
- * Adiciona uma função de unsubscribe ao array.
- * @param {Function} unsub - A função de unsubscribe retornada pelo onSnapshot.
- */
-export function addUnsubscribe(unsub) {
-    unsubscribes.push(unsub);
+export function setCurrentUser(user) {
+    state.currentUser = user;
 }
 
-/**
- * Executa todas as funções de unsubscribe e limpa o array.
- * Essencial para evitar memory leaks ao fazer logout.
- */
-export function clearAllUnsubscribes() {
-    unsubscribes.forEach(unsub => unsub());
-    unsubscribes = [];
+export function setFilteredQuestions(questions) {
+    state.filteredQuestions = questions;
+    state.currentQuestionIndex = 0;
 }
 
-/**
- * Limpa as estatísticas da sessão de estudo atual.
- */
+export function setCurrentQuestionIndex(index) {
+    state.currentQuestionIndex = index;
+}
+
+export function setSelectedAnswer(answer) {
+    state.selectedAnswer = answer;
+}
+
+export function addSessionStat(stat) {
+    state.sessionStats.push(stat);
+}
+
 export function clearSessionStats() {
     state.sessionStats = [];
 }
 
-/**
- * Reseta o estado da aplicação para os valores iniciais,
- * geralmente chamado durante o logout do usuário.
- */
+export function addUnsubscribe(unsub) {
+    state.unsubscribes.push(unsub);
+}
+
+export function clearUnsubscribes() {
+    state.unsubscribes.forEach(unsub => unsub());
+    state.unsubscribes = [];
+}
+
+
 export function resetStateOnLogout() {
-    state.filterOptions = { materia: [], allAssuntos: [] };
+    state.currentUser = null;
     state.allQuestions = [];
     state.filteredQuestions = [];
     state.currentQuestionIndex = 0;
-    state.selectedAnswer = null;
     state.sessionStats = [];
     state.historicalSessions = [];
-    state.isReviewSession = false;
     state.userFolders = [];
     state.userCadernos = [];
     state.userAnswers.clear();
@@ -86,15 +85,6 @@ export function resetStateOnLogout() {
     state.userReviewItemsMap.clear();
     state.currentFolderId = null;
     state.currentCadernoId = null;
-    state.selectedMateria = null;
-    state.editingId = null;
-    state.editingType = null;
-    state.deletingId = null;
-    state.deletingType = null;
-    state.isAddingQuestionsMode = { active: false, cadernoId: null };
-    state.createCadernoWithFilteredQuestions = false;
-    state.isNavigatingBackFromAddMode = false;
-
-    clearAllUnsubscribes();
+    // Não limpa filterOptions, pois pode ser útil manter
 }
 
