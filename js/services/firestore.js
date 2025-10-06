@@ -60,6 +60,16 @@ export function setupCadernosAndFoldersListener(userId, callback) {
     return () => { unsubCadernos(); unsubFolders(); };
 }
 
+export function setupGenericListener(collectionPath, stateProperty, callback) {
+    const q = query(collection(db, collectionPath), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        state[stateProperty] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (callback) callback();
+    });
+    return unsubscribe;
+}
+
+
 export async function getWeeklySolvedQuestionsData() {
     const weeklyCounts = Array(7).fill(0);
     if (!state.currentUser) return weeklyCounts;
@@ -177,5 +187,37 @@ export async function addQuestionsToCaderno(cadernoId, questionIds) {
     await updateDoc(cadernoRef, {
         questionIds: arrayUnion(...questionIds)
     });
+}
+
+export async function saveSessionStats() {
+    if (!state.currentUser || state.sessionStats.length === 0) return;
+    
+    const total = state.sessionStats.length;
+    const correct = state.sessionStats.filter(s => s.isCorrect).length;
+    const incorrect = total - correct;
+    const accuracy = total > 0 ? (correct / total * 100) : 0; 
+    
+    const statsByMateria = state.sessionStats.reduce((acc, stat) => {
+        if (!acc[stat.materia]) acc[stat.materia] = { correct: 0, total: 0 };
+        acc[stat.materia].total++;
+        if (stat.isCorrect) acc[stat.materia].correct++;
+        return acc;
+    }, {});
+
+    const sessionData = {
+        createdAt: serverTimestamp(),
+        totalQuestions: total,
+        correctCount: correct,
+        incorrectCount: incorrect,
+        accuracy: accuracy,
+        details: statsByMateria
+    };
+
+    try {
+        const sessionsCollection = collection(db, 'users', state.currentUser.uid, 'sessions');
+        await addDoc(sessionsCollection, sessionData);
+    } catch (error) {
+        console.error("Erro ao salvar a sessão:", error);
+    }
 }
 
