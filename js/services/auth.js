@@ -14,7 +14,7 @@ import { closeAuthModal } from '../ui/modal.js';
 import DOM from '../dom-elements.js';
 import { navigateToView } from "../ui/navigation.js";
 
-export function initializeAuth() {
+export function initAuth() {
     onAuthStateChanged(auth, (user) => {
         clearUnsubscribes();
         setState('currentUser', user);
