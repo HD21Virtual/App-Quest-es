@@ -1,105 +1,69 @@
-/**
- * @file js/state.js
- * @description Centraliza o estado da aplicação.
- */
+import DOM from "./dom-elements.js";
 
 export let state = {
-    currentUser: null,
+    allQuestions: [],
+    filteredQuestions: [],
     filterOptions: {
         materia: [],
         allAssuntos: []
     },
     currentQuestionIndex: 0,
     selectedAnswer: null,
-    filteredQuestions: [],
-    allQuestions: [],
     sessionStats: [],
     historicalSessions: [],
+    currentUser: null,
     userFolders: [],
     userCadernos: [],
     currentFolderId: null,
     currentCadernoId: null,
     editingId: null,
-    editingType: null, // 'folder' ou 'caderno'
+    editingType: null,
     isAddingQuestionsMode: { active: false, cadernoId: null },
-    createCadernoWithFilteredQuestions: false,
-    deletingId: null,
-    deletingType: null,
-    isNavigatingBackFromAddMode: false,
     isReviewSession: false,
-    userReviewItemsMap: new Map(),
     userAnswers: new Map(),
     userCadernoState: new Map(),
-    selectedMateria: null,
-    unsubscribes: {} // Armazena as funções de unsubscribe do Firestore
+    userReviewItemsMap: new Map(),
+    savedFilters: [], // Added this key
+    unsubscribes: [],
 };
 
-/**
- * Atualiza uma propriedade do estado central.
- * @param {string} key - A chave do estado a ser atualizada.
- * @param {*} value - O novo valor para a chave.
- */
 export function setState(key, value) {
-    if (key in state) {
+    if (Object.prototype.hasOwnProperty.call(state, key)) {
         state[key] = value;
     } else {
         console.warn(`Tentativa de definir uma chave de estado inexistente: ${key}`);
     }
 }
 
-/**
- * Adiciona uma função de unsubscribe do Firestore para ser chamada no logout.
- * @param {string} key - Um identificador para o listener.
- * @param {Function} func - A função de unsubscribe retornada pelo onSnapshot.
- */
-export function addUnsubscribe(key, func) {
-    state.unsubscribes[key] = func;
+export function getActiveContainer() {
+    return state.currentCadernoId ? DOM.savedCadernosListContainer : DOM.vadeMecumContentArea;
 }
 
-/**
- * Chama todas as funções de unsubscribe armazenadas e limpa o objeto.
- */
-export function clearUnsubscribes() {
-    for (const key in state.unsubscribes) {
-        if (typeof state.unsubscribes[key] === 'function') {
-            state.unsubscribes[key](); // Executa a função de unsubscribe
-        }
-    }
-    state.unsubscribes = {};
-}
-
-/**
- * Reseta o estado da aplicação para os valores iniciais (usado no logout).
- */
-export function resetStateOnLogout() {
-    state.currentUser = null;
-    state.currentQuestionIndex = 0;
-    state.selectedAnswer = null;
-    state.filteredQuestions = [];
-    state.sessionStats = [];
-    state.historicalSessions = [];
-    state.userFolders = [];
-    state.userCadernos = [];
-    state.currentFolderId = null;
-    state.currentCadernoId = null;
-    state.userReviewItemsMap.clear();
-    state.userAnswers.clear();
-    state.userCadernoState.clear();
-}
-
-/**
- * Limpa as estatísticas da sessão atual.
- */
 export function clearSessionStats() {
     state.sessionStats = [];
 }
 
+export function addUnsubscribe(unsubscribe) {
+    state.unsubscribes.push(unsubscribe);
+}
 
-/**
- * Obtém o contêiner de conteúdo ativo (seja a view principal ou a de cadernos).
- * @returns {HTMLElement} O elemento do contêiner ativo.
- */
-export function getActiveContainer() {
-    return state.currentCadernoId ? document.getElementById('saved-cadernos-list-container') : document.getElementById('vade-mecum-content-area');
+export function clearUnsubscribes() {
+    state.unsubscribes.forEach(unsub => unsub());
+    state.unsubscribes = [];
+}
+
+export function resetStateOnLogout() {
+    state.allQuestions = [];
+    state.filteredQuestions = [];
+    state.userFolders = [];
+    state.userCadernos = [];
+    state.userAnswers.clear();
+    state.userCadernoState.clear();
+    state.userReviewItemsMap.clear();
+    state.historicalSessions = [];
+    state.sessionStats = [];
+    if (DOM.reviewCard) DOM.reviewCard.classList.add('hidden');
+    if (DOM.savedCadernosListContainer) DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus cadernos.</p>';
+    if (DOM.savedFiltersListContainer) DOM.savedFiltersListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus filtros.</p>';
 }
 
