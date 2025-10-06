@@ -1,12 +1,14 @@
 import { state } from './state.js';
 import DOM from './dom-elements.js';
-import { closeAuthModal, closeSaveModal, closeLoadModal, closeCadernoModal, closeNameModal, closeConfirmationModal, closeStatsModal, openAuthModal, openSaveModal, openLoadModal, openCadernoModal, openNameModal } from './ui/modal.js';
+import { closeAuthModal, closeSaveModal, closeLoadModal, closeCadernoModal, closeNameModal, closeConfirmationModal, closeStatsModal, openAuthModal, openSaveModal, openLoadModal, openCadernoModal, openNameModal, openConfirmationModal } from './ui/modal.js';
 import { applyFilters, clearAllFilters, setupCustomSelect } from './features/filter.js';
 import { handleAuth, handleGoogleLogin } from './services/auth.js';
 import { saveFilter, deleteFilter, loadFilter, createCaderno, createOrUpdateName, deleteItem, resetAllUserData } from './services/firestore.js';
-import { handleCadernoListClick, handleBackToFolders, handleAddQuestionsToCaderno, handleCancelAddQuestions, handleEstudarCadernoClick } from './features/caderno.js';
+import { handleCadernoListClick, handleBackToFolders, handleAddQuestionsToCaderno, handleCancelAddQuestions } from './features/caderno.js';
 import { handleMateriaListClick, handleAssuntoListClick, handleBackToMaterias } from './features/materias.js';
 import { startReviewSession, handleSrsFeedback } from './features/srs.js';
+import { navigateToView, switchTab } from './ui/navigation.js';
+import { navigateQuestion } from './features/question-viewer.js';
 
 /**
  * @file js/event-listeners.js
@@ -43,7 +45,7 @@ function handleNavigation(event) {
      }
 }
 
-function handleQuestionNavigation(event) {
+function handleQuestionNav(event) {
     const prevBtn = event.target.closest('#prev-question-btn');
     const nextBtn = event.target.closest('#next-question-btn');
     if (prevBtn) navigateQuestion('prev');
@@ -88,10 +90,16 @@ export function setupAllEventListeners() {
     // Listeners Globais
     document.addEventListener('click', handleGlobalClicks);
     document.addEventListener('click', handleNavigation);
-    document.addEventListener('click', handleQuestionNavigation);
+    document.addEventListener('click', handleQuestionNav);
 
     // Filtros
-    DOM.filterBtn.addEventListener('click', applyFilters);
+    DOM.filterBtn.addEventListener('click', () => {
+        if(state.isAddingQuestionsMode.active) {
+            // Lógica de adicionar questões ao caderno está em caderno.js
+        } else {
+            applyFilters();
+        }
+    });
     DOM.clearFiltersBtn.addEventListener('click', clearAllFilters);
     DOM.selectedFiltersContainer.addEventListener('click', handleFilterActions);
     DOM.searchInput.addEventListener('input', () => {
@@ -107,6 +115,12 @@ export function setupAllEventListeners() {
     });
 
     // Modais
+    document.querySelectorAll('[data-modal-close]').forEach(btn => {
+        const modalId = btn.getAttribute('data-modal-close');
+        const modal = document.getElementById(modalId);
+        if(modal) btn.addEventListener('click', () => modal.classList.add('hidden'));
+    });
+
     DOM.closeAuthModalBtn.addEventListener('click', closeAuthModal);
     DOM.closeSaveModalBtn.addEventListener('click', closeSaveModal);
     DOM.cancelSaveBtn.addEventListener('click', closeSaveModal);
@@ -117,6 +131,7 @@ export function setupAllEventListeners() {
     DOM.cancelNameBtn.addEventListener('click', closeNameModal);
     DOM.cancelConfirmationBtn.addEventListener('click', closeConfirmationModal);
     DOM.closeStatsModalBtn.addEventListener('click', closeStatsModal);
+
 
     // Ações de Modais
     DOM.saveFilterBtn.addEventListener('click', openSaveModal);
@@ -139,7 +154,7 @@ export function setupAllEventListeners() {
     DOM.confirmCadernoBtn.addEventListener('click', createCaderno);
     DOM.confirmNameBtn.addEventListener('click', createOrUpdateName);
     DOM.confirmDeleteBtn.addEventListener('click', deleteItem);
-    DOM.resetAllProgressBtn.addEventListener('click', resetAllUserData);
+    if(DOM.resetAllProgressBtn) DOM.resetAllProgressBtn.addEventListener('click', () => openConfirmationModal('all-progress'));
     
     // Navegação e Ações de Views
     DOM.hamburgerBtn.addEventListener('click', () => DOM.mobileMenu.classList.toggle('hidden'));
@@ -168,7 +183,10 @@ export function setupAllEventListeners() {
     });
     document.addEventListener('click', (e) => { // Delegação para SRS
         const srsBtn = e.target.closest('.srs-feedback-btn');
-        if(srsBtn) handleSrsFeedback(srsBtn.dataset.feedback);
+        if(srsBtn) {
+            e.stopPropagation();
+            handleSrsFeedback(srsBtn.dataset.feedback);
+        }
     });
 }
 
