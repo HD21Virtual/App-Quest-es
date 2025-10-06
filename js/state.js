@@ -56,3 +56,11 @@ export function clearUnsubscribes() {
     if (state.unsubCadernoState) state.unsubCadernoState();
 }
 
+/**
+ * Determina qual contêiner de conteúdo está ativo com base no estado atual.
+ * @returns {HTMLElement} O elemento contêiner ativo.
+ */
+export function getActiveContainer() {
+    return state.currentCadernoId ? DOM.savedCadernosListContainer : DOM.vadeMecumContentArea;
+}
+
