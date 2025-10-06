@@ -5,7 +5,7 @@ import DOM from './dom-elements.js';
  * @description Gerencia o estado global da aplicação.
  */
 
-export const state = {
+const initialState = {
     filterOptions: {
         materia: [],
         allAssuntos: []
@@ -31,8 +31,6 @@ export const state = {
     userAnswers: new Map(),
     userCadernoState: new Map(),
     userReviewItemsMap: new Map(),
-
-    // Unsubscribe functions for Firestore listeners
     unsubCadernos: null,
     unsubFolders: null,
     unsubFiltros: null,
@@ -41,6 +39,21 @@ export const state = {
     unsubAnswers: null,
     unsubCadernoState: null,
 };
+
+export let state = { ...initialState };
+
+export function resetStateOnLogout() {
+    state = { 
+        ...initialState,
+        // Mantemos dados que não dependem do usuário
+        allQuestions: state.allQuestions,
+        filterOptions: state.filterOptions
+    };
+    state.userAnswers = new Map();
+    state.userCadernoState = new Map();
+    state.userReviewItemsMap = new Map();
+}
+
 
 /**
  * Adiciona uma função de 'unsubscribe' do Firestore ao estado para limpeza posterior.
