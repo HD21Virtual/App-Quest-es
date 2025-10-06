@@ -3,7 +3,7 @@ import DOM from '../dom-elements.js';
 import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions, updateStatsPanel } from './stats.js';
 import { showItemStatsModal, openNameModal, openConfirmationModal } from '../ui/modal.js';
-import { arrayRemove, updateDoc, doc } from "firebase/firestore";
+import { arrayRemove, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from '../firebase-config.js';
 import { navigateToView } from '../ui/navigation.js';
 
