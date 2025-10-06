@@ -1,7 +1,7 @@
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { auth } from '../firebase-config.js';
 import { state, clearUnsubscribes, resetStateOnLogout } from '../state.js';
-import { setupAllListeners, removeAllListeners } from '../services/firestore.js';
+import { setupAllListeners } from '../services/firestore.js';
 import { updateUserUI } from '../ui/ui-helpers.js';
 import { closeAuthModal } from '../ui/modal.js';
 import DOM from '../dom-elements.js';
@@ -12,7 +12,10 @@ async function handleAuthSuccess(user) {
     closeAuthModal();
     await setupAllListeners(user.uid);
     // Navegar para a view inicial ou recarregar dados necessários
-    DOM.navLinks.find(link => link.dataset.view === 'inicio-view')?.click();
+    const inicioLink = DOM.navLinks.find(link => link.dataset.view === 'inicio-view');
+    if (inicioLink) {
+        inicioLink.click();
+    }
 }
 
 function handleLogout() {
@@ -43,7 +46,7 @@ export function setupAuthListener() {
 export async function handleEmailLogin() {
     DOM.authError.classList.add('hidden');
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
+        await signInWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
         // O onAuthStateChanged vai lidar com o resto
     } catch (error) {
         DOM.authError.textContent = error.message;
@@ -54,7 +57,7 @@ export async function handleEmailLogin() {
 export async function handleEmailRegister() {
     DOM.authError.classList.add('hidden');
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
+        await createUserWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
         // O onAuthStateChanged vai lidar com o resto
     } catch (error) {
         DOM.authError.textContent = error.message;
