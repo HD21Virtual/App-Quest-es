@@ -296,3 +296,13 @@ export async function resetAllUserData() {
     }
 }
 
+export async function saveCadernoState(cadernoId, questionIndex) {
+    if (!state.currentUser || !cadernoId) return;
+    const stateRef = doc(db, 'users', state.currentUser.uid, 'cadernoState', cadernoId);
+    try {
+        await setDoc(stateRef, { lastQuestionIndex: questionIndex });
+    } catch (error) {
+        console.error("Error saving caderno state:", error);
+    }
+}
+
