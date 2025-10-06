@@ -1,90 +1,58 @@
+import DOM from './dom-elements.js';
+
 /**
  * @file js/state.js
- * @description Centraliza o estado da aplicação para ser compartilhado entre os módulos.
+ * @description Gerencia o estado global da aplicação.
  */
 
-// Central state object
 export const state = {
-    currentUser: null,
-    allQuestions: [],
-    filteredQuestions: [],
+    filterOptions: {
+        materia: [],
+        allAssuntos: []
+    },
     currentQuestionIndex: 0,
-    selectedAnswer: null,
+    filteredQuestions: [],
+    allQuestions: [],
     sessionStats: [],
-    historicalSessions: [],
+    currentUser: null,
     userFolders: [],
     userCadernos: [],
-    userAnswers: new Map(),
-    userCadernoState: new Map(),
-    userReviewItemsMap: new Map(),
     currentFolderId: null,
     currentCadernoId: null,
     editingId: null,
-    editingType: null, // 'folder' ou 'caderno'
+    editingType: null,
     isAddingQuestionsMode: { active: false, cadernoId: null },
     createCadernoWithFilteredQuestions: false,
     deletingId: null,
     deletingType: null,
     isNavigatingBackFromAddMode: false,
     isReviewSession: false,
-    filterOptions: {
-        materia: [],
-        allAssuntos: []
-    },
-    unsubscribes: [] // Armazena as funções de unsubscribe do Firestore
+    historicalSessions: [],
+    userAnswers: new Map(),
+    userCadernoState: new Map(),
+    userReviewItemsMap: new Map(),
+
+    // Unsubscribe functions for Firestore listeners
+    unsubCadernos: null,
+    unsubFolders: null,
+    unsubFiltros: null,
+    unsubSessions: null,
+    unsubReviewItems: null,
+    unsubAnswers: null,
+    unsubCadernoState: null,
 };
-
-// --- Funções para modificar o estado (Setters) ---
-
-export function setCurrentUser(user) {
-    state.currentUser = user;
-}
-
-export function setFilteredQuestions(questions) {
-    state.filteredQuestions = questions;
-    state.currentQuestionIndex = 0;
-}
-
-export function setCurrentQuestionIndex(index) {
-    state.currentQuestionIndex = index;
-}
-
-export function setSelectedAnswer(answer) {
-    state.selectedAnswer = answer;
-}
-
-export function addSessionStat(stat) {
-    state.sessionStats.push(stat);
-}
 
 export function clearSessionStats() {
     state.sessionStats = [];
 }
 
-export function addUnsubscribe(unsub) {
-    state.unsubscribes.push(unsub);
-}
-
 export function clearUnsubscribes() {
-    state.unsubscribes.forEach(unsub => unsub());
-    state.unsubscribes = [];
-}
-
-
-export function resetStateOnLogout() {
-    state.currentUser = null;
-    state.allQuestions = [];
-    state.filteredQuestions = [];
-    state.currentQuestionIndex = 0;
-    state.sessionStats = [];
-    state.historicalSessions = [];
-    state.userFolders = [];
-    state.userCadernos = [];
-    state.userAnswers.clear();
-    state.userCadernoState.clear();
-    state.userReviewItemsMap.clear();
-    state.currentFolderId = null;
-    state.currentCadernoId = null;
-    // Não limpa filterOptions, pois pode ser útil manter
+    if (state.unsubCadernos) state.unsubCadernos();
+    if (state.unsubFolders) state.unsubFolders();
+    if (state.unsubFiltros) state.unsubFiltros();
+    if (state.unsubSessions) state.unsubSessions();
+    if (state.unsubReviewItems) state.unsubReviewItems();
+    if (state.unsubAnswers) state.unsubAnswers();
+    if (state.unsubCadernoState) state.unsubCadernoState();
 }
 
