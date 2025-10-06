@@ -1,14 +1,48 @@
-import { state } from '../state.js';
 import DOM from '../dom-elements.js';
+import { state } from '../state.js';
 
 /**
  * @file js/ui/ui-helpers.js
- * @description Funções auxiliares para manipular a interface do usuário.
+ * @description Funções auxiliares para manipulação da UI.
  */
 
-/**
- * Atualiza a exibição das tags de filtros selecionados.
- */
+export function updateAssuntoFilter(disciplinas) {
+    const assuntoContainer = DOM.assuntoFilter;
+    const assuntoButton = assuntoContainer.querySelector('.custom-select-button');
+    const valueSpan = assuntoContainer.querySelector('.custom-select-value');
+    const optionsContainer = assuntoContainer.querySelector('.custom-select-options');
+    
+    valueSpan.textContent = 'Assunto';
+    valueSpan.classList.add('text-gray-500');
+    assuntoContainer.dataset.value = '[]';
+
+    if (disciplinas.length === 0) {
+        assuntoButton.disabled = true;
+        optionsContainer.innerHTML = `<div class="p-2 text-center text-gray-400 text-sm">Selecione uma disciplina</div>`;
+    } else {
+        assuntoButton.disabled = false;
+        let newHtml = '';
+        
+        disciplinas.forEach(disciplina => {
+            const materiaObj = state.filterOptions.materia.find(m => m.name === disciplina);
+            if (materiaObj && materiaObj.assuntos.length > 0) {
+                newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
+                
+                materiaObj.assuntos.forEach(assunto => {
+                    newHtml += `
+                        <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" data-value="${assunto}" class="custom-select-option rounded">
+                            <span>${assunto}</span>
+                        </label>
+                    `;
+                });
+            }
+        });
+        
+        optionsContainer.innerHTML = newHtml;
+    }
+}
+
 export function updateSelectedFiltersDisplay() {
     DOM.selectedFiltersContainer.innerHTML = '';
     let hasFilters = false;
@@ -47,44 +81,25 @@ export function updateSelectedFiltersDisplay() {
     }
 }
 
-/**
- * Atualiza as opções do filtro de assunto com base na disciplina selecionada.
- * @param {string[]} disciplinas - Um array com os nomes das disciplinas selecionadas.
- */
-export function updateAssuntoFilter(disciplinas) {
-    const assuntoContainer = DOM.assuntoFilter;
-    const assuntoButton = assuntoContainer.querySelector('.custom-select-button');
-    const valueSpan = assuntoContainer.querySelector('.custom-select-value');
-    const optionsContainer = assuntoContainer.querySelector('.custom-select-options');
-    
-    valueSpan.textContent = 'Assunto';
-    valueSpan.classList.add('text-gray-500');
-    assuntoContainer.dataset.value = '[]';
+export function updateUserUI(user) {
+    const mobileContainer = DOM.userAccountContainerMobile;
+    const desktopContainer = DOM.userAccountContainer;
 
-    if (disciplinas.length === 0) {
-        assuntoButton.disabled = true;
-        optionsContainer.innerHTML = `<div class="p-2 text-center text-gray-400 text-sm">Selecione uma disciplina</div>`;
+    if (!mobileContainer || !desktopContainer) return;
+
+    desktopContainer.innerHTML = '';
+    mobileContainer.innerHTML = '';
+
+    if (user) {
+        const loggedInHTML = `<div class="flex items-center"><span class="text-gray-600 text-sm mr-4">${user.email}</span><button id="logout-btn" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
+        const loggedInHTMLMobile = `<div class="flex items-center justify-between"><span class="text-gray-600 text-sm">${user.email}</span><button id="logout-btn-mobile" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
+        desktopContainer.innerHTML = loggedInHTML;
+        mobileContainer.innerHTML = loggedInHTMLMobile;
     } else {
-        assuntoButton.disabled = false;
-        let newHtml = '';
-        
-        disciplinas.forEach(disciplina => {
-            const materiaObj = state.filterOptions.materia.find(m => m.name === disciplina);
-            if (materiaObj && materiaObj.assuntos.length > 0) {
-                newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
-                
-                materiaObj.assuntos.forEach(assunto => {
-                    newHtml += `
-                        <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
-                            <input type="checkbox" data-value="${assunto}" class="custom-select-option rounded">
-                            <span>${assunto}</span>
-                        </label>
-                    `;
-                });
-            }
-        });
-        
-        optionsContainer.innerHTML = newHtml;
+        const loggedOutHTML = `<button id="show-login-modal-btn" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Minha Conta</button>`;
+        const loggedOutHTMLMobile = `<button id="show-login-modal-btn-mobile" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block w-full text-left px-3 py-2 rounded-md text-base font-medium">Minha Conta</button>`;
+        desktopContainer.innerHTML = loggedOutHTML;
+        mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
 
