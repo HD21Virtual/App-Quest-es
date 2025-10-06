@@ -1,10 +1,14 @@
+import { state } from '../state.js';
 import DOM from '../dom-elements.js';
 
 /**
  * @file js/ui/ui-helpers.js
- * @description Funções auxiliares para manipulação de pequenos componentes da UI.
+ * @description Funções auxiliares para manipular a interface do usuário.
  */
 
+/**
+ * Atualiza a exibição das tags de filtros selecionados.
+ */
 export function updateSelectedFiltersDisplay() {
     DOM.selectedFiltersContainer.innerHTML = '';
     let hasFilters = false;
@@ -12,7 +16,7 @@ export function updateSelectedFiltersDisplay() {
     const createFilterTag = (type, value, label) => {
         hasFilters = true;
         const tag = document.createElement('div');
-        tag.className = 'flex items-center bg-gray-100 border border-gray-300 rounded-md pl-2 pr-1 py-1 text-sm';
+        tag.className = 'flex items-center bg-gray-100 border border-gray-300 rounded-md pl-2 pr-1 py-1';
         tag.innerHTML = `
             <span class="font-bold mr-2">${label}:</span>
             <span>${value}</span>
@@ -39,6 +43,48 @@ export function updateSelectedFiltersDisplay() {
     }
 
     if (!hasFilters) {
-        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500 text-sm">Seus filtros aparecerão aqui</span>`;
+        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Seus filtros aparecerão aqui</span>`;
     }
 }
+
+/**
+ * Atualiza as opções do filtro de assunto com base na disciplina selecionada.
+ * @param {string[]} disciplinas - Um array com os nomes das disciplinas selecionadas.
+ */
+export function updateAssuntoFilter(disciplinas) {
+    const assuntoContainer = DOM.assuntoFilter;
+    const assuntoButton = assuntoContainer.querySelector('.custom-select-button');
+    const valueSpan = assuntoContainer.querySelector('.custom-select-value');
+    const optionsContainer = assuntoContainer.querySelector('.custom-select-options');
+    
+    valueSpan.textContent = 'Assunto';
+    valueSpan.classList.add('text-gray-500');
+    assuntoContainer.dataset.value = '[]';
+
+    if (disciplinas.length === 0) {
+        assuntoButton.disabled = true;
+        optionsContainer.innerHTML = `<div class="p-2 text-center text-gray-400 text-sm">Selecione uma disciplina</div>`;
+    } else {
+        assuntoButton.disabled = false;
+        let newHtml = '';
+        
+        disciplinas.forEach(disciplina => {
+            const materiaObj = state.filterOptions.materia.find(m => m.name === disciplina);
+            if (materiaObj && materiaObj.assuntos.length > 0) {
+                newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
+                
+                materiaObj.assuntos.forEach(assunto => {
+                    newHtml += `
+                        <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" data-value="${assunto}" class="custom-select-option rounded">
+                            <span>${assunto}</span>
+                        </label>
+                    `;
+                });
+            }
+        });
+        
+        optionsContainer.innerHTML = newHtml;
+    }
+}
+
