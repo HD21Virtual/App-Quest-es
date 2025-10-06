@@ -1,10 +1,10 @@
-import { db, auth } from '../firebase-config.js';
+import { db } from '../firebase-config.js';
 import { 
     collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
     serverTimestamp, orderBy, arrayUnion, arrayRemove, increment, writeBatch, 
     query, where, addDoc 
-} from "firebase/firestore";
-import { state, addUnsubscribe, clearSessionStats, resetStateOnLogout } from '../state.js';
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { state, addUnsubscribe, resetStateOnLogout } from '../state.js';
 import DOM from '../dom-elements.js';
 import { closeCadernoModal, closeNameModal, closeSaveModal, closeConfirmationModal } from '../ui/modal.js';
 import { applyFilters, clearAllFilters } from '../features/filter.js';
