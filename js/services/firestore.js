@@ -332,7 +332,7 @@ export async function setSrsReviewItem(questionId, newStage) {
     state.userReviewItemsMap.set(questionId, reviewData);
 }
 
-export async function createOrUpdateItem(type, name, editingId) {
+export async function createOrUpdateName(type, name, editingId) {
     if (editingId) { // Editando
         const collectionPath = type === 'folder' ? 'folders' : 'cadernos';
         const itemRef = doc(db, 'users', state.currentUser.uid, collectionPath, editingId);
@@ -429,5 +429,18 @@ export async function resetAllUserData() {
 
         await Promise.all(batchArray.map(batch => batch.commit()));
     }
+}
+
+export async function saveFilter(name, filters) {
+    const filtro = {
+        name,
+        ...filters
+    };
+    const filtrosCollection = collection(db, 'users', state.currentUser.uid, 'filtros');
+    await addDoc(filtrosCollection, filtro);
+}
+
+export async function deleteFilter(id) {
+    await deleteDoc(doc(db, 'users', state.currentUser.uid, 'filtros', id));
 }
 
