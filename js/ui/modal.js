@@ -8,6 +8,10 @@ function closeModal(modalElement) {
     modalElement.classList.add('hidden');
 }
 
+export function closeAuthModal() {
+    closeModal(DOM.authModal);
+}
+
 export function openAuthModal() {
     DOM.authModal.classList.remove('hidden');
 }
