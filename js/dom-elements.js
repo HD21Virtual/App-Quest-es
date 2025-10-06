@@ -1,70 +1,99 @@
-const DOM = {
-    // Views
-    inicioView: document.getElementById('inicio-view'),
-    vadeMecumView: document.getElementById('vade-mecum-view'),
-    cadernosView: document.getElementById('cadernos-view'),
-    materiasView: document.getElementById('materias-view'),
-    revisaoView: document.getElementById('revisao-view'),
-    estatisticasView: document.getElementById('estatisticas-view'),
+const DOM = {};
 
-    // Header & Nav
-    mainNav: document.getElementById('main-nav'),
-    hamburgerBtn: document.getElementById('hamburger-btn'),
-    mobileMenu: document.getElementById('mobile-menu'),
-    userAccountContainer: document.getElementById('user-account-container'),
-    userAccountContainerMobile: document.getElementById('user-account-container-mobile'),
-    
-    // Auth Modal
-    authModal: document.getElementById('auth-modal'),
-    
-    // Vade Mecum / Questões View
-    vadeMecumContentArea: document.getElementById('vade-mecum-content-area'),
-    vadeMecumTitle: document.getElementById('vade-mecum-title'),
-    addQuestionsBanner: document.getElementById('add-questions-banner'),
-    addQuestionsBannerText: document.getElementById('add-questions-banner-text'),
-    cancelAddQuestionsBtn: document.getElementById('cancel-add-questions-btn'),
-    toggleFiltersBtn: document.getElementById('toggle-filters-btn'),
-    filterCard: document.getElementById('filter-card'),
-    savedFiltersListBtn: document.getElementById('saved-filters-list-btn'),
-    searchInput: document.getElementById('search-input'),
-    materiaFilter: document.getElementById('materia-filter'),
-    assuntoFilter: document.getElementById('assunto-filter'),
-    tipoFilterGroup: document.getElementById('tipo-filter-group'),
-    selectedFiltersContainer: document.getElementById('selected-filters-container'),
-    clearFiltersBtn: document.getElementById('clear-filters-btn'),
-    saveFilterBtn: document.getElementById('save-filter-btn'),
-    createCadernoBtn: document.getElementById('create-caderno-btn'),
-    filterBtn: document.getElementById('filter-btn'),
-    tabsContainer: document.getElementById('tabs-container'),
+export function initDOM() {
+    // Views
+    DOM.inicioView = document.getElementById('inicio-view');
+    DOM.vadeMecumView = document.getElementById('vade-mecum-view');
+    DOM.cadernosView = document.getElementById('cadernos-view');
+    DOM.materiasView = document.getElementById('materias-view');
+    DOM.revisaoView = document.getElementById('revisao-view');
+    DOM.estatisticasView = document.getElementById('estatisticas-view');
+
+    // Navigation
+    DOM.mainNav = document.getElementById('main-nav');
+    DOM.mobileMenu = document.getElementById('mobile-menu');
+    DOM.hamburgerBtn = document.getElementById('hamburger-btn');
+
+    // Stats Cards (Home)
+    DOM.statsTotalQuestionsEl = document.getElementById('stats-total-questions');
+    DOM.statsTotalCorrectEl = document.getElementById('stats-total-correct');
+    DOM.statsTotalIncorrectEl = document.getElementById('stats-total-incorrect');
+    DOM.statsGeralAccuracyEl = document.getElementById('stats-geral-accuracy');
+    DOM.homeChartCanvas = document.getElementById('homePerformanceChart');
+    DOM.weeklyChartCanvas = document.getElementById('weeklyPerformanceChart');
+
+    // Filters
+    DOM.vadeMecumTitle = document.getElementById('vade-mecum-title');
+    DOM.filterBtn = document.getElementById('filter-btn');
+    DOM.materiaFilter = document.getElementById('materia-filter');
+    DOM.assuntoFilter = document.getElementById('assunto-filter');
+    DOM.tipoFilterGroup = document.getElementById('tipo-filter-group');
+    DOM.searchInput = document.getElementById('search-input');
+    DOM.clearFiltersBtn = document.getElementById('clear-filters-btn');
+    DOM.selectedFiltersContainer = document.getElementById('selected-filters-container');
+    DOM.filterCard = document.getElementById('filter-card');
+    DOM.toggleFiltersBtn = document.getElementById('toggle-filters-btn');
 
     // Cadernos View
-    cadernosViewTitle: document.getElementById('cadernos-view-title'),
-    backToFoldersBtn: document.getElementById('back-to-folders-btn'),
-    addQuestionsToCadernoBtn: document.getElementById('add-questions-to-caderno-btn'),
-    createFolderBtn: document.getElementById('create-folder-btn'),
-    addCadernoToFolderBtn: document.getElementById('add-caderno-to-folder-btn'),
-    savedCadernosListContainer: document.getElementById('saved-cadernos-list-container'),
-    
-    // Matérias View
-    materiasViewTitle: document.getElementById('materias-view-title'),
-    materiasListContainer: document.getElementById('materias-list-container'),
-    assuntosListContainer: document.getElementById('assuntos-list-container'),
-    backToMateriasBtn: document.getElementById('back-to-materias-btn'),
-    
-    // Revisão View
-    startReviewBtn: document.getElementById('start-review-btn'),
-    
-    // Estatísticas View
-    resetAllProgressBtn: document.getElementById('reset-all-progress-btn'),
+    DOM.savedCadernosListContainer = document.getElementById('saved-cadernos-list-container');
+    DOM.cadernosViewTitle = document.getElementById('cadernos-view-title');
+    DOM.backToFoldersBtn = document.getElementById('back-to-folders-btn');
+    DOM.addCadernoToFolderBtn = document.getElementById('add-caderno-to-folder-btn');
+    DOM.addQuestionsToCadernoBtn = document.getElementById('add-questions-to-caderno-btn');
+    DOM.createFolderBtn = document.getElementById('create-folder-btn');
+    DOM.addQuestionsBanner = document.getElementById('add-questions-banner');
+    DOM.addQuestionsBannerText = document.getElementById('add-questions-banner-text');
 
-    // Modals
-    saveModal: document.getElementById('save-modal'),
-    loadModal: document.getElementById('load-modal'),
-    cadernoModal: document.getElementById('caderno-modal'),
-    nameModal: document.getElementById('name-modal'),
-    confirmationModal: document.getElementById('confirmation-modal'),
-    statsModal: document.getElementById('stats-modal'),
-};
+    // Materias View
+    DOM.materiasViewTitle = document.getElementById('materias-view-title');
+    DOM.materiasListContainer = document.getElementById('materias-list-container');
+    DOM.assuntosListContainer = document.getElementById('assuntos-list-container');
+    DOM.backToMateriasBtn = document.getElementById('back-to-materias-btn');
+
+    // Review View
+    DOM.reviewCard = document.getElementById('review-card');
+    DOM.reviewCountEl = document.getElementById('review-count');
+    DOM.startReviewBtn = document.getElementById('start-review-btn');
+
+    // Auth Modal
+    DOM.authModal = document.getElementById('auth-modal');
+    DOM.userAccountContainer = document.getElementById('user-account-container');
+    DOM.userAccountContainerMobile = document.getElementById('user-account-container-mobile');
+    DOM.emailInput = document.getElementById('email-input');
+    DOM.passwordInput = document.getElementById('password-input');
+    DOM.authError = document.getElementById('auth-error');
+
+    // Save Filter Modal
+    DOM.saveModal = document.getElementById('save-modal');
+    DOM.filterNameInput = document.getElementById('filter-name-input');
+
+    // Load Filter Modal
+    DOM.loadModal = document.getElementById('load-modal');
+    DOM.savedFiltersListContainer = document.getElementById('saved-filters-list-container');
+    DOM.searchSavedFiltersInput = document.getElementById('search-saved-filters-input');
+
+    // Caderno Modal
+    DOM.cadernoModal = document.getElementById('caderno-modal');
+    DOM.cadernoNameInput = document.getElementById('caderno-name-input');
+    DOM.folderSelect = document.getElementById('folder-select');
+
+    // Name Modal
+    DOM.nameModal = document.getElementById('name-modal');
+    DOM.nameInput = document.getElementById('name-input');
+    DOM.nameModalTitle = document.getElementById('name-modal-title');
+
+    // Confirmation Modal
+    DOM.confirmationModal = document.getElementById('confirmation-modal');
+    DOM.confirmationModalTitle = document.getElementById('confirmation-modal-title');
+    DOM.confirmationModalText = document.getElementById('confirmation-modal-text');
+    DOM.confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    DOM.cancelConfirmationBtn = document.getElementById('cancel-confirmation-btn');
+
+    // Stats Modal
+    DOM.statsModal = document.getElementById('stats-modal');
+    DOM.statsModalTitle = document.getElementById('stats-modal-title');
+    DOM.statsModalContent = document.getElementById('stats-modal-content');
+}
 
 export default DOM;
 
