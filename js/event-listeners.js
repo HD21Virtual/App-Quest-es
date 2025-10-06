@@ -1,6 +1,7 @@
 import {
-    closeModal, showSaveFilterModal, showLoadFilterModal,
-    showCadernoModal, showNameModal, handleConfirmation, closeConfirmationModal
+    showSaveFilterModal, showLoadFilterModal,
+    showCadernoModal, showNameModal, handleConfirmation, 
+    showConfirmationModal, showAuthModal, closeAuthModal
 } from './ui/modal.js';
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { saveFilter, deleteFilter, createCaderno, createOrUpdateName, deleteItem } from './services/firestore.js';
