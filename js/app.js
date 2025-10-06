@@ -1,36 +1,27 @@
 import { initAuth } from './services/auth.js';
 import { fetchAllQuestions } from './services/firestore.js';
 import { setupAllEventListeners } from './event-listeners.js';
-import { navigateToView } from './ui/navigation.js';
-import { updateUserUI } from './ui/ui-helpers.js';
-import { updateStatsPageUI } from './features/stats.js';
+import { applyFilters, setupCustomSelects } from './features/filter.js';
+import { initDOM } from './dom-elements.js';
 
-function onUserLogin(user) {
-    console.log("User logged in:", user.uid);
-    updateUserUI(user);
-    fetchAllQuestions().then(() => {
-        setupAllListeners();
-        navigateToView('inicio-view');
-    });
-}
+async function main() {
+    // 1. Initialize all DOM element references now that the page is loaded
+    initDOM();
 
-function onUserLogout() {
-    console.log("User logged out.");
-    updateUserUI(null);
-    navigateToView('inicio-view'); 
-    updateStatsPageUI(); // Clear stats on logout
-}
+    // 2. Initialize authentication which sets up the user state and initial view
+    initAuth();
 
-function main() {
-    // Initialize authentication first, as it controls the data flow
-    initAuth(onUserLogin, onUserLogout);
-    
-    // Set up listeners for elements that are always present (like modals, nav)
+    // 3. Set up all event listeners for the application
     setupAllEventListeners();
-    
-    // Show the initial view for a logged-out user
-    updateUserUI(null);
-    navigateToView('inicio-view');
+
+    // 4. Fetch initial data required for the app to function
+    await fetchAllQuestions();
+
+    // 5. Once data is fetched, setup UI components that depend on it
+    setupCustomSelects();
+
+    // 6. Apply default filters to show some questions initially
+    applyFilters();
 }
 
 // Wait for the DOM to be fully loaded before running the main script
