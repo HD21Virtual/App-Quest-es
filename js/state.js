@@ -1,88 +1,105 @@
-import DOM from './dom-elements.js';
-
 /**
  * @file js/state.js
- * @description Gerencia o estado global da aplicação.
+ * @description Centraliza o estado da aplicação.
  */
 
-const initialState = {
+export let state = {
+    currentUser: null,
     filterOptions: {
         materia: [],
         allAssuntos: []
     },
     currentQuestionIndex: 0,
+    selectedAnswer: null,
     filteredQuestions: [],
     allQuestions: [],
     sessionStats: [],
-    currentUser: null,
+    historicalSessions: [],
     userFolders: [],
     userCadernos: [],
     currentFolderId: null,
     currentCadernoId: null,
     editingId: null,
-    editingType: null,
+    editingType: null, // 'folder' ou 'caderno'
     isAddingQuestionsMode: { active: false, cadernoId: null },
     createCadernoWithFilteredQuestions: false,
     deletingId: null,
     deletingType: null,
     isNavigatingBackFromAddMode: false,
     isReviewSession: false,
-    historicalSessions: [],
+    userReviewItemsMap: new Map(),
     userAnswers: new Map(),
     userCadernoState: new Map(),
-    userReviewItemsMap: new Map(),
-    unsubCadernos: null,
-    unsubFolders: null,
-    unsubFiltros: null,
-    unsubSessions: null,
-    unsubReviewItems: null,
-    unsubAnswers: null,
-    unsubCadernoState: null,
+    selectedMateria: null,
+    unsubscribes: {} // Armazena as funções de unsubscribe do Firestore
 };
 
-export let state = { ...initialState };
-
-export function resetStateOnLogout() {
-    state = { 
-        ...initialState,
-        // Mantemos dados que não dependem do usuário
-        allQuestions: state.allQuestions,
-        filterOptions: state.filterOptions
-    };
-    state.userAnswers = new Map();
-    state.userCadernoState = new Map();
-    state.userReviewItemsMap = new Map();
+/**
+ * Atualiza uma propriedade do estado central.
+ * @param {string} key - A chave do estado a ser atualizada.
+ * @param {*} value - O novo valor para a chave.
+ */
+export function setState(key, value) {
+    if (key in state) {
+        state[key] = value;
+    } else {
+        console.warn(`Tentativa de definir uma chave de estado inexistente: ${key}`);
+    }
 }
-
 
 /**
- * Adiciona uma função de 'unsubscribe' do Firestore ao estado para limpeza posterior.
- * @param {string} key - A chave para armazenar a função (ex: 'unsubCadernos').
- * @param {Function} unsub - A função de unsubscribe retornada pelo onSnapshot.
+ * Adiciona uma função de unsubscribe do Firestore para ser chamada no logout.
+ * @param {string} key - Um identificador para o listener.
+ * @param {Function} func - A função de unsubscribe retornada pelo onSnapshot.
  */
-export function addUnsubscribe(key, unsub) {
-    state[key] = unsub;
+export function addUnsubscribe(key, func) {
+    state.unsubscribes[key] = func;
 }
 
+/**
+ * Chama todas as funções de unsubscribe armazenadas e limpa o objeto.
+ */
+export function clearUnsubscribes() {
+    for (const key in state.unsubscribes) {
+        if (typeof state.unsubscribes[key] === 'function') {
+            state.unsubscribes[key](); // Executa a função de unsubscribe
+        }
+    }
+    state.unsubscribes = {};
+}
+
+/**
+ * Reseta o estado da aplicação para os valores iniciais (usado no logout).
+ */
+export function resetStateOnLogout() {
+    state.currentUser = null;
+    state.currentQuestionIndex = 0;
+    state.selectedAnswer = null;
+    state.filteredQuestions = [];
+    state.sessionStats = [];
+    state.historicalSessions = [];
+    state.userFolders = [];
+    state.userCadernos = [];
+    state.currentFolderId = null;
+    state.currentCadernoId = null;
+    state.userReviewItemsMap.clear();
+    state.userAnswers.clear();
+    state.userCadernoState.clear();
+}
+
+/**
+ * Limpa as estatísticas da sessão atual.
+ */
 export function clearSessionStats() {
     state.sessionStats = [];
 }
 
-export function clearUnsubscribes() {
-    if (state.unsubCadernos) state.unsubCadernos();
-    if (state.unsubFolders) state.unsubFolders();
-    if (state.unsubFiltros) state.unsubFiltros();
-    if (state.unsubSessions) state.unsubSessions();
-    if (state.unsubReviewItems) state.unsubReviewItems();
-    if (state.unsubAnswers) state.unsubAnswers();
-    if (state.unsubCadernoState) state.unsubCadernoState();
-}
 
 /**
- * Determina qual contêiner de conteúdo está ativo com base no estado atual.
- * @returns {HTMLElement} O elemento contêiner ativo.
+ * Obtém o contêiner de conteúdo ativo (seja a view principal ou a de cadernos).
+ * @returns {HTMLElement} O elemento do contêiner ativo.
  */
 export function getActiveContainer() {
-    return state.currentCadernoId ? DOM.savedCadernosListContainer : DOM.vadeMecumContentArea;
+    return state.currentCadernoId ? document.getElementById('saved-cadernos-list-container') : document.getElementById('vade-mecum-content-area');
 }
 
