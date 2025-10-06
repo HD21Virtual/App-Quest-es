@@ -3,7 +3,7 @@ import { navigateToView } from './ui/navigation.js';
 import { openAuthModal, openSaveModal, openLoadModal, openCadernoModal, openNameModal, closeConfirmationModal, handleConfirmation } from './ui/modal.js';
 import { state } from './state.js';
 import { handleEmailLogin, handleEmailRegister, handleGoogleLogin, handleSignOut } from './services/auth.js';
-import { saveFilter, deleteFilter, createCaderno, createOrUpdateName, resetAllUserData } from './services/firestore.js';
+import { saveFilter, deleteFilter, createCaderno, createOrUpdateName } from './services/firestore.js';
 import { applyFilters, clearAllFilters } from './features/filter.js';
 import { handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, handleAddQuestionsToCaderno } from './features/caderno.js';
 import { handleMateriaListClick, handleAssuntoListClick, handleBackToMaterias } from './features/materias.js';
@@ -72,7 +72,7 @@ export function setupAllEventListeners() {
         
         // Reset Progress
         if (target.closest('#reset-all-progress-btn')) {
-            state.deletingType = 'all-progress';
+            setState('deletingType', 'all-progress');
             DOM.confirmationModalTitle.textContent = `Resetar Todo o Progresso`;
             DOM.confirmationModalText.innerHTML = `Tem certeza que deseja apagar **TODO** o seu histórico de resoluções e revisões? <br><br> <span class="font-bold text-red-600">Esta ação é irreversível e apagará todas as suas estatísticas.</span>`;
             DOM.confirmationModal.classList.remove('hidden');
