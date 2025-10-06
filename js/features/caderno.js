@@ -1,7 +1,7 @@
 import { state } from '../state.js';
 import DOM from '../dom-elements.js';
 import { displayQuestion } from './question-viewer.js';
-import { generateStatsForQuestions, updateStatsPanel } from './stats.js';
+import { generateStatsForQuestions } from './stats.js';
 import { showItemStatsModal } from '../ui/modal.js';
 
 /**
@@ -10,10 +10,11 @@ import { showItemStatsModal } from '../ui/modal.js';
  */
 
 export async function renderFoldersAndCadernos() {
+    if (!DOM.savedCadernosListContainer) return;
     DOM.savedCadernosListContainer.innerHTML = '';
 
     if (state.currentCadernoId) {
-        renderSingleCadernoView();
+        await renderSingleCadernoView();
     } else if (state.currentFolderId) {
         renderSingleFolderView();
     } else {
@@ -28,47 +29,58 @@ function renderRootCadernosView() {
     DOM.createFolderBtn.classList.remove('hidden');
     DOM.addQuestionsToCadernoBtn.classList.add('hidden');
 
-    if (state.userFolders.length === 0 && state.userCadernos.filter(c => !c.folderId).length === 0) {
-        DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 p-4">Nenhum caderno ou pasta criada.</p>';
+    const unfiledCadernos = state.userCadernos.filter(c => !c.folderId);
+
+    if (state.userFolders.length === 0 && unfiledCadernos.length === 0) {
+        DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 bg-white p-6 rounded-lg shadow-sm">Nenhum caderno ou pasta criada ainda.</p>';
         return;
     }
 
+    let html = '';
     state.userFolders.forEach(folder => {
-        const count = state.userCadernos.filter(c => c.folderId === folder.id).length;
-        DOM.savedCadernosListContainer.innerHTML += `
-            <div class="folder-item flex justify-between items-center p-4 bg-white rounded-lg shadow-sm mb-2" data-folder-id="${folder.id}">
-                <div class="flex items-center cursor-pointer flex-grow" data-action="open-folder">
-                    <i class="fas fa-folder text-yellow-500 text-2xl mr-4"></i>
-                    <div>
-                        <h4 class="font-bold">${folder.name}</h4>
-                        <p class="text-sm text-gray-500">${count} caderno(s)</p>
+        const folderCadernosCount = state.userCadernos.filter(c => c.folderId === folder.id).length;
+        html += `
+            <div class="bg-white rounded-lg shadow-sm p-4 hover:bg-gray-50 transition folder-item mb-2" data-folder-id="${folder.id}">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center cursor-pointer flex-grow" data-action="open">
+                        <i class="fas fa-folder text-yellow-500 text-2xl mr-4"></i>
+                        <div>
+                            <span class="font-bold text-lg">${folder.name}</span>
+                            <p class="text-sm text-gray-500">${folderCadernosCount} caderno(s)</p>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center space-x-1">
-                    <button class="stats-folder-btn" data-id="${folder.id}" data-name="${folder.name}"><i class="fas fa-chart-bar"></i></button>
-                    <button class="edit-folder-btn" data-id="${folder.id}" data-name="${folder.name}"><i class="fas fa-pencil-alt"></i></button>
-                    <button class="delete-folder-btn" data-id="${folder.id}"><i class="fas fa-trash-alt"></i></button>
+                    <div class="flex items-center space-x-1">
+                         <button class="stats-folder-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${folder.id}" data-name="${folder.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
+                         <button class="edit-folder-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${folder.id}" data-name="${folder.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
+                         <button class="delete-folder-btn text-gray-400 hover:text-red-600 p-2 rounded-full" data-id="${folder.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                    </div>
                 </div>
             </div>`;
     });
 
-    const unfiledCadernos = state.userCadernos.filter(c => !c.folderId);
-    unfiledCadernos.forEach(caderno => {
-         DOM.savedCadernosListContainer.innerHTML += `
-             <div class="caderno-item flex justify-between items-center p-4 bg-white rounded-lg shadow-sm mb-2" data-caderno-id="${caderno.id}">
-                <div class="flex items-center cursor-pointer flex-grow" data-action="open-caderno">
-                    <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
-                    <div>
-                        <h4 class="font-bold">${caderno.name}</h4>
-                        <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+    if (unfiledCadernos.length > 0) {
+        if (state.userFolders.length > 0) {
+            html += '<h3 class="mt-6 mb-2 text-md font-semibold text-gray-600">Cadernos sem Pasta</h3>';
+        }
+        unfiledCadernos.forEach(caderno => {
+            html += `
+                <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm mt-2 caderno-item mb-2" data-caderno-id="${caderno.id}">
+                     <div class="flex items-center cursor-pointer flex-grow" data-action="open">
+                        <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
+                        <div>
+                            <h4 class="font-bold text-lg">${caderno.name}</h4>
+                            <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button class="edit-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt"></i></button>
-                    <button class="delete-caderno-btn" data-id="${caderno.id}"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            </div>`;
-    });
+                    <div class="flex items-center space-x-2">
+                        <button class="stats-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
+                        <button class="edit-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
+                        <button class="delete-caderno-btn text-red-500 hover:text-red-700" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                    </div>
+                </div>`;
+        });
+    }
+    DOM.savedCadernosListContainer.innerHTML = html;
 }
 
 function renderSingleFolderView() {
@@ -79,28 +91,32 @@ function renderSingleFolderView() {
     DOM.backToFoldersBtn.classList.remove('hidden');
     DOM.addCadernoToFolderBtn.classList.remove('hidden');
     DOM.createFolderBtn.classList.add('hidden');
+    DOM.addQuestionsToCadernoBtn.classList.add('hidden');
 
+    let html = '';
     const cadernosInFolder = state.userCadernos.filter(c => c.folderId === state.currentFolderId);
     if (cadernosInFolder.length > 0) {
         cadernosInFolder.forEach(caderno => {
-             DOM.savedCadernosListContainer.innerHTML += `
-             <div class="caderno-item flex justify-between items-center p-4 bg-white rounded-lg shadow-sm mb-2" data-caderno-id="${caderno.id}">
-                <div class="flex items-center cursor-pointer flex-grow" data-action="open-caderno">
-                    <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
-                    <div>
-                        <h4 class="font-bold">${caderno.name}</h4>
-                        <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+            html += `
+                <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm caderno-item mb-2" data-caderno-id="${caderno.id}">
+                   <div class="flex items-center cursor-pointer flex-grow" data-action="open">
+                        <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
+                        <div>
+                            <h4 class="font-bold text-lg">${caderno.name}</h4>
+                            <p class="text-sm text-gray-500">${caderno.questionIds.length} questões</p>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button class="edit-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt"></i></button>
-                    <button class="delete-caderno-btn" data-id="${caderno.id}"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            </div>`;
+                    <div class="flex items-center space-x-2">
+                        <button class="stats-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
+                        <button class="edit-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
+                        <button class="delete-caderno-btn text-red-500 hover:text-red-700" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                    </div>
+                </div>`;
         });
     } else {
-        DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 p-4">Nenhum caderno nesta pasta.</p>';
+        html = '<p class="text-center text-gray-500 bg-white p-6 rounded-lg shadow-sm">Nenhum caderno nesta pasta ainda. Clique em "Adicionar Caderno" para criar um.</p>';
     }
+    DOM.savedCadernosListContainer.innerHTML = html;
 }
 
 async function renderSingleCadernoView() {
@@ -126,14 +142,13 @@ async function renderSingleCadernoView() {
 
 export function handleCadernosViewClick(event) {
     const target = event.target;
-    const folderItem = target.closest('[data-action="open-folder"]');
-    const cadernoItem = target.closest('[data-action="open-caderno"]');
-    // Adicionar outros botões (edit, delete, stats) aqui
+    const folderItem = target.closest('[data-action="open"]');
+    const cadernoItem = target.closest('[data-action="open"]');
     
-    if (folderItem) {
+    if (folderItem && folderItem.closest('.folder-item')) {
         state.currentFolderId = folderItem.closest('.folder-item').dataset.folderId;
         renderFoldersAndCadernos();
-    } else if (cadernoItem) {
+    } else if (cadernoItem && cadernoItem.closest('.caderno-item')) {
         state.currentCadernoId = cadernoItem.closest('.caderno-item').dataset.cadernoId;
         renderFoldersAndCadernos();
     } else if (target.closest('.stats-caderno-btn')) {
@@ -160,12 +175,12 @@ async function showItemStats(itemId, itemType, itemName) {
     }
 
     if (questionIds.length === 0) {
-        // Lidar com o caso de não haver questões
+        showItemStatsModal(itemName, { totalCorrect: 0, totalIncorrect: 0, questionIds: [] });
         return;
     }
 
     const historicalStats = await generateStatsForQuestions(questionIds);
-    showItemStatsModal(itemName, historicalStats);
+    showItemStatsModal(itemName, { ...historicalStats, questionIds });
 }
 
 export function exitAddMode() {
