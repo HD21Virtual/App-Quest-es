@@ -42,6 +42,15 @@ export const state = {
     unsubCadernoState: null,
 };
 
+/**
+ * Adiciona uma função de 'unsubscribe' do Firestore ao estado para limpeza posterior.
+ * @param {string} key - A chave para armazenar a função (ex: 'unsubCadernos').
+ * @param {Function} unsub - A função de unsubscribe retornada pelo onSnapshot.
+ */
+export function addUnsubscribe(key, unsub) {
+    state[key] = unsub;
+}
+
 export function clearSessionStats() {
     state.sessionStats = [];
 }
