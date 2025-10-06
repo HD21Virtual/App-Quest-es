@@ -1,7 +1,7 @@
 import DOM from './dom-elements.js';
 import { navigateToView } from './ui/navigation.js';
 import { openAuthModal, openSaveModal, openLoadModal, openCadernoModal, openNameModal, closeConfirmationModal, handleConfirmation } from './ui/modal.js';
-import { state } from './state.js';
+import { state, setState } from './state.js';
 import { handleEmailLogin, handleEmailRegister, handleGoogleLogin, handleSignOut } from './services/auth.js';
 import { saveFilter, deleteFilter, createCaderno, createOrUpdateName } from './services/firestore.js';
 import { applyFilters, clearAllFilters } from './features/filter.js';
