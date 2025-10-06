@@ -61,7 +61,7 @@ export function handleMateriaClick(materiaName) {
     renderMateriasView();
 }
 
-export function handleAssuntoClick(assuntoName) {
+export function handleAssuntoListClick(assuntoName) {
     const materiaName = state.selectedMateria.name;
 
     navigateToView('vade-mecum-view');
