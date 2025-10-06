@@ -46,9 +46,6 @@ async function handleFilterButtonClick() {
             });
         }
         
-        // This part would ideally be handled by a navigation/state manager
-        // to avoid direct UI manipulation from the filter module.
-        // For now, it mirrors the original logic.
         setState('isAddingQuestionsMode', { active: false, cadernoId: null });
         DOM.addQuestionsBanner.classList.add('hidden');
         navigateToView('cadernos-view', { cadernoId: caderno.id });
@@ -109,7 +106,7 @@ export async function applyFilters() {
     updateSelectedFiltersDisplay();
 }
 
-function clearAllFilters() {
+export function clearAllFilters() {
     DOM.searchInput.value = '';
     
     const materiaContainer = DOM.materiaFilter;
