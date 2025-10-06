@@ -1,112 +1,94 @@
-import { state } from './state.js';
 import DOM from './dom-elements.js';
-import { closeAuthModal, closeSaveModal, closeLoadModal, closeCadernoModal, closeNameModal, closeConfirmationModal, closeStatsModal, openAuthModal, openSaveModal, openLoadModal, openCadernoModal, openNameModal, openConfirmationModal } from './ui/modal.js';
-import { applyFilters, clearAllFilters, setupCustomSelect } from './features/filter.js';
-import { handleAuth, handleGoogleLogin } from './services/auth.js';
-import { saveFilter, deleteFilter, loadFilter, createCaderno, createOrUpdateName, deleteItem, resetAllUserData } from './services/firestore.js';
-import { handleCadernoListClick, handleBackToFolders, handleAddQuestionsToCaderno, handleCancelAddQuestions } from './features/caderno.js';
+import { navigateToView } from './ui/navigation.js';
+import { openAuthModal, openSaveModal, openLoadModal, openCadernoModal, openNameModal, closeConfirmationModal, handleConfirmation } from './ui/modal.js';
+import { state } from './state.js';
+import { handleEmailLogin, handleEmailRegister, handleGoogleLogin, handleSignOut } from './services/auth.js';
+import { saveFilter, deleteFilter, createCaderno, createOrUpdateName, resetAllUserData } from './services/firestore.js';
+import { applyFilters, clearAllFilters } from './features/filter.js';
+import { handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, handleAddQuestionsToCaderno } from './features/caderno.js';
 import { handleMateriaListClick, handleAssuntoListClick, handleBackToMaterias } from './features/materias.js';
-import { startReviewSession, handleSrsFeedback } from './features/srs.js';
-import { navigateToView, switchTab } from './ui/navigation.js';
+import { handleStartReview } from './features/srs.js';
 import { navigateQuestion } from './features/question-viewer.js';
 
-/**
- * @file js/event-listeners.js
- * @description Configura todos os event listeners da aplicação.
- */
-
-function handleGlobalClicks(event) {
-    // Fecha custom selects ao clicar fora
-    document.querySelectorAll('.custom-select-container').forEach(container => {
-        if (!container.contains(event.target)) {
-            const panel = container.querySelector('.custom-select-panel');
-            if(panel) panel.classList.add('hidden');
+function setupCustomSelect(container) {
+    const button = container.querySelector('.custom-select-button');
+    const panel = container.querySelector('.custom-select-panel');
+    button.addEventListener('click', () => {
+        if (!button.disabled) {
+            panel.classList.toggle('hidden');
         }
     });
-
-    // Fecha modais ao clicar no overlay
-    if (DOM.loadModal && !DOM.loadModal.classList.contains('hidden') && !DOM.loadModal.querySelector('div').contains(event.target) && !DOM.savedFiltersListBtn.contains(event.target)) {
-        closeLoadModal();
-    }
-    if (DOM.saveModal && !DOM.saveModal.classList.contains('hidden') && !DOM.saveModal.querySelector('div').contains(event.target) && !DOM.saveFilterBtn.contains(event.target)) {
-        closeSaveModal();
-    }
-    if (DOM.authModal && !DOM.authModal.classList.contains('hidden') && DOM.authModal.contains(event.target) && !DOM.authModal.querySelector('div').contains(event.target)) {
-        closeAuthModal();
-    }
 }
-
-function handleNavigation(event) {
-     const navLink = event.target.closest('.nav-link');
-     if(navLink) {
-        event.preventDefault();
-        const viewId = navLink.dataset.view;
-        navigateToView(viewId, event.isTrusted);
-     }
-}
-
-function handleQuestionNav(event) {
-    const prevBtn = event.target.closest('#prev-question-btn');
-    const nextBtn = event.target.closest('#next-question-btn');
-    if (prevBtn) navigateQuestion('prev');
-    if (nextBtn) navigateQuestion('next');
-}
-
-function handleFilterActions(event) {
-    const removeBtn = event.target.closest('.remove-filter-btn');
-    if (!removeBtn) return;
-
-    const type = removeBtn.dataset.filterType;
-    const value = removeBtn.dataset.filterValue;
-
-    switch (type) {
-        case 'materia':
-        case 'assunto':
-            const filterContainer = document.getElementById(`${type}-filter`);
-            const checkbox = filterContainer.querySelector(`.custom-select-option[data-value="${value}"]`);
-            if (checkbox) {
-                checkbox.checked = false;
-                const optionsContainer = filterContainer.querySelector('.custom-select-options');
-                if(optionsContainer) optionsContainer.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            if (state.isAddingQuestionsMode.active) { applyFilters(); }
-            break;
-        case 'tipo':
-            const activeFilter = DOM.tipoFilterGroup.querySelector('.active-filter');
-            if(activeFilter) activeFilter.classList.remove('active-filter');
-            const todosFilter = DOM.tipoFilterGroup.querySelector(`[data-value="todos"]`);
-            if(todosFilter) todosFilter.classList.add('active-filter');
-            if (state.isAddingQuestionsMode.active) { applyFilters(); }
-            break;
-        case 'search':
-            DOM.searchInput.value = '';
-            if (state.isAddingQuestionsMode.active) { applyFilters(); }
-            break;
-    }
-}
-
 
 export function setupAllEventListeners() {
-    // Listeners Globais
-    document.addEventListener('click', handleGlobalClicks);
-    document.addEventListener('click', handleNavigation);
-    document.addEventListener('click', handleQuestionNav);
+    // Event delegation for dynamically created elements and general clicks
+    document.addEventListener('click', (event) => {
+        const target = event.target;
 
-    // Filtros
-    DOM.filterBtn.addEventListener('click', () => {
-        if(state.isAddingQuestionsMode.active) {
-            // Lógica de adicionar questões ao caderno está em caderno.js
-        } else {
-            applyFilters();
+        // Auth buttons
+        if (target.closest('#show-login-modal-btn') || target.closest('#show-login-modal-btn-mobile') || target.closest('#login-from-empty')) openAuthModal();
+        if (target.closest('#login-btn')) handleEmailLogin();
+        if (target.closest('#register-btn')) handleEmailRegister();
+        if (target.closest('#google-login-btn')) handleGoogleLogin();
+        if (target.closest('#logout-btn') || target.closest('#logout-btn-mobile')) handleSignOut();
+
+        // Navigation
+        const navLink = target.closest('.nav-link');
+        if (navLink) navigateToView(navLink.dataset.view);
+
+        // Modals
+        if (target.closest('#save-filter-btn')) openSaveModal();
+        if (target.closest('#saved-filters-list-btn')) openLoadModal();
+        if (target.closest('#create-caderno-btn') || target.closest('#add-caderno-to-folder-btn')) openCadernoModal(target.closest('#add-caderno-to-folder-btn'));
+        if (target.closest('#create-folder-btn')) openNameModal('folder');
+        if (target.closest('#cancel-confirmation-btn')) closeConfirmationModal();
+        if (target.closest('#confirm-delete-btn')) handleConfirmation();
+
+        // Filters
+        if (target.closest('#filter-btn')) applyFilters(true);
+        if (target.closest('#clear-filters-btn')) clearAllFilters();
+
+        // Cadernos/Folders
+        const folderItem = target.closest('.folder-item[data-action="open"]');
+        if (folderItem) handleFolderItemClick(folderItem.dataset.folderId);
+
+        const cadernoItem = target.closest('.caderno-item[data-action="open"]');
+        if (cadernoItem) handleCadernoItemClick(cadernoItem.dataset.cadernoId);
+        
+        if (target.closest('#back-to-folders-btn')) handleBackToFolders();
+        if (target.closest('#add-questions-to-caderno-btn')) handleAddQuestionsToCaderno();
+
+        // Matérias/Assuntos
+        if (target.closest('.materia-item')) handleMateriaListClick(target.closest('.materia-item').dataset.materiaName);
+        if (target.closest('.assunto-item')) handleAssuntoListClick(target.closest('.assunto-item').dataset.assuntoName);
+        if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
+
+        // SRS
+        if (target.closest('#start-review-btn')) handleStartReview();
+
+        // Question Navigation
+        if (target.closest('#prev-question-btn')) navigateQuestion('prev');
+        if (target.closest('#next-question-btn')) navigateQuestion('next');
+        
+        // Reset Progress
+        if (target.closest('#reset-all-progress-btn')) {
+            state.deletingType = 'all-progress';
+            DOM.confirmationModalTitle.textContent = `Resetar Todo o Progresso`;
+            DOM.confirmationModalText.innerHTML = `Tem certeza que deseja apagar **TODO** o seu histórico de resoluções e revisões? <br><br> <span class="font-bold text-red-600">Esta ação é irreversível e apagará todas as suas estatísticas.</span>`;
+            DOM.confirmationModal.classList.remove('hidden');
         }
     });
-    DOM.clearFiltersBtn.addEventListener('click', clearAllFilters);
-    DOM.selectedFiltersContainer.addEventListener('click', handleFilterActions);
-    DOM.searchInput.addEventListener('input', () => {
-        if (state.isAddingQuestionsMode.active) {
-            applyFilters();
-        }
+
+    // Specific event listeners that don't fit delegation well
+    DOM.hamburgerBtn.addEventListener('click', () => DOM.mobileMenu.classList.toggle('hidden'));
+    
+    DOM.toggleFiltersBtn.addEventListener('click', () => {
+        DOM.filterCard.classList.toggle('hidden');
+        DOM.toggleFiltersBtn.innerHTML = DOM.filterCard.classList.contains('hidden') 
+            ? `<i class="fas fa-eye mr-2"></i> Mostrar Filtros` 
+            : `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
     });
+
     DOM.tipoFilterGroup.addEventListener('click', (event) => {
         if (event.target.classList.contains('filter-btn-toggle')) {
             DOM.tipoFilterGroup.querySelectorAll('.filter-btn-toggle').forEach(btn => btn.classList.remove('active-filter'));
@@ -114,79 +96,6 @@ export function setupAllEventListeners() {
         }
     });
 
-    // Modais
-    document.querySelectorAll('[data-modal-close]').forEach(btn => {
-        const modalId = btn.getAttribute('data-modal-close');
-        const modal = document.getElementById(modalId);
-        if(modal) btn.addEventListener('click', () => modal.classList.add('hidden'));
-    });
-
-    DOM.closeAuthModalBtn.addEventListener('click', closeAuthModal);
-    DOM.closeSaveModalBtn.addEventListener('click', closeSaveModal);
-    DOM.cancelSaveBtn.addEventListener('click', closeSaveModal);
-    DOM.closeLoadModalBtn.addEventListener('click', closeLoadModal);
-    DOM.closeCadernoModalBtn.addEventListener('click', closeCadernoModal);
-    DOM.cancelCadernoBtn.addEventListener('click', closeCadernoModal);
-    DOM.closeNameModalBtn.addEventListener('click', closeNameModal);
-    DOM.cancelNameBtn.addEventListener('click', closeNameModal);
-    DOM.cancelConfirmationBtn.addEventListener('click', closeConfirmationModal);
-    DOM.closeStatsModalBtn.addEventListener('click', closeStatsModal);
-
-
-    // Ações de Modais
-    DOM.saveFilterBtn.addEventListener('click', openSaveModal);
-    DOM.savedFiltersListBtn.addEventListener('click', openLoadModal);
-    DOM.createCadernoBtn.addEventListener('click', () => openCadernoModal(true));
-    DOM.createFolderBtn.addEventListener('click', () => openNameModal('folder'));
-    DOM.addCadernoToFolderBtn.addEventListener('click', () => openCadernoModal(false));
-    
-    // Auth
-    DOM.loginBtn.addEventListener('click', () => handleAuth('login'));
-    DOM.registerBtn.addEventListener('click', () => handleAuth('register'));
-    DOM.googleLoginBtn.addEventListener('click', handleGoogleLogin);
-    
-    // Salvar/Carregar/Deletar (Firestore)
-    DOM.confirmSaveBtn.addEventListener('click', saveFilter);
-    DOM.savedFiltersListContainer.addEventListener('click', (e) => {
-        if (e.target.closest('.load-filter-btn')) loadFilter(e.target.closest('.load-filter-btn').dataset.id);
-        if (e.target.closest('.delete-filter-btn')) deleteFilter(e.target.closest('.delete-filter-btn').dataset.id);
-    });
-    DOM.confirmCadernoBtn.addEventListener('click', createCaderno);
-    DOM.confirmNameBtn.addEventListener('click', createOrUpdateName);
-    DOM.confirmDeleteBtn.addEventListener('click', deleteItem);
-    if(DOM.resetAllProgressBtn) DOM.resetAllProgressBtn.addEventListener('click', () => openConfirmationModal('all-progress'));
-    
-    // Navegação e Ações de Views
-    DOM.hamburgerBtn.addEventListener('click', () => DOM.mobileMenu.classList.toggle('hidden'));
-    DOM.toggleFiltersBtn.addEventListener('click', () => {
-        DOM.filterCard.classList.toggle('hidden');
-        DOM.toggleFiltersBtn.innerHTML = DOM.filterCard.classList.contains('hidden') 
-            ? `<i class="fas fa-eye mr-2"></i> Mostrar Filtros` 
-            : `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
-    });
-    DOM.savedCadernosListContainer.addEventListener('click', handleCadernoListClick);
-    DOM.backToFoldersBtn.addEventListener('click', handleBackToFolders);
-    DOM.addQuestionsToCadernoBtn.addEventListener('click', handleAddQuestionsToCaderno);
-    DOM.cancelAddQuestionsBtn.addEventListener('click', handleCancelAddQuestions);
-    DOM.materiasListContainer.addEventListener('click', handleMateriaListClick);
-    DOM.assuntosListContainer.addEventListener('click', handleAssuntoListClick);
-    DOM.backToMateriasBtn.addEventListener('click', handleBackToMaterias);
-    DOM.startReviewBtn.addEventListener('click', startReviewSession);
-
-    // Abas e Conteúdo Dinâmico
-    DOM.tabsContainer.addEventListener('click', (e) => switchTab(e.target, DOM.vadeMecumContentArea));
-    document.addEventListener('click', (e) => { // Delegação para abas de caderno
-        const tabsContainerCaderno = e.target.closest('#tabs-container');
-        if (tabsContainerCaderno && DOM.savedCadernosListContainer.contains(tabsContainerCaderno)) {
-            switchTab(e.target, DOM.savedCadernosListContainer);
-        }
-    });
-    document.addEventListener('click', (e) => { // Delegação para SRS
-        const srsBtn = e.target.closest('.srs-feedback-btn');
-        if(srsBtn) {
-            e.stopPropagation();
-            handleSrsFeedback(srsBtn.dataset.feedback);
-        }
-    });
+    DOM.customSelects.forEach(setupCustomSelect);
 }
 
