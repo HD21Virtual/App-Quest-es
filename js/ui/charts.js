@@ -1,9 +1,10 @@
 import { getWeeklySolvedQuestionsData } from '../services/firestore.js';
 import { state } from '../state.js';
 import DOM from '../dom-elements.js';
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js/auto/auto.js';
-import ChartDataLabels from 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0';
+// Os imports do Chart.js e do plugin foram removidos.
+// O código agora utilizará as versões carregadas globalmente no index.html.
 
+// O Chart e o ChartDataLabels estão disponíveis globalmente.
 Chart.register(ChartDataLabels);
 
 let performanceChart = null;
