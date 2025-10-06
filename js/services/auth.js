@@ -11,7 +11,7 @@ import { state, setCurrentUser, clearUnsubscribes, resetStateOnLogout } from '..
 import DOM from '../dom-elements.js';
 import { closeAuthModal } from '../ui/modal.js';
 import { setupFirestoreListeners, fetchAllQuestions } from './firestore.js';
-import { applyFilters } from '../features/filter.js';
+import { applyFilters, setupCustomSelect } from '../features/filter.js';
 import { navigateToView } from '../ui/navigation.js';
 
 /**
