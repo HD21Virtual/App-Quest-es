@@ -74,13 +74,15 @@ export function setupAllEventListeners() {
     document.getElementById('confirm-delete-btn').addEventListener('click', () => handleConfirmation('delete'));
     document.getElementById('cancel-confirmation-btn').addEventListener('click', closeConfirmationModal);
     
-    DOM.resetAllProgressBtn.addEventListener('click', () => {
-        openModal('confirmation', { 
-            type: 'all-progress',
-            title: 'Resetar Todo o Progresso',
-            text: `Tem certeza que deseja apagar **TODO** o seu histórico de resoluções e revisões? <br><br> <span class="font-bold text-red-600">Esta ação é irreversível e apagará todas as suas estatísticas.</span>`
+    if (DOM.resetAllProgressBtn) {
+        DOM.resetAllProgressBtn.addEventListener('click', () => {
+            openModal('confirmation', { 
+                type: 'all-progress',
+                title: 'Resetar Todo o Progresso',
+                text: `Tem certeza que deseja apagar **TODO** o seu histórico de resoluções e revisões? <br><br> <span class="font-bold text-red-600">Esta ação é irreversível e apagará todas as suas estatísticas.</span>`
+            });
         });
-    });
+    }
 }
 
 // Helper para configurar o fechamento dos modais
@@ -94,3 +96,4 @@ function setupModalCloseListeners() {
     document.getElementById('cancel-name-btn').addEventListener('click', () => closeModal('name'));
     document.getElementById('close-stats-modal').addEventListener('click', () => closeModal('stats'));
 }
+
