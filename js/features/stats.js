@@ -47,16 +47,29 @@ export function updateStatsPanel(container = null, data = null) {
         return;
     }
 
-    // Gerar HTML e renderizar o gráfico...
-    // Esta parte pode ser expandida conforme o código original.
+    let materiaStatsHtml = '<div class="space-y-4">';
+    for (const materia in statsByMateria) {
+        const disciplinaStats = statsByMateria[materia];
+        const disciplinaAccuracy = (disciplinaStats.total > 0 ? (disciplinaStats.correct / disciplinaStats.total * 100) : 0).toFixed(0);
+        materiaStatsHtml += `
+            <div>
+                <div class="flex justify-between items-center text-gray-800">
+                    <span>${materia}</span>
+                    <span class="font-semibold">${disciplinaStats.correct} / ${disciplinaStats.total} (${disciplinaAccuracy}%)</span>
+                </div>
+            </div>
+        `;
+    }
+    materiaStatsHtml += '</div>';
+
     statsContainer.innerHTML = `
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div class="relative w-full max-w-xs mx-auto">
                 <canvas id="performanceChart"></canvas>
             </div>
             <div>
-                <h4 class="text-lg font-bold">Desempenho por Disciplina</h4>
-                <!-- Detalhes por matéria aqui -->
+                <h4 class="text-xl font-bold text-gray-800 mb-3">Desempenho por Disciplina</h4>
+                ${materiaStatsHtml}
             </div>
          </div>
     `;
@@ -134,11 +147,44 @@ export async function generateStatsForQuestions(questionIds) {
 }
 
 export function updateStatsPageUI() {
-    const combinedSessions = [...state.historicalSessions];
-    // ... lógica para combinar sessões e calcular totais
+    const combinedSessions = [...state.historicalSessions, ...state.sessionStats.length > 0 ? [
+        {
+            totalQuestions: state.sessionStats.length,
+            correctCount: state.sessionStats.filter(s => s.isCorrect).length,
+            details: state.sessionStats.reduce((acc, stat) => {
+                if (!acc[stat.materia]) acc[stat.materia] = { correct: 0, total: 0 };
+                acc[stat.materia].total++;
+                if (stat.isCorrect) acc[stat.materia].correct++;
+                return acc;
+            }, {})
+        }
+    ] : []];
 
-    // Renderizar gráficos da página de início/estatísticas
+    if (!DOM.statsTotalQuestions || combinedSessions.length === 0) return;
+
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    const materiaTotals = {};
+
+    combinedSessions.forEach(session => {
+        totalQuestions += session.totalQuestions;
+        totalCorrect += session.correctCount;
+        for (const materia in session.details) {
+            if (!materiaTotals[materia]) materiaTotals[materia] = { correct: 0, total: 0 };
+            materiaTotals[materia].correct += session.details[materia].correct;
+            materiaTotals[materia].total += session.details[materia].total;
+        }
+    });
+
+    const totalIncorrect = totalQuestions - totalCorrect;
+    const geralAccuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(0) : 0;
+
+    DOM.statsTotalQuestions.textContent = totalQuestions;
+    DOM.statsTotalCorrect.textContent = totalCorrect;
+    DOM.statsTotalIncorrect.textContent = totalIncorrect;
+    DOM.statsGeralAccuracy.textContent = `${geralAccuracy}%`;
+
     renderWeeklyChart();
-    renderHomePerformanceChart();
+    renderHomePerformanceChart(materiaTotals);
 }
 
