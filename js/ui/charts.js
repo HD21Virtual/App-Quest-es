@@ -165,3 +165,31 @@ export async function renderWeeklyChart() {
     });
 }
 
+export function renderItemPerformanceChart(canvasId, totalCorrect, totalIncorrect) {
+    const totalAttempts = totalCorrect + totalIncorrect;
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    if (totalAttempts > 0) {
+        new Chart(canvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Acertos', 'Erros'],
+                datasets: [{
+                    data: [totalCorrect, totalIncorrect],
+                    backgroundColor: ['#22c55e', '#ef4444'],
+                    hoverBackgroundColor: ['#16a34a', '#dc2626'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    } else {
+        canvas.outerHTML = '<p class="text-center text-gray-500 mt-4">Nenhum histórico de respostas para exibir o gráfico.</p>';
+    }
+}
+
