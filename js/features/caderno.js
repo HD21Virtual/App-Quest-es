@@ -7,8 +7,7 @@ import { navigateToView } from '../ui/navigation.js';
 
 /**
  * @file js/features/caderno.js
- * @description Lida com a lógica da visualização de Cadernos, incluindo a renderização
- * de pastas, cadernos, e a navegação entre eles.
+ * @description Lida com a lógica da visualização de Cadernos.
  */
 
 export function renderFoldersAndCadernos() {
@@ -80,7 +79,6 @@ async function renderSingleCadernoView() {
     const vadeMecumContentHtml = DOM.vadeMecumView.querySelector('#tabs-and-main-content').outerHTML;
     DOM.savedCadernosListContainer.innerHTML = vadeMecumContentHtml;
     
-    // Attach listener for the newly created tabs
     const tabsContainerCaderno = DOM.savedCadernosListContainer.querySelector('#tabs-container');
     tabsContainerCaderno.addEventListener('click', handleVadeMecumTabs);
 
@@ -98,6 +96,17 @@ async function renderSingleCadernoView() {
     displayQuestion();
 }
 
+export function exitAddMode() {
+    if (state.isAddingQuestionsMode.active) {
+        state.isAddingQuestionsMode = { active: false, cadernoId: null };
+        DOM.addQuestionsBanner.classList.add('hidden');
+        DOM.filterBtn.textContent = 'Filtrar questões';
+        DOM.filterBtn.disabled = false;
+        
+        const mainContentContainer = DOM.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+        if (mainContentContainer) mainContentContainer.classList.remove('hidden');
+    }
+}
 
 // --- HTML Generators ---
 
@@ -185,8 +194,7 @@ export function handleAddQuestionsToCaderno() {
 }
 
 export function handleCancelAddQuestions() {
-    state.isAddingQuestionsMode = { active: false, cadernoId: null };
-    DOM.addQuestionsBanner.classList.add('hidden');
+    exitAddMode();
     navigateToView('cadernos-view');
 }
 
