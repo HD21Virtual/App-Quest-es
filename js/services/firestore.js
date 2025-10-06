@@ -9,6 +9,47 @@ import DOM from '../dom-elements.js';
 
 // --- FUNÇÕES DE LEITURA (FETCH & LISTENERS) ---
 
+export async function getWeeklySolvedQuestionsData() {
+    const weeklyCounts = Array(7).fill(0);
+    if (!state.currentUser) return weeklyCounts;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    try {
+        const sessionsCollection = collection(db, 'users', state.currentUser.uid, 'sessions');
+        const q = query(sessionsCollection, where("createdAt", ">=", sevenDaysAgo));
+        
+        const querySnapshot = await getDocs(q);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        querySnapshot.forEach(doc => {
+            const session = doc.data();
+            if (!session.createdAt) return;
+
+            const sessionDate = session.createdAt.toDate();
+            sessionDate.setHours(0, 0, 0, 0);
+
+            const timeDiff = today.getTime() - sessionDate.getTime();
+            const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+            
+            const index = 6 - dayDiff;
+
+            if (index >= 0 && index < 7) {
+                weeklyCounts[index] += session.totalQuestions || 0;
+            }
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar dados de atividades da semana:", error);
+    }
+    
+    return weeklyCounts;
+}
+
+
 export async function fetchAllQuestions() {
     try {
         const querySnapshot = await getDocs(collection(db, "questions"));
@@ -339,4 +380,5 @@ export async function setSrsReviewItem(questionId, reviewData) {
     const reviewRef = doc(db, 'users', state.currentUser.uid, 'reviewItems', questionId);
     await setDoc(reviewRef, reviewData, { merge: true });
 }
+
 
