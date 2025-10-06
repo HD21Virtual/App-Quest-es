@@ -1,14 +1,7 @@
-import { state } from '../state.js';
+import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
-import { applyFilters, clearAllFilters } from './filter.js';
-
-/**
- * @file js/features/materias.js
- * @description Lida com a lógica da view "Matérias".
- */
-
-let selectedMateria = null;
+import { clearAllFilters, applyFilters } from './filter.js';
 
 export function renderMateriasView() {
     if (!state.currentUser) {
@@ -17,14 +10,13 @@ export function renderMateriasView() {
         return;
     }
 
-    if (selectedMateria) {
-        // Display assuntos for the selected materia
-        DOM.materiasViewTitle.textContent = selectedMateria.name;
+    if (state.selectedMateria) {
+        DOM.materiasViewTitle.textContent = state.selectedMateria.name;
         DOM.materiasListContainer.classList.add('hidden');
         DOM.assuntosListContainer.classList.remove('hidden');
         DOM.backToMateriasBtn.classList.remove('hidden');
 
-        const assuntosHtml = selectedMateria.assuntos.map(assunto => `
+        const assuntosHtml = state.selectedMateria.assuntos.map(assunto => `
             <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer assunto-item" data-assunto-name="${assunto}">
                 <div class="flex items-center">
                     <i class="fas fa-file-alt text-gray-400 mr-3"></i>
@@ -35,14 +27,13 @@ export function renderMateriasView() {
         DOM.assuntosListContainer.innerHTML = `<div class="space-y-2">${assuntosHtml}</div>`;
 
     } else {
-        // Display all materias
         DOM.materiasViewTitle.textContent = 'Matérias';
         DOM.materiasListContainer.classList.remove('hidden');
         DOM.assuntosListContainer.classList.add('hidden');
         DOM.backToMateriasBtn.classList.add('hidden');
 
         if (state.filterOptions.materia.length === 0) {
-             DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma matéria encontrada. Adicione questões para vê-las aqui.</p>';
+             DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma matéria encontrada.</p>';
              return;
         }
 
@@ -64,47 +55,36 @@ export function renderMateriasView() {
     }
 }
 
-export function handleMateriaListClick(event) {
-    const materiaItem = event.target.closest('.materia-item');
-    if (materiaItem) {
-        const materiaName = materiaItem.dataset.materiaName;
-        selectedMateria = state.filterOptions.materia.find(m => m.name === materiaName);
-        renderMateriasView();
-    }
+export function handleMateriaClick(materiaName) {
+    const selected = state.filterOptions.materia.find(m => m.name === materiaName);
+    setState('selectedMateria', selected);
+    renderMateriasView();
 }
 
-export function handleAssuntoListClick(event) {
-    const assuntoItem = event.target.closest('.assunto-item');
-    if (assuntoItem) {
-        const assuntoName = assuntoItem.dataset.assuntoName;
-        const materiaName = selectedMateria.name;
+export function handleAssuntoClick(assuntoName) {
+    const materiaName = state.selectedMateria.name;
 
-        navigateToView('vade-mecum-view');
+    navigateToView('vade-mecum-view');
+    
+    setTimeout(() => {
+        clearAllFilters();
+        
+        const materiaContainer = DOM.materiaFilter;
+        materiaContainer.dataset.value = JSON.stringify([materiaName]);
+        materiaContainer.querySelector('.custom-select-value').textContent = materiaName;
         
         setTimeout(() => {
-            clearAllFilters();
-            const materiaContainer = document.getElementById('materia-filter');
-            const materiaCheckbox = materiaContainer.querySelector(`.custom-select-option[data-value="${materiaName}"]`);
-            if (materiaCheckbox) {
-                materiaCheckbox.checked = true;
-                materiaContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
-            }
-
-            setTimeout(() => {
-                const assuntoContainer = document.getElementById('assunto-filter');
-                const assuntoCheckbox = assuntoContainer.querySelector(`.custom-select-option[data-value="${assuntoName}"]`);
-                if (assuntoCheckbox) {
-                    assuntoCheckbox.checked = true;
-                    assuntoContainer.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                applyFilters();
-            }, 50); 
+            const assuntoContainer = DOM.assuntoFilter;
+            assuntoContainer.dataset.value = JSON.stringify([assuntoName]);
+            assuntoContainer.querySelector('.custom-select-value').textContent = assuntoName;
+            
+            applyFilters();
         }, 50);
-    }
+    }, 50);
 }
 
 export function handleBackToMaterias() {
-    selectedMateria = null;
+    setState('selectedMateria', null);
     renderMateriasView();
 }
 
