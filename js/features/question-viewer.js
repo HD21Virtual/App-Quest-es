@@ -171,7 +171,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             const isHidden = commentaryContainer.classList.contains('hidden');
             
             if (isHidden) {
-                const commentaryText = question.commentary || '<p class="text-gray-600">Nenhum comentário disponível para esta questão.</p>';
+                const commentaryText = question.explanation || '<p class="text-gray-600">Nenhum comentário disponível para esta questão.</p>';
                 commentaryContainer.innerHTML = `
                     <h4 class="font-bold text-lg text-gray-800 mb-2">Gabarito Comentado</h4>
                     <div class="prose max-w-none text-gray-700">${commentaryText}</div>
