@@ -163,6 +163,11 @@ export async function deleteItem(type, id) {
     }
 }
 
+export async function deleteFilter(filterId) {
+    if (!state.currentUser || !filterId) return;
+    await deleteDoc(doc(db, 'users', state.currentUser.uid, 'filtros', filterId));
+}
+
 export async function saveUserAnswer(questionId, userAnswer, isCorrect) {
     if (!state.currentUser) return;
     await setDoc(doc(db, 'users', state.currentUser.uid, 'userQuestionState', questionId), { userAnswer, isCorrect });
