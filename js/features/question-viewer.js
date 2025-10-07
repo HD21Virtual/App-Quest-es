@@ -1,162 +1,121 @@
-import { state, setState, getActiveContainer } from '../state.js';
-import { handleSrsFeedback } from './srs.js';
-import { updateStatsPanel } from './stats.js';
-import { saveUserAnswer, updateQuestionHistory, saveCadernoState } from '../services/firestore.js';
-import { removeQuestionFromCaderno } from './caderno.js';
+import DOM from './dom-elements.js';
+import { state } from './state.js';
+import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
+import { createCaderno, createOrUpdateName, saveFilter } from './services/firestore.js';
+import { handleAuth } from './services/auth.js';
+import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno } from './features/caderno.js';
+import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
+import { handleStartReview, handleSrsFeedback } from './features/srs.js';
+// CORREÇÃO: Importa a função displayQuestion
+import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption, displayQuestion } from './features/question-viewer.js';
+import { applyFilters, clearAllFilters } from './features/filter.js';
+import { navigateToView } from './ui/navigation.js';
 
-export async function navigateQuestion(direction) {
-    if (direction === 'prev' && state.currentQuestionIndex > 0) {
-        setState('currentQuestionIndex', state.currentQuestionIndex - 1);
-    } else if (direction === 'next' && state.currentQuestionIndex < state.filteredQuestions.length - 1) {
-        setState('currentQuestionIndex', state.currentQuestionIndex + 1);
-    }
+// Handlers
+const handleSaveFilter = async () => {
+    const name = DOM.filterNameInput.value.trim();
+    if (!name || !state.currentUser) return;
 
-    if (state.currentCadernoId) {
-        await saveCadernoState(state.currentCadernoId, state.currentQuestionIndex);
-    }
-    await displayQuestion();
-}
-
-export function handleOptionSelect(event) {
-    const target = event.currentTarget;
-    if (target.classList.contains('discarded')) {
-        return;
-    }
-    const activeContainer = getActiveContainer();
-    activeContainer.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
-    target.classList.add('selected');
-    setState('selectedAnswer', target.getAttribute('data-option'));
-    const submitBtn = activeContainer.querySelector('#submit-btn');
-    if (submitBtn) submitBtn.disabled = false;
-}
-
-
-export async function checkAnswer() {
-    const question = state.filteredQuestions[state.currentQuestionIndex];
-    const isCorrect = state.selectedAnswer === question.correctAnswer;
-    renderAnsweredQuestion(isCorrect, state.selectedAnswer, true);
-}
-
-export function handleDiscardOption(event) {
-    event.stopPropagation();
-    const targetItem = event.currentTarget.closest('.option-item');
-    if (targetItem) {
-        targetItem.classList.toggle('discarded');
-        if (targetItem.classList.contains('selected')) {
-            targetItem.classList.remove('selected');
-            setState('selectedAnswer', null);
-            const activeContainer = getActiveContainer();
-            const submitBtn = activeContainer.querySelector('#submit-btn');
-            if(submitBtn) submitBtn.disabled = true;
-        }
-    }
-}
-
-function renderUnansweredQuestion() {
-    const activeContainer = getActiveContainer();
-    const questionsContainer = activeContainer.querySelector('#questions-container');
-    if(!questionsContainer) return;
-
-    const question = state.filteredQuestions[state.currentQuestionIndex];
-    const options = Array.isArray(question.options) ? question.options : [];
+    const currentFilters = {
+        name: name,
+        materias: JSON.parse(DOM.materiaFilter.dataset.value || '[]'),
+        assuntos: JSON.parse(DOM.assuntoFilter.dataset.value || '[]'),
+        tipo: DOM.tipoFilterGroup.querySelector('.active-filter')?.dataset.value || 'todos',
+        search: DOM.searchInput.value
+    };
     
-    const optionsHtml = options.map((option, index) => {
-        let letterContent = '';
-        if (question.tipo === 'Multipla Escolha' || question.tipo === 'C/E') {
-            const letter = question.tipo === 'C/E' ? option.charAt(0) : String.fromCharCode(65 + index);
-            letterContent = `<span class="option-letter text-gray-700">${letter}</span>`;
+    await saveFilter(currentFilters);
+
+    DOM.filterNameInput.value = '';
+    closeSaveModal();
+};
+
+
+export function setupAllEventListeners() {
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+        const targetId = target.id;
+        
+        // --- Auth ---
+        if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
+            openAuthModal();
+        } else if (targetId === 'login-btn') {
+            await handleAuth('login');
+        } else if (targetId === 'register-btn') {
+            await handleAuth('register');
+        } else if (targetId === 'google-login-btn') {
+            await handleAuth('google');
+        } else if (target.closest('#logout-btn') || target.closest('#logout-btn-mobile')) {
+            await handleAuth('logout');
+        }
+
+        // --- Modals ---
+        else if (target.closest('#close-auth-modal')) closeAuthModal();
+        else if (target.closest('#save-filter-btn')) openSaveModal();
+        else if (target.closest('#close-save-modal') || target.closest('#cancel-save-btn')) closeSaveModal();
+        else if (target.closest('#confirm-save-btn')) await handleSaveFilter();
+        
+        else if (target.closest('#saved-filters-list-btn')) openLoadModal();
+        else if (target.closest('#close-load-modal')) closeLoadModal();
+        else if (target.closest('#saved-filters-list-container')) handleLoadModalEvents(event);
+
+        else if (target.closest('#create-caderno-btn')) openCadernoModal(true);
+        else if (target.closest('#add-caderno-to-folder-btn')) openCadernoModal(false, state.currentFolderId);
+        else if (target.closest('#close-caderno-modal') || target.closest('#cancel-caderno-btn')) closeCadernoModal();
+        
+        else if (target.closest('#create-folder-btn')) openNameModal('folder');
+        else if (target.closest('#close-name-modal') || target.closest('#cancel-name-btn')) closeNameModal();
+        
+        else if (target.closest('#cancel-confirmation-btn')) closeConfirmationModal();
+        else if (target.closest('#confirm-delete-btn')) await handleConfirmation();
+        
+        else if (target.closest('#close-stats-modal')) closeStatsModal();
+
+        // --- Cadernos / Folders ---
+        else if (target.closest('#saved-cadernos-list-container')) {
+            handleCadernoItemClick(event);
+            handleFolderItemClick(event);
+        }
+        else if (target.closest('#back-to-folders-btn')) handleBackToFolders();
+        else if (target.closest('#add-questions-to-caderno-btn')) handleAddQuestionsToCaderno();
+        else if (target.closest('#cancel-add-questions-btn')) cancelAddQuestions();
+
+
+        // --- Materias / Assuntos ---
+        else if (target.closest('#materias-list-container')) handleMateriaListClick(event);
+        else if (target.closest('#assuntos-list-container')) handleAssuntoListClick(event);
+        else if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
+        
+        // --- Questions ---
+        else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
+        else if (target.closest('#next-question-btn')) await navigateQuestion('next');
+        else if (target.closest('.option-item') && !target.closest('.discard-btn')) handleOptionSelect(event);
+        else if (target.closest('#submit-btn')) await checkAnswer();
+        else if (target.closest('.discard-btn')) handleDiscardOption(event);
+        else if (target.closest('.srs-feedback-btn')) await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
+        else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
+
+
+        // --- Filters ---
+        // CORREÇÃO: Chama displayQuestion após aplicar ou limpar os filtros
+        else if (target.closest('#filter-btn')) {
+            await applyFilters();
+            await displayQuestion();
+        }
+        else if (target.closest('#clear-filters-btn')) {
+            clearAllFilters();
+            await displayQuestion();
         }
         
-        const scissorIconSVG = `...`; // SVG content
+        // --- Navigation ---
+        else if (target.closest('.nav-link')) {
+            event.preventDefault();
+            navigateToView(target.closest('.nav-link').dataset.view);
+        }
+    });
 
-        return `
-            <div data-option="${option}" class="option-item group flex items-center p-2 rounded-md cursor-pointer ...">
-               ...
-            </div>
-        `;
-    }).join('');
-
-    questionsContainer.innerHTML = `
-        <p class="text-gray-800 text-lg mb-6">${question.text}</p>
-        <div id="options-container" class="space-y-2">
-            ${optionsHtml}
-        </div>
-        <div id="card-footer" class="mt-6 flex items-center">
-            <button id="submit-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-md ... " disabled>Resolver</button>
-        </div>
-    `;
-}
-
-
-export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = false) {
-    const activeContainer = getActiveContainer();
-    if (!activeContainer) return;
-
-    renderUnansweredQuestion();
-    
-    const questionsContainer = activeContainer.querySelector('#questions-container');
-    if (!questionsContainer) return;
-    // ... rest of the function
-}
-
-export async function displayQuestion() {
-    const activeContainer = getActiveContainer();
-    if (!activeContainer) {
-        return;
+    // Input/Change listeners
+    if (DOM.searchSavedFiltersInput) {
+        DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
-
-    const questionsContainer = activeContainer.querySelector('#questions-container');
-    const questionInfoContainer = activeContainer.querySelector('#question-info-container');
-    const questionToolbar = activeContainer.querySelector('#question-toolbar');
-
-    if (!questionsContainer || !questionInfoContainer || !questionToolbar) return;
-
-    questionsContainer.innerHTML = '';
-    questionInfoContainer.innerHTML = '';
-    questionToolbar.innerHTML = '';
-    setState('selectedAnswer', null);
-    
-    if (!state.currentUser) {
-        questionsContainer.innerHTML = `<div class="text-center"><h3 class="text-xl font-bold">Bem-vindo!</h3><p class="text-gray-600 mt-2">Por favor, <button id="login-from-empty" class="text-blue-600 underline">faça login</button> para começar a resolver questões.</p></div>`;
-        return;
-    }
-
-    // CORREÇÃO: Mostra uma mensagem quando não há questões a serem exibidas
-    if (state.filteredQuestions.length === 0) {
-        questionsContainer.innerHTML = `
-            <div class="text-center py-10 px-4">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <h3 class="mt-2 text-sm font-semibold text-gray-900">Nenhuma questão para mostrar</h3>
-                <p class="mt-1 text-sm text-gray-500">Use os filtros acima e clique em "Filtrar questões" para começar.</p>
-            </div>
-        `;
-        await updateNavigation();
-        return;
-    }
-    
-    await updateNavigation();
-    const question = state.filteredQuestions[state.currentQuestionIndex];
-    
-    const userAnswerData = state.currentUser.answers?.[question.id];
-
-    if (userAnswerData) {
-        renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.answer);
-    } else {
-        renderUnansweredQuestion();
-    }
-    // ... rest of rendering logic
-}
-
-
-async function updateNavigation() {
-    const activeContainer = getActiveContainer();
-    if (!activeContainer) return;
-    // ... rest of navigation update logic
-}
-
-
-export function renderQuestionListForAdding(questions, existingQuestionIds) {
-    // ... rendering logic
 }
