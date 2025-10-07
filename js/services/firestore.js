@@ -163,6 +163,11 @@ export async function deleteItem(type, id) {
     }
 }
 
+export async function saveFilter(filterData) {
+    if (!state.currentUser) return;
+    await addDoc(collection(db, 'users', state.currentUser.uid, 'filtros'), filterData);
+}
+
 export async function deleteFilter(filterId) {
     if (!state.currentUser || !filterId) return;
     await deleteDoc(doc(db, 'users', state.currentUser.uid, 'filtros', filterId));
