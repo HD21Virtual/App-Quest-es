@@ -269,12 +269,12 @@ export async function displayQuestion() {
     `;
 
     let toolbarHTML = `
-        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-comment-alt mr-2"></i>Gabarito Comentado</a>
-        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-comments mr-2"></i>Comentários</a>
-        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-edit mr-2"></i>Criar Anotações</a>
-        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-book mr-2"></i>Cadernos</a>
-        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-chart-bar mr-2"></i>Desempenho</a>
-        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-exclamation-triangle mr-2"></i>Notificar Erro</a>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-graduation-cap mr-2"></i>Gabarito Comentado</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-comment-dots mr-2"></i>Comentários</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-edit mr-2"></i>Criar Anotações</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-book mr-2"></i>Cadernos</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-chart-bar mr-2"></i>Desempenho</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-flag mr-2"></i>Notificar Erro</button>
     `;
     
     if(state.currentCadernoId) {
@@ -339,4 +339,5 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
