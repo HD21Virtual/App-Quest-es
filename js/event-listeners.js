@@ -34,8 +34,7 @@ export function setupAllEventListeners() {
     document.addEventListener('click', async (event) => {
         const target = event.target;
         const targetId = target.id;
-        const targetClassList = target.classList;
-
+        
         // --- Auth ---
         if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
             openAuthModal();
@@ -89,10 +88,11 @@ export function setupAllEventListeners() {
         // --- Questions ---
         else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
         else if (target.closest('#next-question-btn')) await navigateQuestion('next');
-        else if (target.closest('.option-item')) handleOptionSelect(event);
+        else if (target.closest('.option-item') && !target.closest('.discard-btn')) handleOptionSelect(event);
         else if (target.closest('#submit-btn')) await checkAnswer();
         else if (target.closest('.discard-btn')) handleDiscardOption(event);
         else if (target.closest('.srs-feedback-btn')) await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
+        else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
 
 
         // --- Filters ---
