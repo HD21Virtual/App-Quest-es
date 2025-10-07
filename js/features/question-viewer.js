@@ -31,9 +31,11 @@ export function handleOptionSelect(event) {
 }
 
 export async function checkAnswer() {
+    await handleSrsFeedback('good'); // Defaulting to 'good', SRS buttons will handle specifics
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const isCorrect = state.selectedAnswer === question.correctAnswer;
-    await handleSrsFeedback('good'); // Defaulting to 'good', SRS buttons will handle specifics
+    renderAnsweredQuestion(isCorrect, state.selectedAnswer);
+    updateStatsPanel();
 }
 
 export function handleDiscardOption(event) {
@@ -223,4 +225,5 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
