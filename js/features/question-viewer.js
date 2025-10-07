@@ -83,10 +83,13 @@ function renderUnansweredQuestion() {
 
         const letterHtml = letter ? `<div class="option-circle flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4 transition-colors"><span class="option-letter font-bold text-gray-600 transition-colors">${letter}</span></div>` : '';
 
+        // Corrige a exibição do texto da alternativa para C/E
+        const optionText = question.tipo === 'C/E' ? option : option.substring(2).trim();
+
         return `
             <div data-option="${option}" class="option-item group flex items-start p-3 rounded-md cursor-pointer transition-colors hover:bg-gray-50 border border-transparent">
                ${letterHtml}
-               <span class="option-text flex-grow text-gray-700">${option.substring(2)}</span>
+               <span class="option-text flex-grow text-gray-700">${optionText}</span>
                <button class="discard-btn ml-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
                     <i class="fas fa-cut pointer-events-none"></i>
                </button>
