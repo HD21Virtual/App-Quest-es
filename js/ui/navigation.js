@@ -4,17 +4,16 @@ import { renderMateriasView } from '../features/materias.js';
 import { clearAllFilters } from '../features/filter.js';
 import { setState, state } from '../state.js';
 
-export function navigateToView(viewId, isUserClick = true) {
-    // Define allViews aqui para garantir que os elementos do DOM já foram carregados por initDOM()
-    const allViews = [
-        DOM.inicioView,
-        DOM.vadeMecumView,
-        DOM.cadernosView,
-        DOM.materiasView,
-        DOM.revisaoView,
-        DOM.estatisticasView
-    ];
+const allViews = [
+    DOM.inicioView,
+    DOM.vadeMecumView,
+    DOM.cadernosView,
+    DOM.materiasView,
+    DOM.revisaoView,
+    DOM.estatisticasView
+];
 
+export function navigateToView(viewId, isUserClick = true) {
     if (state.isAddingQuestionsMode.active && (viewId !== 'vade-mecum-view' || isUserClick)) {
         exitAddMode();
     }
@@ -62,3 +61,4 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
+
