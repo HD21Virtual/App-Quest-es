@@ -17,6 +17,19 @@ export async function navigateQuestion(direction) {
     await displayQuestion();
 }
 
+export function handleOptionSelect(event) {
+    const target = event.currentTarget;
+    if (target.classList.contains('discarded')) {
+        return;
+    }
+    const activeContainer = getActiveContainer();
+    activeContainer.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
+    target.classList.add('selected');
+    setState('selectedAnswer', target.getAttribute('data-option'));
+    const submitBtn = activeContainer.querySelector('#submit-btn');
+    if (submitBtn) submitBtn.disabled = false;
+}
+
 
 export async function checkAnswer() {
     const question = state.filteredQuestions[state.currentQuestionIndex];
@@ -40,7 +53,29 @@ export function handleDiscardOption(event) {
 }
 
 function renderUnansweredQuestion() {
-// ... existing code ...
+    const activeContainer = getActiveContainer();
+    const questionsContainer = activeContainer.querySelector('#questions-container');
+    if(!questionsContainer) return;
+
+    const question = state.filteredQuestions[state.currentQuestionIndex];
+    const options = Array.isArray(question.options) ? question.options : [];
+    
+    const optionsHtml = options.map((option, index) => {
+        let letterContent = '';
+        if (question.tipo === 'Multipla Escolha' || question.tipo === 'C/E') {
+            const letter = question.tipo === 'C/E' ? option.charAt(0) : String.fromCharCode(65 + index);
+            letterContent = `<span class="option-letter text-gray-700">${letter}</span>`;
+        }
+        
+        const scissorIconSVG = `...`; // SVG content
+
+        return `
+            <div data-option="${option}" class="option-item group flex items-center p-2 rounded-md cursor-pointer ...">
+               ...
+            </div>
+        `;
+    }).join('');
+
     questionsContainer.innerHTML = `
         <p class="text-gray-800 text-lg mb-6">${question.text}</p>
         <div id="options-container" class="space-y-2">
@@ -54,7 +89,7 @@ function renderUnansweredQuestion() {
 
 
 export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = false) {
-// ... existing code ...
+    const activeContainer = getActiveContainer();
     if (!activeContainer) return;
 
     renderUnansweredQuestion();
@@ -89,18 +124,6 @@ export async function displayQuestion() {
     }
 
     if (state.filteredQuestions.length === 0) {
-        questionsContainer.innerHTML = `
-            <div class="text-center p-8 bg-gray-50 rounded-lg">
-                <h3 class="text-xl font-semibold text-gray-700">Nenhuma questão encontrada</h3>
-                <p class="text-gray-500 mt-2">Tente ajustar seus filtros para encontrar o que procura.</p>
-            </div>
-        `;
-        const navigationControls = activeContainer.querySelector('#navigation-controls');
-        if(navigationControls) navigationControls.classList.add('hidden');
-        const questionCounterTop = activeContainer.querySelector('#question-counter-top');
-        if(questionCounterTop) questionCounterTop.classList.add('hidden');
-        if(questionInfoContainer) questionInfoContainer.classList.add('hidden');
-        if(questionToolbar) questionToolbar.classList.add('hidden');
         return;
     }
     
@@ -110,7 +133,7 @@ export async function displayQuestion() {
 
 
 async function updateNavigation() {
-// ... existing code ...
+    const activeContainer = getActiveContainer();
     if (!activeContainer) return;
     // ... rest of navigation update logic
 }
