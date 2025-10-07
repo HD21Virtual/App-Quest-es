@@ -1,6 +1,6 @@
 import DOM from './dom-elements.js';
 import { state } from './state.js';
-import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, handleLoadModalEvents, updateSavedFiltersList } from './ui/modal.js';
+import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 import { createCaderno, createOrUpdateName, saveFilter } from './services/firestore.js';
 import { handleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions } from './features/caderno.js';
