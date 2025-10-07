@@ -1,67 +1,114 @@
-import {
-    showSaveFilterModal, showLoadFilterModal,
-    showCadernoModal, showNameModal, handleConfirmation, 
-    showConfirmationModal, showAuthModal, closeAuthModal
-} from './ui/modal.js';
-import { handleAuth, handleGoogleAuth } from './services/auth.js';
-import { saveFilter, deleteFilter, createCaderno, createOrUpdateName, deleteItem } from './services/firestore.js';
-import { handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, handleAddQuestionsToCaderno } from './features/caderno.js';
-import { handleMateriaClick, handleAssuntoListClick, handleBackToMaterias } from './features/materias.js';
-import { handleStartReview } from './features/srs.js';
-import { navigateQuestion, handleOptionSelect, checkAnswer } from './features/question-viewer.js';
+import DOM from './dom-elements.js';
+import { state } from './state.js';
+import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, handleLoadModalEvents, updateSavedFiltersList } from './ui/modal.js';
+import { createCaderno, createOrUpdateName, saveFilter } from './services/firestore.js';
+import { handleAuth } from './services/auth.js';
+import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions } from './features/caderno.js';
+import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
+import { handleStartReview, handleSrsFeedback } from './features/srs.js';
+import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
+import { applyFilters, clearAllFilters } from './features/filter.js';
+import { navigateToView } from './ui/navigation.js';
+
+// Handlers
+const handleSaveFilter = async () => {
+    const name = DOM.filterNameInput.value.trim();
+    if (!name || !state.currentUser) return;
+
+    const currentFilters = {
+        name: name,
+        materias: JSON.parse(DOM.materiaFilter.dataset.value || '[]'),
+        assuntos: JSON.parse(DOM.assuntoFilter.dataset.value || '[]'),
+        tipo: DOM.tipoFilterGroup.querySelector('.active-filter')?.dataset.value || 'todos',
+        search: DOM.searchInput.value
+    };
+    
+    await saveFilter(currentFilters);
+
+    DOM.filterNameInput.value = '';
+    closeSaveModal();
+};
+
 
 export function setupAllEventListeners() {
-    document.body.addEventListener('click', (event) => {
+    document.addEventListener('click', async (event) => {
         const target = event.target;
-        const action = target.dataset.action;
+        const targetId = target.id;
+        const targetClassList = target.classList;
 
         // --- Auth ---
-        if (action === 'login') handleAuth('login');
-        if (action === 'register') handleAuth('register');
-        if (action === 'google-login') handleGoogleAuth();
-        if (action === 'logout') handleAuth('logout');
-        if (action === 'show-auth-modal') showAuthModal();
-        if (action === 'close-auth-modal') closeAuthModal();
-        
+        if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
+            openAuthModal();
+        } else if (targetId === 'login-btn') {
+            await handleAuth('login');
+        } else if (targetId === 'register-btn') {
+            await handleAuth('register');
+        } else if (targetId === 'google-login-btn') {
+            await handleAuth('google');
+        } else if (target.closest('#logout-btn') || target.closest('#logout-btn-mobile')) {
+            await handleAuth('logout');
+        }
+
         // --- Modals ---
-        if (action === 'show-save-filter') showSaveFilterModal();
-        if (action === 'show-load-filter') showLoadFilterModal();
-        if (action === 'show-create-caderno') showCadernoModal('create-from-filter');
-        if (action === 'show-add-caderno-to-folder') showCadernoModal('add-to-folder');
-        if (action === 'show-create-folder') showNameModal('create-folder');
-        if (action === 'confirm-delete') handleConfirmation(true);
-        if (action === 'cancel-delete') handleConfirmation(false);
+        else if (target.closest('#close-auth-modal')) closeAuthModal();
+        else if (target.closest('#save-filter-btn')) openSaveModal();
+        else if (target.closest('#close-save-modal') || target.closest('#cancel-save-btn')) closeSaveModal();
+        else if (target.closest('#confirm-save-btn')) await handleSaveFilter();
+        
+        else if (target.closest('#saved-filters-list-btn')) openLoadModal();
+        else if (target.closest('#close-load-modal')) closeLoadModal();
+        else if (target.closest('#saved-filters-list-container')) handleLoadModalEvents(event);
 
-        // --- Cadernos ---
-        if (target.closest('.folder-item') && target.closest('[data-action="open-folder"]')) handleFolderItemClick(target.closest('.folder-item').dataset.folderId);
-        if (target.closest('.caderno-item') && target.closest('[data-action="open-caderno"]')) handleCadernoItemClick(target.closest('.caderno-item').dataset.cadernoId);
-        if (action === 'back-to-folders') handleBackToFolders();
-        if (action === 'add-questions-to-caderno') handleAddQuestionsToCaderno();
-        if (target.closest('.edit-folder-btn')) showNameModal('edit-folder', target.closest('.edit-folder-btn').dataset);
-        if (target.closest('.edit-caderno-btn')) showNameModal('edit-caderno', target.closest('.edit-caderno-btn').dataset);
-        if (target.closest('.delete-folder-btn')) showConfirmationModal('folder', target.closest('.delete-folder-btn').dataset.id);
-        if (target.closest('.delete-caderno-btn')) showConfirmationModal('caderno', target.closest('.delete-caderno-btn').dataset.id);
+        else if (target.closest('#create-caderno-btn')) openCadernoModal(true);
+        else if (target.closest('#add-caderno-to-folder-btn')) openCadernoModal(false, state.currentFolderId);
+        else if (target.closest('#close-caderno-modal') || target.closest('#cancel-caderno-btn')) closeCadernoModal();
+        
+        else if (target.closest('#create-folder-btn')) openNameModal('folder');
+        else if (target.closest('#close-name-modal') || target.closest('#cancel-name-btn')) closeNameModal();
+        
+        else if (target.closest('#cancel-confirmation-btn')) closeConfirmationModal();
+        else if (target.closest('#confirm-delete-btn')) await handleConfirmation();
+        
+        else if (target.closest('#close-stats-modal')) closeStatsModal();
 
-        // --- Matérias ---
-        if (target.closest('.materia-item')) handleMateriaClick(target.closest('.materia-item').dataset.materiaName);
-        if (target.closest('.assunto-item')) handleAssuntoListClick(target.closest('.assunto-item').dataset.assuntoName);
-        if (action === 'back-to-materias') handleBackToMaterias();
+        // --- Cadernos / Folders ---
+        else if (target.closest('#saved-cadernos-list-container')) {
+            handleCadernoItemClick(event);
+            handleFolderItemClick(event);
+        }
+        else if (target.closest('#back-to-folders-btn')) handleBackToFolders();
+        else if (target.closest('#add-questions-to-caderno-btn')) handleAddQuestionsToCaderno();
+        else if (target.closest('#cancel-add-questions-btn')) cancelAddQuestions();
+
+
+        // --- Materias / Assuntos ---
+        else if (target.closest('#materias-list-container')) handleMateriaListClick(event);
+        else if (target.closest('#assuntos-list-container')) handleAssuntoListClick(event);
+        else if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
         
         // --- Questions ---
-        if (action === 'prev-question') navigateQuestion(-1);
-        if (action === 'next-question') navigateQuestion(1);
-        if (target.closest('.option-item')) handleOptionSelect(target.closest('.option-item').dataset.option);
-        if (action === 'submit-answer') checkAnswer();
-        if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
+        else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
+        else if (target.closest('#next-question-btn')) await navigateQuestion('next');
+        else if (target.closest('.option-item')) handleOptionSelect(event);
+        else if (target.closest('#submit-btn')) await checkAnswer();
+        else if (target.closest('.discard-btn')) handleDiscardOption(event);
+        else if (target.closest('.srs-feedback-btn')) await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
 
-        // --- Review ---
-        if (action === 'start-review') handleStartReview();
+
+        // --- Filters ---
+        else if (target.closest('#filter-btn')) await applyFilters();
+        else if (target.closest('#clear-filters-btn')) clearAllFilters();
+        
+        // --- Navigation ---
+        else if (target.closest('.nav-link')) {
+            event.preventDefault();
+            navigateToView(target.closest('.nav-link').dataset.view);
+        }
     });
 
-    // Non-delegated listeners
-    const resetBtn = document.getElementById('reset-all-progress-btn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => showConfirmationModal('all-progress'));
+    // Input/Change listeners
+    if (DOM.searchSavedFiltersInput) {
+        DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
 }
 
