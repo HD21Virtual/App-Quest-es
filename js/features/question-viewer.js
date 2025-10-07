@@ -184,6 +184,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             `;
             footer.innerHTML = `<div class="w-full">${feedbackDiv.innerHTML} ${srsButtonsHTML}</div>`;
         } else {
+            feedbackHtml += `         
                 <button id="show-comment-btn" class="text-blue-600 hover:underline">Ver resolução</button>
              `;
              footer.appendChild(feedbackDiv);
@@ -336,6 +337,7 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
 
 
