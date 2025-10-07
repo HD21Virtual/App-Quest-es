@@ -1,9 +1,9 @@
-import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
+import { state, setState } from '../state.js';
 import { navigateToView } from '../ui/navigation.js';
 import { clearAllFilters, applyFilters } from './filter.js';
 
-export function renderMateriasView() {
+function renderMateriasView() {
     if (!state.currentUser) {
         DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Por favor, faça login para ver as matérias.</p>';
         DOM.assuntosListContainer.classList.add('hidden');
@@ -33,8 +33,8 @@ export function renderMateriasView() {
         DOM.backToMateriasBtn.classList.add('hidden');
 
         if (state.filterOptions.materia.length === 0) {
-             DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma matéria encontrada.</p>';
-             return;
+            DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma matéria encontrada. Adicione questões para vê-las aqui.</p>';
+            return;
         }
 
         const materiasHtml = state.filterOptions.materia.map(materia => `
@@ -55,32 +55,43 @@ export function renderMateriasView() {
     }
 }
 
-export function handleMateriaClick(materiaName) {
-    const selected = state.filterOptions.materia.find(m => m.name === materiaName);
-    setState('selectedMateria', selected);
-    renderMateriasView();
+
+export function handleMateriaListClick(event) {
+    const materiaItem = event.target.closest('.materia-item');
+    if (materiaItem) {
+        const materiaName = materiaItem.dataset.materiaName;
+        setState('selectedMateria', state.filterOptions.materia.find(m => m.name === materiaName));
+        renderMateriasView();
+    }
 }
 
-export function handleAssuntoListClick(assuntoName) {
-    const materiaName = state.selectedMateria.name;
+export function handleAssuntoListClick(event) {
+    const assuntoItem = event.target.closest('.assunto-item');
+    if (assuntoItem) {
+        const assuntoName = assuntoItem.dataset.assuntoName;
+        const materiaName = state.selectedMateria.name;
 
-    navigateToView('vade-mecum-view');
-    
-    setTimeout(() => {
-        clearAllFilters();
-        
-        const materiaContainer = DOM.materiaFilter;
-        materiaContainer.dataset.value = JSON.stringify([materiaName]);
-        materiaContainer.querySelector('.custom-select-value').textContent = materiaName;
-        
+        navigateToView('vade-mecum-view');
+
         setTimeout(() => {
-            const assuntoContainer = DOM.assuntoFilter;
-            assuntoContainer.dataset.value = JSON.stringify([assuntoName]);
-            assuntoContainer.querySelector('.custom-select-value').textContent = assuntoName;
+            clearAllFilters();
             
-            applyFilters();
+            const materiaCheckbox = DOM.materiaFilter.querySelector(`.custom-select-option[data-value="${materiaName}"]`);
+            if (materiaCheckbox) {
+                materiaCheckbox.checked = true;
+                DOM.materiaFilter.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            setTimeout(() => {
+                const assuntoCheckbox = DOM.assuntoFilter.querySelector(`.custom-select-option[data-value="${assuntoName}"]`);
+                if (assuntoCheckbox) {
+                    assuntoCheckbox.checked = true;
+                    DOM.assuntoFilter.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                applyFilters();
+            }, 50);
         }, 50);
-    }, 50);
+    }
 }
 
 export function handleBackToMaterias() {
