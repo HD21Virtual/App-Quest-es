@@ -1,17 +1,14 @@
-import DOM from "./dom-elements.js";
+import DOM from './dom-elements.js';
 
-export let state = {
+let state = {
+    currentUser: null,
     allQuestions: [],
     filteredQuestions: [],
-    filterOptions: {
-        materia: [],
-        allAssuntos: []
-    },
     currentQuestionIndex: 0,
     selectedAnswer: null,
     sessionStats: [],
-    historicalSessions: [],
-    currentUser: null,
+    performanceChart: null,
+    homePerformanceChart: null,
     userFolders: [],
     userCadernos: [],
     currentFolderId: null,
@@ -19,28 +16,39 @@ export let state = {
     editingId: null,
     editingType: null,
     isAddingQuestionsMode: { active: false, cadernoId: null },
+    createCadernoWithFilteredQuestions: false,
+    deletingId: null,
+    deletingType: null,
+    isNavigatingBackFromAddMode: false,
     isReviewSession: false,
+    userReviewItems: [],
+    historicalSessions: [],
     userAnswers: new Map(),
     userCadernoState: new Map(),
     userReviewItemsMap: new Map(),
-    savedFilters: [], // Added this key
-    unsubscribes: [],
+    filterOptions: {
+        materia: [],
+        allAssuntos: []
+    },
+    savedFilters: [],
+    selectedMateria: null,
+    unsubscribes: []
 };
 
 export function setState(key, value) {
-    if (Object.prototype.hasOwnProperty.call(state, key)) {
+    if (key in state) {
         state[key] = value;
     } else {
         console.warn(`Tentativa de definir uma chave de estado inexistente: ${key}`);
     }
 }
 
-export function getActiveContainer() {
-    return state.currentCadernoId ? DOM.savedCadernosListContainer : DOM.vadeMecumContentArea;
+export function getState() {
+    return state;
 }
 
-export function clearSessionStats() {
-    state.sessionStats = [];
+export function getActiveContainer() {
+    return state.currentCadernoId ? DOM.savedCadernosListContainer : DOM.vadeMecumContentArea;
 }
 
 export function addUnsubscribe(unsubscribe) {
@@ -53,17 +61,26 @@ export function clearUnsubscribes() {
 }
 
 export function resetStateOnLogout() {
-    state.allQuestions = [];
-    state.filteredQuestions = [];
-    state.userFolders = [];
-    state.userCadernos = [];
-    state.userAnswers.clear();
-    state.userCadernoState.clear();
-    state.userReviewItemsMap.clear();
-    state.historicalSessions = [];
-    state.sessionStats = [];
-    if (DOM.reviewCard) DOM.reviewCard.classList.add('hidden');
-    if (DOM.savedCadernosListContainer) DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus cadernos.</p>';
-    if (DOM.savedFiltersListContainer) DOM.savedFiltersListContainer.innerHTML = '<p class="text-center text-gray-500">Faça login para ver seus filtros.</p>';
+    clearUnsubscribes();
+    state = {
+        ...state, // keep some parts like charts if needed
+        currentUser: null,
+        userFolders: [],
+        userCadernos: [],
+        userReviewItems: [],
+        historicalSessions: [],
+        userAnswers: new Map(),
+        userCadernoState: new Map(),
+        userReviewItemsMap: new Map(),
+        savedFilters: [],
+        sessionStats: [],
+    };
 }
+
+
+export function clearSessionStats() {
+    state.sessionStats = [];
+}
+
+export { state };
 
