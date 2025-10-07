@@ -4,16 +4,18 @@ import { renderMateriasView } from '../features/materias.js';
 import { clearAllFilters } from '../features/filter.js';
 import { setState, state } from '../state.js';
 
-const allViews = [
-    DOM.inicioView,
-    DOM.vadeMecumView,
-    DOM.cadernosView,
-    DOM.materiasView,
-    DOM.revisaoView,
-    DOM.estatisticasView
-];
-
 export function navigateToView(viewId, isUserClick = true) {
+    // Correction: Initialize the views array inside the function
+    // This ensures that the DOM elements are available when the function is called.
+    const allViews = [
+        DOM.inicioView,
+        DOM.vadeMecumView,
+        DOM.cadernosView,
+        DOM.materiasView,
+        DOM.revisaoView,
+        DOM.estatisticasView
+    ];
+    
     if (state.isAddingQuestionsMode.active && (viewId !== 'vade-mecum-view' || isUserClick)) {
         exitAddMode();
     }
@@ -61,4 +63,3 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
-
