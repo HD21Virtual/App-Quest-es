@@ -170,7 +170,7 @@ export async function generateStatsForQuestions(questionIds) {
     if (!state.currentUser || questionIds.length === 0) {
         return { totalCorrect: 0, totalIncorrect: 0, statsByMateria: {} };
     }
-
+    const { getDoc, doc, db } = await import('../firebase-config.js');
     let totalCorrect = 0;
     let totalIncorrect = 0;
     const statsByMateria = {};
