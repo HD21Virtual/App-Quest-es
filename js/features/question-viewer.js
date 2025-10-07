@@ -100,6 +100,7 @@ function renderUnansweredQuestion() {
         <div id="card-footer" class="mt-6 flex items-center">
              <!-- O botão de resolver será adicionado se não for respondido -->
         </div>
+        <div id="commentary-container" class="hidden mt-6 pt-6 border-t border-gray-200"></div>
     `;
 }
 
@@ -142,7 +143,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             <div class="flex items-center space-x-4">
                 <span class="font-bold text-lg ${resultClass}">${resultText}</span>
                 <span class="text-sm text-gray-500">${randomPercentage}% acertaram</span>
-                <a href="#" class="text-sm text-blue-600 hover:underline">Ver resolução</a>
+                <button class="view-resolution-btn text-sm text-blue-600 hover:underline">Ver resolução</button>
             </div>
         `;
 
@@ -158,6 +159,31 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             footer.innerHTML += `<div class="mt-4 pt-4 border-t w-full">${reviewButtons}</div>`;
             footer.classList.add('flex-col', 'items-start');
         }
+    }
+
+    const viewResolutionBtn = activeContainer.querySelector('.view-resolution-btn');
+    const commentaryContainer = activeContainer.querySelector('#commentary-container');
+    
+    if (viewResolutionBtn && commentaryContainer) {
+        viewResolutionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            const isHidden = commentaryContainer.classList.contains('hidden');
+            
+            if (isHidden) {
+                const commentaryText = question.commentary || '<p class="text-gray-600">Nenhum comentário disponível para esta questão.</p>';
+                commentaryContainer.innerHTML = `
+                    <h4 class="font-bold text-lg text-gray-800 mb-2">Gabarito Comentado</h4>
+                    <div class="prose max-w-none text-gray-700">${commentaryText}</div>
+                `;
+                commentaryContainer.classList.remove('hidden');
+                viewResolutionBtn.textContent = 'Ocultar resolução';
+            } else {
+                commentaryContainer.classList.add('hidden');
+                commentaryContainer.innerHTML = '';
+                viewResolutionBtn.textContent = 'Ver resolução';
+            }
+        });
     }
 }
 
