@@ -100,7 +100,7 @@ function renderUnansweredQuestion() {
         <div id="card-footer" class="mt-6 flex items-center">
              <!-- O botão de resolver será adicionado se não for respondido -->
         </div>
-        <div id="commentary-container" class="hidden mt-6 pt-6 border-t border-gray-200"></div>
+        <div id="commentary-container" class="hidden mt-6"></div>
     `;
 }
 
@@ -171,10 +171,17 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             const isHidden = commentaryContainer.classList.contains('hidden');
             
             if (isHidden) {
-                const commentaryText = question.explanation || '<p class="text-gray-600">Nenhum comentário disponível para esta questão.</p>';
+                const commentaryText = question.explanation || 'Nenhum comentário disponível para esta questão.';
+                const boxColorClass = isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800';
+                
                 commentaryContainer.innerHTML = `
-                    <h4 class="font-bold text-lg text-gray-800 mb-2">Gabarito Comentado</h4>
-                    <div class="prose max-w-none text-gray-700">${commentaryText}</div>
+                    <div class="p-4 rounded-lg ${boxColorClass}">
+                        <p class="leading-relaxed">
+                            <strong class="font-bold">Gabarito: ${question.correctAnswer}</strong>
+                            <br>
+                            ${commentaryText}
+                        </p>
+                    </div>
                 `;
                 commentaryContainer.classList.remove('hidden');
                 viewResolutionBtn.textContent = 'Ocultar resolução';
