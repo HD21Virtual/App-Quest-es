@@ -5,18 +5,35 @@ import { saveUserAnswer, updateQuestionHistory, saveCadernoState } from '../serv
 import { removeQuestionFromCaderno } from './caderno.js';
 
 export async function navigateQuestion(direction) {
-// ... existing code ...
-    if (submitBtn) submitBtn.disabled = false;
+    if (direction === 'prev' && state.currentQuestionIndex > 0) {
+        setState('currentQuestionIndex', state.currentQuestionIndex - 1);
+    } else if (direction === 'next' && state.currentQuestionIndex < state.filteredQuestions.length - 1) {
+        setState('currentQuestionIndex', state.currentQuestionIndex + 1);
+    }
+
+    if (state.currentCadernoId) {
+        await saveCadernoState(state.currentCadernoId, state.currentQuestionIndex);
+    }
+    await displayQuestion();
 }
 
 
 export async function checkAnswer() {
-// ... existing code ...
+    const question = state.filteredQuestions[state.currentQuestionIndex];
+    const isCorrect = state.selectedAnswer === question.correctAnswer;
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, true);
 }
 
 export function handleDiscardOption(event) {
-// ... existing code ...
+    event.stopPropagation();
+    const targetItem = event.currentTarget.closest('.option-item');
+    if (targetItem) {
+        targetItem.classList.toggle('discarded');
+        if (targetItem.classList.contains('selected')) {
+            targetItem.classList.remove('selected');
+            setState('selectedAnswer', null);
+            const activeContainer = getActiveContainer();
+            const submitBtn = activeContainer.querySelector('#submit-btn');
             if(submitBtn) submitBtn.disabled = true;
         }
     }
@@ -102,3 +119,4 @@ async function updateNavigation() {
 export function renderQuestionListForAdding(questions, existingQuestionIds) {
     // ... rendering logic
 }
+
