@@ -5,6 +5,7 @@ import { saveUserAnswer, updateQuestionHistory, saveCadernoState } from '../serv
 import { removeQuestionFromCaderno } from './caderno.js';
 
 export async function navigateQuestion(direction) {
+// ... existing code ...
     if (direction === 'prev' && state.currentQuestionIndex > 0) {
         setState('currentQuestionIndex', state.currentQuestionIndex - 1);
     } else if (direction === 'next' && state.currentQuestionIndex < state.filteredQuestions.length - 1) {
@@ -18,6 +19,7 @@ export async function navigateQuestion(direction) {
 }
 
 export function handleOptionSelect(event) {
+// ... existing code ...
     const target = event.currentTarget;
     if (target.classList.contains('discarded')) {
         return;
@@ -32,12 +34,14 @@ export function handleOptionSelect(event) {
 
 
 export async function checkAnswer() {
+// ... existing code ...
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const isCorrect = state.selectedAnswer === question.correctAnswer;
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, true);
 }
 
 export function handleDiscardOption(event) {
+// ... existing code ...
     event.stopPropagation();
     const targetItem = event.currentTarget.closest('.option-item');
     if (targetItem) {
@@ -53,6 +57,7 @@ export function handleDiscardOption(event) {
 }
 
 function renderUnansweredQuestion() {
+// ... existing code ...
     const activeContainer = getActiveContainer();
     const questionsContainer = activeContainer.querySelector('#questions-container');
     if(!questionsContainer) return;
@@ -89,6 +94,7 @@ function renderUnansweredQuestion() {
 
 
 export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = false) {
+// ... existing code ...
     const activeContainer = getActiveContainer();
     if (!activeContainer) return;
 
@@ -124,22 +130,46 @@ export async function displayQuestion() {
     }
 
     if (state.filteredQuestions.length === 0) {
+        questionsContainer.innerHTML = `
+            <div class="text-center py-12 px-6">
+                <h3 class="text-xl font-bold text-gray-700">Nenhuma questão encontrada</h3>
+                <p class="text-gray-500 mt-2">Por favor, ajuste os filtros ou clique em "Limpar filtro" para ver as questões.</p>
+            </div>
+        `;
         return;
     }
     
     const question = state.filteredQuestions[state.currentQuestionIndex];
-    // ... rest of rendering logic
+// ... existing code ...
 }
 
 
 async function updateNavigation() {
     const activeContainer = getActiveContainer();
     if (!activeContainer) return;
-    // ... rest of navigation update logic
+
+    const navContainer = activeContainer.querySelector('#navigation-controls');
+    const questionCounterTop = activeContainer.querySelector('#question-counter-top');
+
+    if (!navContainer || !questionCounterTop) return;
+
+    if (state.filteredQuestions.length > 0) {
+        navContainer.classList.remove('hidden');
+        questionCounterTop.classList.remove('hidden');
+        questionCounterTop.innerHTML = `Questão <strong>${state.currentQuestionIndex + 1}</strong> de <strong>${state.filteredQuestions.length}</strong>`;
+
+        const prevBtn = activeContainer.querySelector('#prev-question-btn');
+        const nextBtn = activeContainer.querySelector('#next-question-btn');
+        if(prevBtn) prevBtn.disabled = state.currentQuestionIndex === 0;
+        if(nextBtn) nextBtn.disabled = state.currentQuestionIndex === state.filteredQuestions.length - 1;
+
+    } else {
+        navContainer.classList.add('hidden');
+        questionCounterTop.classList.add('hidden');
+    }
 }
 
 
 export function renderQuestionListForAdding(questions, existingQuestionIds) {
-    // ... rendering logic
+// ... existing code ...
 }
-
