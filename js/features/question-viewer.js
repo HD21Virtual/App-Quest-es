@@ -81,13 +81,25 @@ function renderUnansweredQuestion() {
             const letter = question.tipo === 'C/E' ? option.charAt(0) : String.fromCharCode(65 + index);
             letterContent = `<span class="option-letter text-gray-700 font-medium">${letter}</span>`;
         }
+        
+        const scissorIconSVG = `
+            <svg class="h-5 w-5 text-blue-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 6.5a2 2 0 114 0 2 2 0 01-4 0zM3.5 17.5a2 2 0 114 0 2 2 0 01-4 0z"></path>
+               <path stroke-linecap="round" stroke-linejoin="round" d="M6 8.5L18 15.5"></path>
+               <path stroke-linecap="round" stroke-linejoin="round" d="M6 15.5L18 8.5"></path>
+            </svg>`;
 
         return `
-            <div data-option="${option}" class="option-item group flex items-start p-3 rounded-md cursor-pointer transition-colors duration-200 border border-transparent hover:border-blue-300">
-                <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border-2 border-gray-300 transition-colors duration-200 option-circle mr-4 mt-1">
-                    ${letterContent}
+            <div data-option="${option}" class="option-item group flex items-center p-2 rounded-md cursor-pointer transition duration-200">
+               <div class="action-icon-container w-8 h-8 flex-shrink-0 flex items-center justify-center mr-1">
+                    <div class="discard-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-100 rounded-full p-1.5">
+                        ${scissorIconSVG}
+                    </div>
                 </div>
-                <div class="flex-grow option-text text-gray-700">${option}</div>
+               <div class="option-circle flex-shrink-0 w-8 h-8 border-2 border-gray-300 rounded-full flex items-center justify-center mr-4 transition-all duration-200">
+                   ${letterContent}
+               </div>
+               <span class="option-text text-gray-800">${option}</span>
             </div>
         `;
     }).join('');
@@ -102,6 +114,10 @@ function renderUnansweredQuestion() {
         </div>
         <div id="commentary-container" class="hidden mt-6"></div>
     `;
+    
+    questionsContainer.querySelectorAll('.discard-btn').forEach(btn => {
+        btn.addEventListener('click', handleDiscardOption);
+    });
 }
 
 
@@ -111,23 +127,28 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
 
     const question = state.filteredQuestions[state.currentQuestionIndex];
     
+    // Remove o botão de descarte das alternativas
+    activeContainer.querySelectorAll('.action-icon-container').forEach(icon => icon.innerHTML = '');
+
     activeContainer.querySelectorAll('.option-item').forEach(item => {
         item.classList.add('is-answered');
         item.style.cursor = 'default';
         const option = item.dataset.option;
         const optionCircle = item.querySelector('.option-circle');
-        const optionText = item.querySelector('.option-text');
 
 
         if (option === question.correctAnswer) {
             item.classList.add('correct-answer');
-            if (optionCircle) optionCircle.innerHTML = `<i class="fas fa-check text-green-600"></i>`;
+             if(activeContainer.querySelector('.action-icon-container')) {
+                item.querySelector('.action-icon-container').innerHTML = `<i class="fas fa-check text-green-500 text-xl"></i>`;
+            }
         }
         if (option === userAnswer && !isCorrect) {
             item.classList.add('incorrect-answer');
-             if (optionCircle) optionCircle.innerHTML = `<i class="fas fa-times text-red-600"></i>`;
+             if(activeContainer.querySelector('.action-icon-container')) {
+                item.querySelector('.action-icon-container').innerHTML = `<i class="fas fa-times text-red-500 text-xl"></i>`;
+            }
         }
-        // Remove hover effects from answered questions
         item.classList.remove('hover:border-blue-300');
     });
 
@@ -136,7 +157,6 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
         const resultClass = isCorrect ? 'text-green-600' : 'text-red-600';
         const resultText = isCorrect ? 'Correta!' : 'Incorreta!';
         
-        // Simulating percentage, replace with real data if available
         const randomPercentage = (Math.random() * (85 - 60) + 60).toFixed(1);
 
         footer.innerHTML = `
@@ -229,7 +249,6 @@ export async function displayQuestion() {
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const userAnswerData = state.userAnswers.get(question.id);
 
-    // Render info, counter, and controls
     questionCounterTop.innerHTML = `Questão <strong>${state.currentQuestionIndex + 1}</strong> de <strong>${state.filteredQuestions.length}</strong>`;
     questionInfoContainer.innerHTML = `
         <div class="flex flex-col sm:flex-row sm:space-x-4">
