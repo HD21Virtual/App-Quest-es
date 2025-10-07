@@ -313,3 +313,23 @@ export async function saveCadernoState(cadernoId, questionIndex) {
     }
 }
 
+export async function deleteItem(type, id) {
+    if (!state.currentUser) return;
+
+    if (type === 'folder') {
+        const cadernosToDelete = state.userCadernos.filter(c => c.folderId === id);
+        const batch = writeBatch(db);
+        cadernosToDelete.forEach(caderno => {
+            const cadernoRef = doc(db, 'users', state.currentUser.uid, 'cadernos', caderno.id);
+            batch.delete(cadernoRef);
+        });
+        const folderRef = doc(db, 'users', state.currentUser.uid, 'folders', id);
+        batch.delete(folderRef);
+        await batch.commit();
+
+    } else if (type === 'caderno') {
+        const cadernoRef = doc(db, 'users', state.currentUser.uid, 'cadernos', id);
+        await deleteDoc(cadernoRef);
+    }
+}
+
