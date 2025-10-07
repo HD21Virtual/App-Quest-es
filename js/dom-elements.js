@@ -33,6 +33,7 @@ export function initDOM() {
     DOM.selectedFiltersContainer = document.getElementById('selected-filters-container');
     DOM.filterCard = document.getElementById('filter-card');
     DOM.toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+    DOM.vadeMecumContentArea = document.getElementById('vade-mecum-content-area');
 
     // Cadernos View
     DOM.savedCadernosListContainer = document.getElementById('saved-cadernos-list-container');
@@ -96,4 +97,3 @@ export function initDOM() {
 }
 
 export default DOM;
-
