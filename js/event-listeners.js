@@ -6,7 +6,7 @@ import { handleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions } from './features/caderno.js';
 import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
-import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
+import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption, removeQuestionFromCaderno } from './features/question-viewer.js';
 import { applyFilters, clearAllFilters } from './features/filter.js';
 import { navigateToView } from './ui/navigation.js';
 
