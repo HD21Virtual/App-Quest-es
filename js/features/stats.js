@@ -1,6 +1,7 @@
 import { state, getActiveContainer } from '../state.js';
 import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart } from '../ui/charts.js';
 import { getHistoricalCountsForQuestions } from '../services/firestore.js';
+import DOM from '../dom-elements.js';
 
 export function updateStatsPageUI() {
     const combinedSessions = [...state.historicalSessions];
@@ -38,8 +39,18 @@ export function updateStatsPageUI() {
         }
     });
 
-    renderHomePerformanceChart(materiaTotals);
-    renderWeeklyChart();
+    // Only render home charts if the home view is active
+    if (DOM.inicioView && !DOM.inicioView.classList.contains('hidden')) {
+        renderHomePerformanceChart(materiaTotals);
+        renderWeeklyChart();
+    }
+    
+    // Update general stats cards (they exist on the home page)
+    if (DOM.statsTotalQuestionsEl) DOM.statsTotalQuestionsEl.textContent = totalQuestions;
+    if (DOM.statsTotalCorrectEl) DOM.statsTotalCorrectEl.textContent = totalCorrect;
+    if (DOM.statsTotalIncorrectEl) DOM.statsTotalIncorrectEl.textContent = totalQuestions - totalCorrect;
+    const geralAccuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(0) : 0;
+    if (DOM.statsGeralAccuracyEl) DOM.statsGeralAccuracyEl.textContent = `${geralAccuracy}%`;
 
     // ... logic to update stats page containers
 }
