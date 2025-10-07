@@ -18,8 +18,8 @@ export async function navigateQuestion(direction) {
 }
 
 export function handleOptionSelect(event) {
-    const target = event.currentTarget;
-    if (target.classList.contains('discarded') || target.classList.contains('is-answered')) {
+    const target = event.target.closest('.option-item');
+    if (!target || target.classList.contains('discarded') || target.classList.contains('is-answered')) {
         return;
     }
     const activeContainer = getActiveContainer();
@@ -52,7 +52,7 @@ export async function checkAnswer() {
 
 export function handleDiscardOption(event) {
     event.stopPropagation();
-    const targetItem = event.currentTarget.closest('.option-item');
+    const targetItem = event.target.closest('.option-item');
     if (targetItem) {
         targetItem.classList.toggle('discarded');
         if (targetItem.classList.contains('selected')) {
@@ -245,3 +245,4 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
     const listContainer = document.getElementById('vade-mecum-content-area');
     listContainer.innerHTML = `<div class="bg-white rounded-lg shadow-sm">${listHtml}</div>`;
 }
+
