@@ -3,7 +3,7 @@ import { state, setState } from '../state.js';
 import { navigateToView } from '../ui/navigation.js';
 import { clearAllFilters, applyFilters } from './filter.js';
 
-function renderMateriasView() {
+export function renderMateriasView() {
     if (!state.currentUser) {
         DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Por favor, faça login para ver as matérias.</p>';
         DOM.assuntosListContainer.classList.add('hidden');
