@@ -18,8 +18,8 @@ export async function navigateQuestion(direction) {
 }
 
 export function handleOptionSelect(event) {
-    const target = event.currentTarget;
-    if (target.classList.contains('discarded') || target.closest('.is-answered')) {
+    const target = event.target.closest('.option-item');
+    if (!target || target.classList.contains('discarded') || target.classList.contains('is-answered')) {
         return;
     }
     const activeContainer = getActiveContainer();
@@ -256,3 +256,4 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
