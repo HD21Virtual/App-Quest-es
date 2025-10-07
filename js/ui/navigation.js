@@ -1,38 +1,38 @@
 import DOM from '../dom-elements.js';
-import { state } from '../state.js';
-import { renderFoldersAndCadernos, exitAddMode } from '../features/caderno.js';
+import { exitAddMode, renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderMateriasView } from '../features/materias.js';
-import { applyFilters, clearAllFilters } from '../features/filter.js';
+import { clearAllFilters } from '../features/filter.js';
+import { setState, state } from '../state.js';
 
 const allViews = [
-    'inicio-view',
-    'vade-mecum-view',
-    'cadernos-view',
-    'materias-view',
-    'revisao-view',
-    'estatisticas-view'
+    DOM.inicioView,
+    DOM.vadeMecumView,
+    DOM.cadernosView,
+    DOM.materiasView,
+    DOM.revisaoView,
+    DOM.estatisticasView
 ];
 
 export function navigateToView(viewId, isUserClick = true) {
     if (state.isAddingQuestionsMode.active && (viewId !== 'vade-mecum-view' || isUserClick)) {
         exitAddMode();
     }
-    
-    // Hide all views first
-    allViews.forEach(id => {
-        const viewElement = document.getElementById(id);
-        if (viewElement) { // Defensive check
-            viewElement.classList.add('hidden');
-        }
+
+    if (viewId === 'cadernos-view' && !state.isNavigatingBackFromAddMode) {
+        setState('currentFolderId', null);
+        setState('currentCadernoId', null);
+    }
+    setState('isNavigatingBackFromAddMode', false);
+
+    allViews.forEach(v => {
+        if (v) v.classList.add('hidden');
     });
-    
-    // Show the target view
-    const targetView = document.getElementById(viewId);
-    if (targetView) { // Defensive check
+
+    const targetView = allViews.find(v => v && v.id === viewId);
+    if (targetView) {
         targetView.classList.remove('hidden');
     }
 
-    // Update nav link styles
     document.querySelectorAll('.nav-link').forEach(navLink => {
         navLink.classList.remove('text-blue-700', 'bg-blue-100');
         navLink.classList.add('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
@@ -43,11 +43,8 @@ export function navigateToView(viewId, isUserClick = true) {
         matchingLink.classList.remove('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
     });
 
-    // View-specific logic
     if (viewId === 'vade-mecum-view') {
-        if (state.isAddingQuestionsMode.active) {
-            applyFilters();
-        } else if (!state.isReviewSession) {
+        if (!state.isReviewSession && isUserClick) {
             DOM.vadeMecumTitle.textContent = "Vade Mecum de Questões";
             DOM.toggleFiltersBtn.classList.remove('hidden');
             DOM.filterCard.classList.remove('hidden');
@@ -56,10 +53,10 @@ export function navigateToView(viewId, isUserClick = true) {
     } else if (viewId === 'cadernos-view') {
         renderFoldersAndCadernos();
     } else if (viewId === 'materias-view') {
+        setState('selectedMateria', null);
         renderMateriasView();
     }
 
-    // Close mobile menu on navigation
     if (DOM.mobileMenu) {
         DOM.mobileMenu.classList.add('hidden');
     }
