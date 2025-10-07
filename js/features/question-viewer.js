@@ -43,12 +43,9 @@ export async function checkAnswer() {
         });
     }
 
-    if (state.currentUser && !state.isReviewSession) {
-         await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
-         await updateQuestionHistory(question.id, isCorrect);
-    }
-
-    renderAnsweredQuestion(isCorrect, state.selectedAnswer, true);
+    // This flag indicates that the answer is fresh and should trigger SRS
+    const isFreshAnswer = true;
+    renderAnsweredQuestion(isCorrect, state.selectedAnswer, isFreshAnswer);
     updateStatsPanel();
 }
 
@@ -127,25 +124,22 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
 
     const question = state.filteredQuestions[state.currentQuestionIndex];
     
-    // Remove o botão de descarte das alternativas
     activeContainer.querySelectorAll('.action-icon-container').forEach(icon => icon.innerHTML = '');
 
     activeContainer.querySelectorAll('.option-item').forEach(item => {
         item.classList.add('is-answered');
         item.style.cursor = 'default';
         const option = item.dataset.option;
-        const optionCircle = item.querySelector('.option-circle');
-
-
+        
         if (option === question.correctAnswer) {
             item.classList.add('correct-answer');
-             if(activeContainer.querySelector('.action-icon-container')) {
+             if(item.querySelector('.action-icon-container')) {
                 item.querySelector('.action-icon-container').innerHTML = `<i class="fas fa-check text-green-500 text-xl"></i>`;
             }
         }
         if (option === userAnswer && !isCorrect) {
             item.classList.add('incorrect-answer');
-             if(activeContainer.querySelector('.action-icon-container')) {
+             if(item.querySelector('.action-icon-container')) {
                 item.querySelector('.action-icon-container').innerHTML = `<i class="fas fa-times text-red-500 text-xl"></i>`;
             }
         }
@@ -154,30 +148,48 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
 
     const footer = activeContainer.querySelector('#card-footer');
     if (footer) {
+        footer.innerHTML = ''; // Clear previous content
         const resultClass = isCorrect ? 'text-green-600' : 'text-red-600';
         const resultText = isCorrect ? 'Correta!' : 'Incorreta!';
         
-        const randomPercentage = (Math.random() * (85 - 60) + 60).toFixed(1);
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'flex items-center space-x-4 w-full';
+        feedbackDiv.innerHTML = `<span class="font-bold text-lg ${resultClass}">${resultText}</span>`;
 
-        footer.innerHTML = `
-            <div class="flex items-center space-x-4">
-                <span class="font-bold text-lg ${resultClass}">${resultText}</span>
-                <span class="text-sm text-gray-500">${randomPercentage}% acertaram</span>
-                <button class="view-resolution-btn text-sm text-blue-600 hover:underline">Ver resolução</button>
-            </div>
-        `;
+        if (isFreshAnswer && !state.isReviewSession) {
+            const reviewIntervals = [1, 3, 7, 15, 30, 90];
+            const reviewItem = state.userReviewItemsMap.get(question.id);
+            const currentStage = reviewItem ? reviewItem.stage : 0;
+            
+            const getIntervalLabel = (stage) => {
+                const index = Math.min(stage, reviewIntervals.length - 1);
+                const days = reviewIntervals[index];
+                if (!days) return "";
+                if (days < 30) return `${days}d`;
+                return `${Math.round(days/30)}m`;
+            };
 
-        if(state.isReviewSession){
-             const reviewButtons = `
-                <div class="flex space-x-2">
-                    <button data-feedback="again" class="srs-feedback-btn bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Errei</button>
-                    <button data-feedback="hard" class="srs-feedback-btn bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600">Difícil</button>
-                    <button data-feedback="good" class="srs-feedback-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Bom</button>
-                    <button data-feedback="easy" class="srs-feedback-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Fácil</button>
+            const againLabel = getIntervalLabel(0);
+            const hardLabel = getIntervalLabel(Math.max(0, currentStage - 1));
+            const goodLabel = getIntervalLabel(currentStage + 1);
+            const easyLabel = getIntervalLabel(currentStage + 2);
+            
+            const srsButtonsHTML = `
+                <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full text-center text-sm">
+                    <button class="srs-feedback-btn bg-red-100 text-red-700 font-semibold py-2 px-2 rounded-md hover:bg-red-200" data-feedback="again">Errei<br><span class="font-normal">(${againLabel})</span></button>
+                    <button class="srs-feedback-btn bg-yellow-100 text-yellow-700 font-semibold py-2 px-2 rounded-md hover:bg-yellow-200" data-feedback="hard">Difícil<br><span class="font-normal">(${hardLabel})</span></button>
+                    <button class="srs-feedback-btn bg-green-100 text-green-700 font-semibold py-2 px-2 rounded-md hover:bg-green-200" data-feedback="good">Bom<br><span class="font-normal">(${goodLabel})</span></button>
+                    <button class="srs-feedback-btn bg-blue-100 text-blue-700 font-semibold py-2 px-2 rounded-md hover:bg-blue-200" data-feedback="easy">Fácil<br><span class="font-normal">(${easyLabel})</span></button>
                 </div>
             `;
-            footer.innerHTML += `<div class="mt-4 pt-4 border-t w-full">${reviewButtons}</div>`;
-            footer.classList.add('flex-col', 'items-start');
+            footer.innerHTML = `<div class="w-full">${feedbackDiv.innerHTML} ${srsButtonsHTML}</div>`;
+        } else {
+             const randomPercentage = (Math.random() * (85 - 60) + 60).toFixed(1);
+             feedbackDiv.innerHTML += `
+                <span class="text-sm text-gray-500">${randomPercentage}% acertaram</span>
+                <button class="view-resolution-btn text-sm text-blue-600 hover:underline">Ver resolução</button>
+             `;
+             footer.appendChild(feedbackDiv);
         }
     }
 
@@ -187,13 +199,10 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
     if (viewResolutionBtn && commentaryContainer) {
         viewResolutionBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            
             const isHidden = commentaryContainer.classList.contains('hidden');
-            
             if (isHidden) {
                 const commentaryText = question.explanation || 'Nenhum comentário disponível para esta questão.';
                 const boxColorClass = isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800';
-                
                 commentaryContainer.innerHTML = `
                     <div class="p-4 rounded-lg ${boxColorClass}">
                         <p class="leading-relaxed">
@@ -287,7 +296,7 @@ export async function displayQuestion() {
     renderUnansweredQuestion();
     
     const footer = activeContainer.querySelector('#card-footer');
-    if (userAnswerData) {
+    if (userAnswerData && !state.isReviewSession) { // Don't show old SRS state, force re-evaluation
         renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.userAnswer, false);
     } else if (footer) {
         footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
