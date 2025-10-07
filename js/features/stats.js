@@ -4,9 +4,39 @@ import { getHistoricalCountsForQuestions } from '../services/firestore.js';
 
 export function updateStatsPageUI() {
     const combinedSessions = [...state.historicalSessions];
-    // ... logic to calculate totals
-    
-    // Update home cards, etc.
+    if (state.sessionStats.length > 0) {
+        const correct = state.sessionStats.filter(s => s.isCorrect).length;
+        const total = state.sessionStats.length;
+        const accuracy = total > 0 ? (correct / total * 100) : 0; 
+        
+        const currentSessionData = {
+            totalQuestions: state.sessionStats.length,
+            correctCount: correct,
+            accuracy: accuracy, 
+            details: state.sessionStats.reduce((acc, stat) => {
+                if (!acc[stat.materia]) acc[stat.materia] = { correct: 0, total: 0 };
+                acc[stat.materia].total++;
+                if (stat.isCorrect) acc[stat.materia].correct++;
+                return acc;
+            }, {}),
+            createdAt: { toDate: () => new Date() }
+        };
+        combinedSessions.push(currentSessionData);
+    }
+
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    const materiaTotals = {};
+
+    combinedSessions.forEach(session => {
+        totalQuestions += session.totalQuestions;
+        totalCorrect += session.correctCount;
+        for (const materia in session.details) {
+            if (!materiaTotals[materia]) materiaTotals[materia] = { correct: 0, total: 0 };
+            materiaTotals[materia].correct += session.details[materia].correct;
+            materiaTotals[materia].total += session.details[materia].total;
+        }
+    });
 
     renderHomePerformanceChart(materiaTotals);
     renderWeeklyChart();
