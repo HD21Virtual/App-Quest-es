@@ -81,8 +81,6 @@ function renderUnansweredQuestion() {
             const letter = question.tipo === 'C/E' ? option.charAt(0) : String.fromCharCode(65 + index);
             letterContent = `<span class="option-letter text-gray-700 font-medium">${letter}</span>`;
         }
-        
-        const scissorIconSVG = `<svg class="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 7.879l-1.414-1.414L9 10.172l-1.707-1.707-1.414 1.414L7.586 12l-1.707 1.707 1.414 1.414L9 13.828l1.707 1.707 1.414-1.414L10.414 12l3.707-3.707zM18 6a2 2 0 11-4 0 2 2 0 014 0zM6 18a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17l-8-8"></path></svg>`;
 
         return `
             <div data-option="${option}" class="option-item group flex items-start p-3 rounded-md cursor-pointer transition-colors duration-200 border border-transparent hover:border-blue-300">
@@ -90,9 +88,6 @@ function renderUnansweredQuestion() {
                     ${letterContent}
                 </div>
                 <div class="flex-grow option-text text-gray-700">${option}</div>
-                 <button class="discard-btn ml-4 p-1 opacity-0 group-hover:opacity-100 transition-opacity" title="Descartar alternativa">
-                    ${scissorIconSVG}
-                 </button>
             </div>
         `;
     }).join('');
@@ -103,7 +98,7 @@ function renderUnansweredQuestion() {
             ${optionsHtml}
         </div>
         <div id="card-footer" class="mt-6 flex items-center">
-            <button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>
+             <!-- O botão de resolver será adicionado se não for respondido -->
         </div>
     `;
 }
@@ -119,19 +114,40 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
         item.classList.add('is-answered');
         item.style.cursor = 'default';
         const option = item.dataset.option;
+        const optionCircle = item.querySelector('.option-circle');
+        const optionText = item.querySelector('.option-text');
+
 
         if (option === question.correctAnswer) {
             item.classList.add('correct-answer');
+            if (optionCircle) optionCircle.innerHTML = `<i class="fas fa-check text-green-600"></i>`;
         }
         if (option === userAnswer && !isCorrect) {
             item.classList.add('incorrect-answer');
+             if (optionCircle) optionCircle.innerHTML = `<i class="fas fa-times text-red-600"></i>`;
         }
+        // Remove hover effects from answered questions
+        item.classList.remove('hover:border-blue-300');
     });
 
     const footer = activeContainer.querySelector('#card-footer');
     if (footer) {
+        const resultClass = isCorrect ? 'text-green-600' : 'text-red-600';
+        const resultText = isCorrect ? 'Correta!' : 'Incorreta!';
+        
+        // Simulating percentage, replace with real data if available
+        const randomPercentage = (Math.random() * (85 - 60) + 60).toFixed(1);
+
+        footer.innerHTML = `
+            <div class="flex items-center space-x-4">
+                <span class="font-bold text-lg ${resultClass}">${resultText}</span>
+                <span class="text-sm text-gray-500">${randomPercentage}% acertaram</span>
+                <a href="#" class="text-sm text-blue-600 hover:underline">Ver resolução</a>
+            </div>
+        `;
+
         if(state.isReviewSession){
-             footer.innerHTML = `
+             const reviewButtons = `
                 <div class="flex space-x-2">
                     <button data-feedback="again" class="srs-feedback-btn bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Errei</button>
                     <button data-feedback="hard" class="srs-feedback-btn bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600">Difícil</button>
@@ -139,8 +155,8 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
                     <button data-feedback="easy" class="srs-feedback-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Fácil</button>
                 </div>
             `;
-        } else {
-            footer.innerHTML = '';
+            footer.innerHTML += `<div class="mt-4 pt-4 border-t w-full">${reviewButtons}</div>`;
+            footer.classList.add('flex-col', 'items-start');
         }
     }
 }
@@ -184,29 +200,32 @@ export async function displayQuestion() {
     questionCounterTop.innerHTML = `Questão <strong>${state.currentQuestionIndex + 1}</strong> de <strong>${state.filteredQuestions.length}</strong>`;
     questionInfoContainer.innerHTML = `
         <div class="flex flex-col sm:flex-row sm:space-x-4">
-          <span class="font-semibold text-gray-700">Disciplina:</span> <span class="text-gray-600">${question.materia || 'N/A'}</span>
+          <span class="font-semibold text-gray-700">Matéria:</span> <a href="#" class="text-blue-600 hover:underline">${question.materia || 'N/A'}</a>
         </div>
         <div class="flex flex-col sm:flex-row sm:space-x-4">
-          <span class="font-semibold text-gray-700">Assunto:</span> <span class="text-gray-600">${question.assunto || 'N/A'}</span>
+          <span class="font-semibold text-gray-700">Assunto:</span> <a href="#" class="text-blue-600 hover:underline">${question.assunto || 'N/A'}</a>
         </div>
     `;
 
     let toolbarHTML = `
-        <button class="text-gray-500 hover:text-blue-600 transition-colors" title="Adicionar aos favoritos (em breve)">
-            <i class="far fa-star text-lg"></i>
-        </button>
-        <button class="text-gray-500 hover:text-blue-600 transition-colors" title="Ver comentários (em breve)">
-            <i class="far fa-comment text-lg"></i>
-        </button>`;
-        
+        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-comment-alt mr-2"></i>Gabarito Comentado</a>
+        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-comments mr-2"></i>Comentários</a>
+        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-edit mr-2"></i>Criar Anotações</a>
+        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-book mr-2"></i>Cadernos</a>
+        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-chart-bar mr-2"></i>Desempenho</a>
+        <a href="#" class="flex items-center text-gray-600 hover:text-blue-600 text-sm"><i class="fas fa-exclamation-triangle mr-2"></i>Notificar Erro</a>
+    `;
+    
     if(state.currentCadernoId) {
         toolbarHTML += `
-            <button class="remove-question-btn text-red-500 hover:text-red-700 transition-colors" data-question-id="${question.id}" title="Remover do caderno">
-                <i class="fas fa-trash-alt text-lg"></i>
+            <button class="remove-question-btn text-red-500 hover:text-red-700 transition-colors text-sm flex items-center" data-question-id="${question.id}" title="Remover do caderno">
+                <i class="fas fa-trash-alt mr-2"></i>Remover
             </button>
         `;
     }
     questionToolbar.innerHTML = toolbarHTML;
+    questionToolbar.className = 'flex items-center flex-wrap gap-x-4 gap-y-2 text-gray-600';
+
 
     questionCounterTop.classList.remove('hidden');
     questionInfoContainer.classList.remove('hidden');
@@ -214,9 +233,12 @@ export async function displayQuestion() {
     navigationControls.classList.remove('hidden');
 
     renderUnansweredQuestion();
-
+    
+    const footer = activeContainer.querySelector('#card-footer');
     if (userAnswerData) {
         renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.userAnswer, false);
+    } else if (footer) {
+        footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
     }
     
     await updateNavigation();
