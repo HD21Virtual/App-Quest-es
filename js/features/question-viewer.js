@@ -184,10 +184,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             `;
             footer.innerHTML = `<div class="w-full">${feedbackDiv.innerHTML} ${srsButtonsHTML}</div>`;
         } else {
-             const randomPercentage = (Math.random() * (85 - 60) + 60).toFixed(1);
-             feedbackDiv.innerHTML += `
-                <span class="text-sm text-gray-500">${randomPercentage}% acertaram</span>
-                <button class="view-resolution-btn text-sm text-blue-600 hover:underline">Ver resolução</button>
+                <button id="show-comment-btn" class="text-blue-600 hover:underline">Ver resolução</button>
              `;
              footer.appendChild(feedbackDiv);
         }
@@ -339,5 +336,6 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
 
