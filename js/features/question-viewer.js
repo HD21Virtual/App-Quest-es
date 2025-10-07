@@ -17,6 +17,18 @@ export async function navigateQuestion(direction) {
     await displayQuestion();
 }
 
+export function handleOptionSelect(event) {
+    const target = event.currentTarget;
+    if (target.classList.contains('discarded')) {
+        return;
+    }
+    const activeContainer = getActiveContainer();
+    activeContainer.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
+    target.classList.add('selected');
+    setState('selectedAnswer', target.getAttribute('data-option'));
+    const submitBtn = activeContainer.querySelector('#submit-btn');
+    if (submitBtn) submitBtn.disabled = false;
+}
 
 export async function checkAnswer() {
     const question = state.filteredQuestions[state.currentQuestionIndex];
