@@ -101,7 +101,6 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
 
 export async function displayQuestion() {
     const activeContainer = getActiveContainer();
-    // Guard clause to prevent error on initial load or view switch
     if (!activeContainer) {
         return;
     }
@@ -116,18 +115,37 @@ export async function displayQuestion() {
     questionInfoContainer.innerHTML = '';
     questionToolbar.innerHTML = '';
     setState('selectedAnswer', null);
-    await updateNavigation();
     
     if (!state.currentUser) {
         questionsContainer.innerHTML = `<div class="text-center"><h3 class="text-xl font-bold">Bem-vindo!</h3><p class="text-gray-600 mt-2">Por favor, <button id="login-from-empty" class="text-blue-600 underline">faça login</button> para começar a resolver questões.</p></div>`;
         return;
     }
 
+    // CORREÇÃO: Mostra uma mensagem quando não há questões a serem exibidas
     if (state.filteredQuestions.length === 0) {
+        questionsContainer.innerHTML = `
+            <div class="text-center py-10 px-4">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-semibold text-gray-900">Nenhuma questão para mostrar</h3>
+                <p class="mt-1 text-sm text-gray-500">Use os filtros acima e clique em "Filtrar questões" para começar.</p>
+            </div>
+        `;
+        await updateNavigation();
         return;
     }
     
+    await updateNavigation();
     const question = state.filteredQuestions[state.currentQuestionIndex];
+    
+    const userAnswerData = state.currentUser.answers?.[question.id];
+
+    if (userAnswerData) {
+        renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.answer);
+    } else {
+        renderUnansweredQuestion();
+    }
     // ... rest of rendering logic
 }
 
@@ -142,4 +160,3 @@ async function updateNavigation() {
 export function renderQuestionListForAdding(questions, existingQuestionIds) {
     // ... rendering logic
 }
-
