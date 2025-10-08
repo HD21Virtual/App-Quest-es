@@ -4,7 +4,7 @@ import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
 import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions } from './stats.js';
-import { showItemStatsModal } from '../ui/modal.js';
+import { showItemStatsModal, openNameModal } from '../ui/modal.js';
 import { applyFilters } from './filter.js';
 import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore } from '../services/firestore.js';
 
@@ -159,27 +159,81 @@ export async function renderFoldersAndCadernos() {
     }
 }
 
-// Handles clicks on folder items to open them.
+// Handles clicks on folder items to open them, edit, delete, or view stats.
 export function handleFolderItemClick(event) {
-    const actionTarget = event.target.closest('[data-action="open"]');
-    if (actionTarget) {
-        const folderItem = event.target.closest('.folder-item');
-        if (folderItem) {
-            setState('currentFolderId', folderItem.dataset.folderId);
-            renderFoldersAndCadernos();
-        }
+    const folderItem = event.target.closest('.folder-item');
+    if (!folderItem) return;
+
+    const folderId = folderItem.dataset.folderId;
+    const folder = state.userFolders.find(f => f.id === folderId);
+    if (!folder) return;
+
+    // Handle opening the folder
+    if (event.target.closest('[data-action="open"]')) {
+        setState('currentFolderId', folderId);
+        renderFoldersAndCadernos();
+        return;
+    }
+
+    // Handle viewing stats
+    if (event.target.closest('.stats-folder-btn')) {
+        showItemStatsModal(folderId, 'folder', folder.name);
+        return;
+    }
+
+    // Handle editing
+    if (event.target.closest('.edit-folder-btn')) {
+        openNameModal('folder', folderId, folder.name);
+        return;
+    }
+    
+    // Handle deleting
+    if (event.target.closest('.delete-folder-btn')) {
+        setState('deletingId', folderId);
+        setState('deletingType', 'folder');
+        DOM.confirmationModalTitle.textContent = `Excluir Pasta`;
+        DOM.confirmationModalText.innerHTML = `Deseja excluir a pasta <strong>"${folder.name}"</strong>? <br><br> <span class="font-bold text-red-600">Todos os cadernos dentro dela também serão excluídos.</span>`;
+        DOM.confirmationModal.classList.remove('hidden');
+        return;
     }
 }
 
-// Handles clicks on notebook items to open them.
+// Handles clicks on notebook items to open them, edit, delete, or view stats.
 export function handleCadernoItemClick(event) {
-    const actionTarget = event.target.closest('[data-action="open"]');
-    if (actionTarget) {
-        const cadernoItem = event.target.closest('.caderno-item');
-        if (cadernoItem) {
-            setState('currentCadernoId', cadernoItem.dataset.cadernoId);
-            renderFoldersAndCadernos();
-        }
+    const cadernoItem = event.target.closest('.caderno-item');
+    if (!cadernoItem) return;
+
+    const cadernoId = cadernoItem.dataset.cadernoId;
+    const caderno = state.userCadernos.find(c => c.id === cadernoId);
+    if(!caderno) return;
+    
+    // Handle opening the notebook
+    if (event.target.closest('[data-action="open"]')) {
+        setState('currentCadernoId', cadernoId);
+        renderFoldersAndCadernos();
+        return;
+    }
+    
+    // Handle viewing stats
+    if (event.target.closest('.stats-caderno-btn')) {
+        showItemStatsModal(cadernoId, 'caderno', caderno.name);
+        return;
+    }
+    
+    // Handle editing
+    if (event.target.closest('.edit-caderno-btn')) {
+        openNameModal('caderno', cadernoId, caderno.name);
+        return;
+    }
+    
+    // Handle deleting
+    if (event.target.closest('.delete-caderno-btn')) {
+        setState('deletingId', cadernoId);
+        setState('deletingType', 'caderno');
+        DOM.confirmationModalTitle.textContent = `Excluir Caderno`;
+        DOM.confirmationModalText.innerHTML = `Deseja excluir o caderno <strong>"${caderno.name}"</strong>?`;
+        DOM.confirmationModal.classList.remove('hidden');
+        return;
     }
 }
 
@@ -235,3 +289,4 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
+
