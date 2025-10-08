@@ -6,8 +6,9 @@ import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions } from './stats.js';
 import { showItemStatsModal } from '../ui/modal.js';
 import { applyFilters } from './filter.js';
-import { removeQuestionIdFromCaderno } from '../services/firestore.js';
+import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore } from '../services/firestore.js';
 
+// Renders the view when inside a specific notebook, showing the question solver UI.
 async function renderCadernoContentView() {
     const caderno = state.userCadernos.find(c => c.id === state.currentCadernoId);
     if (!caderno) { 
@@ -22,21 +23,63 @@ async function renderCadernoContentView() {
     DOM.createFolderBtn.classList.add('hidden');
     DOM.addQuestionsToCadernoBtn.classList.remove('hidden');
 
+    // Clones the question solver UI from the main "Questões" tab and injects it here.
     const tempContainer = document.createElement('div');
     const mainContentHtml = DOM.vadeMecumView.querySelector('#tabs-and-main-content').outerHTML;
     tempContainer.innerHTML = mainContentHtml;
     DOM.savedCadernosListContainer.innerHTML = '';
     DOM.savedCadernosListContainer.appendChild(tempContainer.firstChild);
 
+    // Filters questions to show only those belonging to the current notebook.
     setState('filteredQuestions', state.allQuestions.filter(q => caderno.questionIds.includes(q.id)));
     const savedState = state.userCadernoState.get(state.currentCadernoId);
     const newIndex = (savedState && savedState.lastQuestionIndex < state.filteredQuestions.length) ? savedState.lastQuestionIndex : 0;
     setState('currentQuestionIndex', newIndex);
     
+    // Resets session stats and displays the first (or last saved) question.
     setState('sessionStats', []);
     await displayQuestion();
 }
 
+// Renders the view when inside a specific folder, showing the notebooks within it.
+function renderFolderContentView() {
+    const folder = state.userFolders.find(f => f.id === state.currentFolderId);
+    if (!folder) { 
+        setState('currentFolderId', null);
+        renderFoldersAndCadernos(); 
+        return; 
+    }
+
+    DOM.cadernosViewTitle.textContent = folder.name;
+    DOM.backToFoldersBtn.classList.remove('hidden');
+    DOM.addCadernoToFolderBtn.classList.remove('hidden');
+    DOM.createFolderBtn.classList.add('hidden');
+    DOM.addQuestionsToCadernoBtn.classList.add('hidden');
+
+    const cadernosInFolder = state.userCadernos.filter(c => c.folderId === state.currentFolderId);
+    if (cadernosInFolder.length > 0) {
+         DOM.savedCadernosListContainer.innerHTML = cadernosInFolder.map(caderno => `
+            <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm caderno-item mb-2" data-caderno-id="${caderno.id}">
+               <div class="flex items-center cursor-pointer flex-grow" data-action="open">
+                    <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
+                    <div>
+                        <h4 class="font-bold text-lg">${caderno.name}</h4>
+                        <p class="text-sm text-gray-500">${caderno.questionIds ? caderno.questionIds.length : 0} questões</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="stats-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
+                    <button class="edit-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
+                    <button class="delete-caderno-btn text-red-500 hover:text-red-700 p-2 rounded-full" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 bg-white p-6 rounded-lg shadow-sm">Nenhum caderno nesta pasta ainda. Clique em "Adicionar Caderno" para criar um.</p>';
+    }
+}
+
+// Renders the root view of the "Cadernos" tab, showing all folders and unfiled notebooks.
 function renderRootCadernosView() {
     DOM.cadernosViewTitle.textContent = 'Meus Cadernos';
     DOM.backToFoldersBtn.classList.add('hidden');
@@ -50,29 +93,73 @@ function renderRootCadernosView() {
         DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 bg-white p-6 rounded-lg shadow-sm">Nenhum caderno ou pasta criada ainda.</p>';
         return;
     }
+    
+    let html = '';
 
+    // Render folders
     state.userFolders.forEach(folder => {
-        // ... rendering logic for folders
+        const folderCadernosCount = state.userCadernos.filter(c => c.folderId === folder.id).length;
+        html += `
+            <div class="bg-white rounded-lg shadow-sm p-4 hover:bg-gray-50 transition folder-item mb-2" data-folder-id="${folder.id}">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center cursor-pointer flex-grow" data-action="open">
+                        <i class="fas fa-folder text-yellow-500 text-2xl mr-4"></i>
+                        <div>
+                            <span class="font-bold text-lg">${folder.name}</span>
+                            <p class="text-sm text-gray-500">${folderCadernosCount} caderno(s)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                         <button class="stats-folder-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${folder.id}" data-name="${folder.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
+                         <button class="edit-folder-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${folder.id}" data-name="${folder.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
+                         <button class="delete-folder-btn text-gray-400 hover:text-red-600 p-2 rounded-full" data-id="${folder.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                         <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
+                    </div>
+                </div>
+            </div>`;
     });
 
+    // Render unfiled cadernos
     if (unfiledCadernos.length > 0) {
-        // ... rendering logic for unfiled cadernos
+        if (state.userFolders.length > 0) { 
+            html += '<h3 class="mt-6 mb-2 text-md font-semibold text-gray-600">Cadernos sem Pasta</h3>'; 
+        }
+        unfiledCadernos.forEach(caderno => {
+            html += `
+                <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm caderno-item mb-2" data-caderno-id="${caderno.id}">
+                     <div class="flex items-center cursor-pointer flex-grow" data-action="open">
+                        <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
+                        <div>
+                            <h4 class="font-bold text-lg">${caderno.name}</h4>
+                            <p class="text-sm text-gray-500">${caderno.questionIds ? caderno.questionIds.length : 0} questões</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="stats-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
+                        <button class="edit-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
+                        <button class="delete-caderno-btn text-red-500 hover:text-red-700 p-2 rounded-full" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
+                    </div>
+                </div>`;
+        });
     }
+    DOM.savedCadernosListContainer.innerHTML = html;
 }
 
 
+// Main function to control the rendering of the "Cadernos" tab view.
 export async function renderFoldersAndCadernos() {
     DOM.savedCadernosListContainer.innerHTML = '';
 
     if (state.currentCadernoId) {
         await renderCadernoContentView();
     } else if (state.currentFolderId) {
-        // renderFolderContentView();
+        renderFolderContentView();
     } else {
         renderRootCadernosView();
     }
 }
 
+// Handles clicks on folder items to open them.
 export function handleFolderItemClick(event) {
     const actionTarget = event.target.closest('[data-action="open"]');
     if (actionTarget) {
@@ -82,9 +169,9 @@ export function handleFolderItemClick(event) {
             renderFoldersAndCadernos();
         }
     }
-    // Handle other actions like edit, delete, stats
 }
 
+// Handles clicks on notebook items to open them.
 export function handleCadernoItemClick(event) {
     const actionTarget = event.target.closest('[data-action="open"]');
     if (actionTarget) {
@@ -94,18 +181,26 @@ export function handleCadernoItemClick(event) {
             renderFoldersAndCadernos();
         }
     }
-    // Handle other actions
 }
 
+// Handles the "Back" button to navigate up the folder/notebook hierarchy.
 export function handleBackToFolders() {
     if (state.currentCadernoId) {
+        // When going back from a caderno, go to its folder if it has one
+        const caderno = state.userCadernos.find(c => c.id === state.currentCadernoId);
         setState('currentCadernoId', null);
+        if(caderno && caderno.folderId) {
+            setState('currentFolderId', caderno.folderId);
+        } else {
+            setState('currentFolderId', null);
+        }
     } else if (state.currentFolderId) {
         setState('currentFolderId', null);
     }
     renderFoldersAndCadernos();
 }
 
+// Initiates the mode to add questions to the currently opened notebook.
 export function handleAddQuestionsToCaderno() {
     const caderno = state.userCadernos.find(c => c.id === state.currentCadernoId);
     if (!caderno) return;
@@ -116,6 +211,7 @@ export function handleAddQuestionsToCaderno() {
     navigateToView('vade-mecum-view');
 }
 
+// Exits the "add questions" mode.
 export function exitAddMode() {
     if (state.isAddingQuestionsMode.active) {
         setState('isAddingQuestionsMode', { active: false, cadernoId: null });
@@ -128,13 +224,14 @@ export function exitAddMode() {
     }
 }
 
+// Cancels the "add questions" process and returns to the notebooks view.
 export function cancelAddQuestions() {
     exitAddMode();
     navigateToView('cadernos-view');
 }
 
+// Removes a specific question from the currently opened notebook.
 export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
-    await removeQuestionIdFromCaderno(state.currentCadernoId, questionId);
+    await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
-
