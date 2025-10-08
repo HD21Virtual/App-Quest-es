@@ -11,6 +11,10 @@ export async function applyFilters() {
         clearSessionStats();
     }
 
+    // Fecha os painéis de seleção ao aplicar o filtro
+    DOM.materiaFilter.querySelector('.custom-select-panel').classList.add('hidden');
+    DOM.assuntoFilter.querySelector('.custom-select-panel').classList.add('hidden');
+
     const selectedMaterias = JSON.parse(DOM.materiaFilter.dataset.value || '[]');
     const selectedAssuntos = JSON.parse(DOM.assuntoFilter.dataset.value || '[]');
     const activeTipoBtn = DOM.tipoFilterGroup.querySelector('.active-filter');
@@ -54,26 +58,11 @@ export async function applyFilters() {
 
 function setupCustomSelect(container) {
     const button = container.querySelector('.custom-select-button');
-    const valueSpan = container.querySelector('.custom-select-value');
     const panel = container.querySelector('.custom-select-panel');
     const searchInput = container.querySelector('.custom-select-search');
     const optionsContainer = container.querySelector('.custom-select-options');
+    const valueSpan = container.querySelector('.custom-select-value');
     const originalText = valueSpan.textContent;
-
-    const filterId = container.id.replace('-filter', '');
-    let options = [];
-    if (filterId === 'materia') {
-        options = state.filterOptions.materia.map(m => m.name);
-    } else if (filterId === 'assunto') {
-        options = []; // Populated by updateAssuntoFilter
-    }
-    
-    optionsContainer.innerHTML = options.map(opt => `
-        <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
-            <input type="checkbox" data-value="${opt}" class="custom-select-option rounded">
-            <span>${opt}</span>
-        </label>
-    `).join('');
 
     button.addEventListener('click', () => {
         if (!button.disabled) {
@@ -125,6 +114,18 @@ function setupCustomSelect(container) {
 }
 
 export function setupCustomSelects() {
+    // Popula a lista de matérias inicialmente
+    const materiaOptions = state.filterOptions.materia.map(m => m.name);
+    const materiaContainer = DOM.materiaFilter.querySelector('.custom-select-options');
+    if (materiaContainer) {
+        materiaContainer.innerHTML = materiaOptions.map(opt => `
+            <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                <input type="checkbox" data-value="${opt}" class="custom-select-option rounded">
+                <span>${opt}</span>
+            </label>
+        `).join('');
+    }
+    
     document.querySelectorAll('.custom-select-container').forEach(setupCustomSelect);
 }
 
@@ -139,9 +140,40 @@ export function clearAllFilters() {
     
     updateAssuntoFilter([]);
     
-    DOM.tipoFilterGroup.querySelector('.active-filter').classList.remove('active-filter');
+    const activeTipo = DOM.tipoFilterGroup.querySelector('.active-filter');
+    if (activeTipo) activeTipo.classList.remove('active-filter');
     DOM.tipoFilterGroup.querySelector('[data-value="todos"]').classList.add('active-filter');
     
     applyFilters();
 }
 
+export function removeFilter(type, value) {
+    switch (type) {
+        case 'materia': {
+            const container = DOM.materiaFilter;
+            const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
+            if (checkbox) checkbox.checked = false;
+            // Dispara o evento de mudança para atualizar o estado e a UI
+            container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+            break;
+        }
+        case 'assunto': {
+            const container = DOM.assuntoFilter;
+            const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
+            if (checkbox) checkbox.checked = false;
+            container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+            break;
+        }
+        case 'tipo': {
+            const currentActive = DOM.tipoFilterGroup.querySelector('.active-filter');
+            if (currentActive) currentActive.classList.remove('active-filter');
+            DOM.tipoFilterGroup.querySelector('[data-value="todos"]').classList.add('active-filter');
+            break;
+        }
+        case 'search': {
+            DOM.searchInput.value = '';
+            break;
+        }
+    }
+    applyFilters();
+}
