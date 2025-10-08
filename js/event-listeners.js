@@ -7,8 +7,9 @@ import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemCl
 import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
 import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
-import { applyFilters, clearAllFilters } from './features/filter.js';
+import { applyFilters, clearAllFilters, removeFilter } from './features/filter.js';
 import { navigateToView } from './ui/navigation.js';
+import { updateSelectedFiltersDisplay } from './ui/ui-helpers.js';
 
 // Handlers
 const handleSaveFilter = async () => {
@@ -35,6 +36,13 @@ export function setupAllEventListeners() {
         const target = event.target;
         const targetId = target.id;
         
+        // Fecha os seletores customizados se o clique for fora deles
+        if (!target.closest('.custom-select-container')) {
+            document.querySelectorAll('.custom-select-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+        }
+
         // --- Auth ---
         if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
             openAuthModal();
@@ -70,7 +78,7 @@ export function setupAllEventListeners() {
         
         else if (target.closest('#close-stats-modal')) closeStatsModal();
 
-        // --- Questions (CORREÇÃO: Movido para antes de 'Cadernos' para prioridade) ---
+        // --- Questions ---
         else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
         else if (target.closest('#next-question-btn')) await navigateQuestion('next');
         else if (target.closest('.option-item') && !target.closest('.discard-btn')) handleOptionSelect(event);
@@ -100,6 +108,27 @@ export function setupAllEventListeners() {
         // --- Filters ---
         else if (target.closest('#filter-btn')) await applyFilters();
         else if (target.closest('#clear-filters-btn')) clearAllFilters();
+        else if (target.closest('.remove-filter-btn')) {
+            const btn = target.closest('.remove-filter-btn');
+            removeFilter(btn.dataset.filterType, btn.dataset.filterValue);
+        }
+        else if (target.closest('.filter-btn-toggle')) {
+            const group = target.closest('.filter-btn-group');
+            if (group) {
+                const currentActive = group.querySelector('.active-filter');
+                if (currentActive) currentActive.classList.remove('active-filter');
+                target.classList.add('active-filter');
+                updateSelectedFiltersDisplay();
+            }
+        }
+         else if (target.closest('#toggle-filters-btn')) {
+            DOM.filterCard.classList.toggle('hidden');
+            const isHidden = DOM.filterCard.classList.contains('hidden');
+            const btn = target.closest('#toggle-filters-btn');
+            btn.innerHTML = isHidden
+                ? `<i class="fas fa-eye mr-2"></i> Mostrar Filtros`
+                : `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
+        }
         
         // --- Navigation ---
         else if (target.closest('.nav-link')) {
