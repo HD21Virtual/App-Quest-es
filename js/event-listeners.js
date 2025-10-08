@@ -93,6 +93,9 @@ export function setupAllEventListeners() {
         else if (target.closest('#materias-list-container')) handleMateriaListClick(event);
         else if (target.closest('#assuntos-list-container')) handleAssuntoListClick(event);
         else if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
+        
+        // --- Revisão ---
+        else if (target.closest('#start-review-btn')) await handleStartReview();
 
         // --- Filters ---
         else if (target.closest('#filter-btn')) await applyFilters();
@@ -110,3 +113,4 @@ export function setupAllEventListeners() {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
 }
+
