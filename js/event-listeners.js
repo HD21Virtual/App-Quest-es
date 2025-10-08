@@ -70,6 +70,15 @@ export function setupAllEventListeners() {
         
         else if (target.closest('#close-stats-modal')) closeStatsModal();
 
+        // --- Questions (CORREÇÃO: Movido para antes de 'Cadernos' para prioridade) ---
+        else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
+        else if (target.closest('#next-question-btn')) await navigateQuestion('next');
+        else if (target.closest('.option-item') && !target.closest('.discard-btn')) handleOptionSelect(event);
+        else if (target.closest('#submit-btn')) await checkAnswer();
+        else if (target.closest('.discard-btn')) handleDiscardOption(event);
+        else if (target.closest('.srs-feedback-btn')) await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
+        else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
+
         // --- Cadernos / Folders ---
         else if (target.closest('#saved-cadernos-list-container')) {
             handleCadernoItemClick(event);
@@ -84,16 +93,6 @@ export function setupAllEventListeners() {
         else if (target.closest('#materias-list-container')) handleMateriaListClick(event);
         else if (target.closest('#assuntos-list-container')) handleAssuntoListClick(event);
         else if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
-        
-        // --- Questions ---
-        else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
-        else if (target.closest('#next-question-btn')) await navigateQuestion('next');
-        else if (target.closest('.option-item') && !target.closest('.discard-btn')) handleOptionSelect(event);
-        else if (target.closest('#submit-btn')) await checkAnswer();
-        else if (target.closest('.discard-btn')) handleDiscardOption(event);
-        else if (target.closest('.srs-feedback-btn')) await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
-        else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
-
 
         // --- Filters ---
         else if (target.closest('#filter-btn')) await applyFilters();
@@ -111,4 +110,3 @@ export function setupAllEventListeners() {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
 }
-
