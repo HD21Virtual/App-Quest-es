@@ -1,6 +1,6 @@
 import { state, setState } from '../state.js';
 import { getWeeklySolvedQuestionsData } from '../services/firestore.js';
-import DOM from '../dom-elements.js';
+import { DOM } from '../dom-elements.js';
 
 let performanceChart = null;
 let homePerformanceChart = null;
@@ -66,4 +66,3 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
-
