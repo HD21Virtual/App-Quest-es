@@ -3,6 +3,7 @@ import { exitAddMode, renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderMateriasView } from '../features/materias.js';
 import { clearAllFilters } from '../features/filter.js';
 import { setState, state } from '../state.js';
+import { updateStatsPageUI } from '../features/stats.js';
 
 export function navigateToView(viewId, isUserClick = true) {
     // Correction: Initialize the views array inside the function
@@ -57,6 +58,9 @@ export function navigateToView(viewId, isUserClick = true) {
     } else if (viewId === 'materias-view') {
         setState('selectedMateria', null);
         renderMateriasView();
+    } else if (viewId === 'inicio-view') {
+        // CORREÇÃO: Chamar a atualização das estatísticas sempre que a tela inicial for exibida
+        updateStatsPageUI();
     }
 
     if (DOM.mobileMenu) {
