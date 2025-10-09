@@ -258,7 +258,7 @@ export async function displayQuestion() {
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const userAnswerData = state.userAnswers.get(question.id);
 
-    questionCounterTop.innerHTML = `Questão <strong>${state.currentQuestionIndex + 1}</strong> de <strong>${state.filteredQuestions.length}</strong>`;
+    questionCounterTop.innerHTML = `Questão ${state.currentQuestionIndex + 1} de ${state.filteredQuestions.length}`;
     questionInfoContainer.innerHTML = `
         <div class="flex flex-col sm:flex-row sm:space-x-4">
           <span class="font-semibold text-gray-700">Matéria:</span> <a href="#" class="text-blue-600 hover:underline">${question.materia || 'N/A'}</a>
@@ -339,6 +339,7 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
 
 
