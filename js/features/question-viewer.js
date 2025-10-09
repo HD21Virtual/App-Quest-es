@@ -258,11 +258,14 @@ export async function displayQuestion() {
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const userAnswerData = state.userAnswers.get(question.id);
 
-    questionCounterTop.innerHTML = `<span class="text-xl text-gray-800">Questão ${currentQuestionIndex + 1} de ${filteredQuestions.length}</span>
-    ${statsHtml}`;
+    questionCounterTop.innerHTML = `Questão <strong>${state.currentQuestionIndex + 1}</strong> de <strong>${state.filteredQuestions.length}</strong>`;
     questionInfoContainer.innerHTML = `
-        <p>Matéria: <a href="#" class="text-blue-600 hover:underline">${question.materia}</a></p>
-        <p>Assunto: <a href="#" class="text-blue-600 hover:underline">${question.assunto}</a></p>
+        <div class="flex flex-col sm:flex-row sm:space-x-4">
+          <span class="font-semibold text-gray-700">Matéria:</span> <a href="#" class="text-blue-600 hover:underline">${question.materia || 'N/A'}</a>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:space-x-4">
+          <span class="font-semibold text-gray-700">Assunto:</span> <a href="#" class="text-blue-600 hover:underline">${question.assunto || 'N/A'}</a>
+        </div>
     `;
 
     let toolbarHTML = `
@@ -336,7 +339,6 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
-
 
 
 
