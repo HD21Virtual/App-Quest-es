@@ -65,9 +65,17 @@ function setupCustomSelect(container) {
     const originalText = valueSpan.textContent;
 
     button.addEventListener('click', () => {
-        if (!button.disabled) {
-            panel.classList.toggle('hidden');
-        }
+        if (button.disabled) return;
+
+        // Fecha outros painéis de filtro que possam estar abertos
+        document.querySelectorAll('.custom-select-container').forEach(otherContainer => {
+            if (otherContainer !== container) {
+                otherContainer.querySelector('.custom-select-panel').classList.add('hidden');
+            }
+        });
+        
+        // Alterna a visibilidade do painel atual
+        panel.classList.toggle('hidden');
     });
     
     searchInput.addEventListener('input', () => {
@@ -177,3 +185,4 @@ export function removeFilter(type, value) {
     }
     applyFilters();
 }
+
