@@ -156,7 +156,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
         feedbackDiv.className = 'flex items-center space-x-4 w-full';
         feedbackDiv.innerHTML = `<span class="font-bold text-lg ${resultClass}">${resultText}</span>`;
 
-        if (isFreshAnswer && !state.isReviewSession) {
+        if (isFreshAnswer) {
             const reviewIntervals = [1, 3, 7, 15, 30, 90];
             const reviewItem = state.userReviewItemsMap.get(question.id);
             const currentStage = reviewItem ? reviewItem.stage : 0;
@@ -339,6 +339,7 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
 
 
