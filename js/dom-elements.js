@@ -1,4 +1,4 @@
-import DOM from './dom-elements.js';
+import { DOM } from './dom-elements.js';
 import { state } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal, closeLoadModal } from './ui/modal.js';
 import { createCaderno, createOrUpdateName, saveFilter } from './services/firestore.js';
