@@ -333,3 +333,14 @@ export async function deleteItem(type, id) {
     }
 }
 
+export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
+    if (!state.currentUser || !questionIds || questionIds.length === 0) return;
+    const cadernoRef = doc(db, 'users', state.currentUser.uid, 'cadernos', cadernoId);
+    try {
+        await updateDoc(cadernoRef, {
+            questionIds: arrayUnion(...questionIds)
+        });
+    } catch (error) {
+        console.error("Erro ao adicionar questões ao caderno:", error);
+    }
+}
