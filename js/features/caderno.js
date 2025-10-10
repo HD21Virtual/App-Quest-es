@@ -6,7 +6,7 @@ import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions } from './stats.js';
 import { showItemStatsModal, openNameModal } from '../ui/modal.js';
 import { applyFilters } from './filter.js';
-import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore } from '../services/firestore.js';
+import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore, addQuestionIdsToCaderno as addQuestionIdsToFirestore } from '../services/firestore.js';
 
 // Renders the view when inside a specific notebook, showing the question solver UI.
 async function renderCadernoContentView() {
@@ -284,9 +284,32 @@ export function cancelAddQuestions() {
     navigateToView('cadernos-view');
 }
 
+// Adds filtered questions to the current notebook.
+export async function addFilteredQuestionsToCaderno() {
+    if (!state.isAddingQuestionsMode.active || !state.currentUser) return;
+
+    const { cadernoId } = state.isAddingQuestionsMode;
+    const caderno = state.userCadernos.find(c => c.id === cadernoId);
+    if (!caderno) return;
+
+    // Only get IDs of questions not already in the notebook
+    const existingIds = new Set(caderno.questionIds || []);
+    const newQuestionIds = state.filteredQuestions
+        .map(q => q.id)
+        .filter(id => !existingIds.has(id));
+
+    if (newQuestionIds.length > 0) {
+        await addQuestionIdsToFirestore(cadernoId, newQuestionIds);
+    }
+    
+    exitAddMode();
+    setState('isNavigatingBackFromAddMode', true); // Flag to prevent view reset
+    setState('currentCadernoId', cadernoId);
+    navigateToView('cadernos-view');
+}
+
 // Removes a specific question from the currently opened notebook.
 export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
-
