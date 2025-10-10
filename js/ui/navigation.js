@@ -17,7 +17,8 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.estatisticasView
     ];
     
-    if (state.isAddingQuestionsMode.active && (viewId !== 'vade-mecum-view' || isUserClick)) {
+    // CORREÇÃO: Sair do modo de adição apenas se estiver navegando para uma tela DIFERENTE da de questões.
+    if (state.isAddingQuestionsMode.active && viewId !== 'vade-mecum-view') {
         exitAddMode();
     }
 
@@ -47,7 +48,7 @@ export function navigateToView(viewId, isUserClick = true) {
     });
 
     if (viewId === 'vade-mecum-view') {
-        if (!state.isReviewSession && isUserClick) {
+        if (!state.isReviewSession && isUserClick && !state.isAddingQuestionsMode.active) {
             DOM.vadeMecumTitle.textContent = "Vade Mecum de Questões";
             DOM.toggleFiltersBtn.classList.remove('hidden');
             DOM.filterCard.classList.remove('hidden');
