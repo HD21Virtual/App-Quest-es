@@ -3,7 +3,7 @@ import { state } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 import { createCaderno, createOrUpdateName, saveFilter } from './services/firestore.js';
 import { handleAuth } from './services/auth.js';
-import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno } from './features/caderno.js';
+import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
 import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
 import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
@@ -106,7 +106,13 @@ export function setupAllEventListeners() {
         else if (target.closest('#start-review-btn')) await handleStartReview();
 
         // --- Filters ---
-        else if (target.closest('#filter-btn')) await applyFilters();
+        else if (target.closest('#filter-btn')) {
+            if (state.isAddingQuestionsMode.active) {
+                await addFilteredQuestionsToCaderno();
+            } else {
+                await applyFilters();
+            }
+        }
         else if (target.closest('#clear-filters-btn')) clearAllFilters();
         else if (target.closest('.remove-filter-btn')) {
             const btn = target.closest('.remove-filter-btn');
@@ -142,5 +148,3 @@ export function setupAllEventListeners() {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
 }
-
-
