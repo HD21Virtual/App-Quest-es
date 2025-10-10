@@ -1,12 +1,12 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { state, setState } from '../state.js';
-import { DOM } from '../dom-elements.js';
+import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
 import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions } from './stats.js';
 import { showItemStatsModal, openNameModal } from '../ui/modal.js';
 import { applyFilters } from './filter.js';
-import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore, addQuestionsToCaderno as addQuestionsToFirestore } from '../services/firestore.js';
+import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore } from '../services/firestore.js';
 
 // Renders the view when inside a specific notebook, showing the question solver UI.
 async function renderCadernoContentView() {
@@ -263,30 +263,6 @@ export function handleAddQuestionsToCaderno() {
     DOM.addQuestionsBanner.classList.remove('hidden');
     DOM.addQuestionsBannerText.textContent = `Selecione questões para adicionar ao caderno "${caderno.name}".`;
     navigateToView('vade-mecum-view');
-}
-
-// Confirms the addition of filtered questions to the target notebook.
-export async function confirmAddQuestionsToCaderno() {
-    if (!state.isAddingQuestionsMode.active || !state.currentUser) return;
-    
-    const { cadernoId } = state.isAddingQuestionsMode;
-    const caderno = state.userCadernos.find(c => c.id === cadernoId);
-    if (!caderno) return;
-
-    const existingIds = caderno.questionIds || [];
-    const newQuestionIds = state.filteredQuestions
-        .map(q => q.id)
-        .filter(id => !existingIds.includes(id));
-
-    if (newQuestionIds.length > 0) {
-        await addQuestionsToFirestore(cadernoId, newQuestionIds);
-    }
-    
-    const targetCadernoId = state.isAddingQuestionsMode.cadernoId;
-    exitAddMode();
-    setState('isNavigatingBackFromAddMode', true);
-    setState('currentCadernoId', targetCadernoId); 
-    navigateToView('cadernos-view', false); 
 }
 
 // Exits the "add questions" mode.
