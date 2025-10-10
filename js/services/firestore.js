@@ -136,14 +136,6 @@ export async function removeQuestionIdFromCaderno(cadernoId, questionId) {
     });
 }
 
-export async function addQuestionsToCaderno(cadernoId, questionIds) {
-    if (!state.currentUser) return;
-    const cadernoRef = doc(db, 'users', state.currentUser.uid, 'cadernos', cadernoId);
-    await updateDoc(cadernoRef, {
-        questionIds: arrayUnion(...questionIds)
-    });
-}
-
 export async function saveUserAnswer(questionId, userAnswer, isCorrect) {
     if (!state.currentUser) return;
     const answerRef = doc(db, 'users', state.currentUser.uid, 'userQuestionState', questionId);
@@ -340,3 +332,4 @@ export async function deleteItem(type, id) {
         await deleteDoc(cadernoRef);
     }
 }
+
