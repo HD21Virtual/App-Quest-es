@@ -6,20 +6,28 @@ import { updateAssuntoFilter, updateSelectedFiltersDisplay } from '../ui/ui-help
 import { saveSessionStats } from '../services/firestore.js';
 
 export async function applyFilters() {
+    // CORREÇÃO: Apenas executa se os elementos de filtro existirem.
+    if (!DOM.materiaFilter) return;
+
     if (!state.isAddingQuestionsMode.active && state.sessionStats.length > 0 && !state.isReviewSession) {
         await saveSessionStats();
         clearSessionStats();
     }
 
     // Fecha os painéis de seleção ao aplicar o filtro
-    DOM.materiaFilter.querySelector('.custom-select-panel').classList.add('hidden');
-    DOM.assuntoFilter.querySelector('.custom-select-panel').classList.add('hidden');
+    if (DOM.materiaFilter.querySelector('.custom-select-panel')) {
+        DOM.materiaFilter.querySelector('.custom-select-panel').classList.add('hidden');
+    }
+    if (DOM.assuntoFilter.querySelector('.custom-select-panel')) {
+        DOM.assuntoFilter.querySelector('.custom-select-panel').classList.add('hidden');
+    }
+
 
     const selectedMaterias = JSON.parse(DOM.materiaFilter.dataset.value || '[]');
     const selectedAssuntos = JSON.parse(DOM.assuntoFilter.dataset.value || '[]');
-    const activeTipoBtn = DOM.tipoFilterGroup.querySelector('.active-filter');
+    const activeTipoBtn = DOM.tipoFilterGroup ? DOM.tipoFilterGroup.querySelector('.active-filter') : null;
     const selectedTipo = activeTipoBtn ? activeTipoBtn.dataset.value : 'todos';
-    const searchTerm = DOM.searchInput.value.toLowerCase();
+    const searchTerm = DOM.searchInput ? DOM.searchInput.value.toLowerCase() : '';
 
     const filtered = state.allQuestions.filter(q => {
         const materiaMatch = selectedMaterias.length === 0 || selectedMaterias.includes(q.materia);
@@ -62,6 +70,10 @@ function setupCustomSelect(container) {
     const searchInput = container.querySelector('.custom-select-search');
     const optionsContainer = container.querySelector('.custom-select-options');
     const valueSpan = container.querySelector('.custom-select-value');
+    
+    // CORREÇÃO: Verifica se os elementos existem antes de adicionar listeners
+    if (!button || !panel || !searchInput || !optionsContainer || !valueSpan) return;
+
     const originalText = valueSpan.textContent;
 
     button.addEventListener('click', () => {
@@ -70,7 +82,8 @@ function setupCustomSelect(container) {
         // Fecha outros painéis de filtro que possam estar abertos
         document.querySelectorAll('.custom-select-container').forEach(otherContainer => {
             if (otherContainer !== container) {
-                otherContainer.querySelector('.custom-select-panel').classList.add('hidden');
+                const otherPanel = otherContainer.querySelector('.custom-select-panel');
+                if (otherPanel) otherPanel.classList.add('hidden');
             }
         });
         
@@ -122,6 +135,10 @@ function setupCustomSelect(container) {
 }
 
 export function setupCustomSelects() {
+    // CORREÇÃO: Adicionado guard clause para rodar apenas na página de questões.
+    if (!DOM.materiaFilter) {
+        return;
+    }
     // Popula a lista de matérias inicialmente
     const materiaOptions = state.filterOptions.materia.map(m => m.name);
     const materiaContainer = DOM.materiaFilter.querySelector('.custom-select-options');
@@ -138,6 +155,9 @@ export function setupCustomSelects() {
 }
 
 export function clearAllFilters() {
+    // CORREÇÃO: Apenas executa se os elementos de filtro existirem.
+    if (!DOM.materiaFilter) return;
+
     DOM.searchInput.value = '';
     
     const materiaContainer = DOM.materiaFilter;
@@ -156,6 +176,9 @@ export function clearAllFilters() {
 }
 
 export function removeFilter(type, value) {
+     // CORREÇÃO: Apenas executa se os elementos de filtro existirem.
+    if (!DOM.materiaFilter) return;
+
     switch (type) {
         case 'materia': {
             const container = DOM.materiaFilter;
@@ -185,4 +208,3 @@ export function removeFilter(type, value) {
     }
     applyFilters();
 }
-
