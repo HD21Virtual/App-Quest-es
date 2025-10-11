@@ -30,6 +30,31 @@ const handleSaveFilter = async () => {
     closeSaveModal();
 };
 
+const handleNameConfirm = async () => {
+    const name = DOM.nameInput.value.trim();
+    if (!name || !state.currentUser || !state.editingType) return;
+
+    await createOrUpdateName(state.editingType, name, state.editingId);
+    
+    closeNameModal();
+};
+
+const handleCadernoConfirm = async () => {
+    const name = DOM.cadernoNameInput.value.trim();
+    if (!name || !state.currentUser) return;
+
+    const folderId = DOM.folderSelect.value || null;
+    let questionIds = [];
+    if (state.createCadernoWithFilteredQuestions) {
+        questionIds = state.filteredQuestions.map(q => q.id);
+    }
+    
+    await createCaderno(name, questionIds, folderId);
+
+    DOM.cadernoNameInput.value = '';
+    closeCadernoModal();
+};
+
 
 export function setupAllEventListeners() {
     document.addEventListener('click', async (event) => {
@@ -69,9 +94,11 @@ export function setupAllEventListeners() {
         else if (target.closest('#create-caderno-btn')) openCadernoModal(true);
         else if (target.closest('#add-caderno-to-folder-btn')) openCadernoModal(false, state.currentFolderId);
         else if (target.closest('#close-caderno-modal') || target.closest('#cancel-caderno-btn')) closeCadernoModal();
+        else if (target.closest('#confirm-caderno-btn')) await handleCadernoConfirm();
         
         else if (target.closest('#create-folder-btn')) openNameModal('folder');
         else if (target.closest('#close-name-modal') || target.closest('#cancel-name-btn')) closeNameModal();
+        else if (target.closest('#confirm-name-btn')) await handleNameConfirm();
         
         else if (target.closest('#cancel-confirmation-btn')) closeConfirmationModal();
         else if (target.closest('#confirm-delete-btn')) await handleConfirmation();
