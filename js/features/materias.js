@@ -4,6 +4,11 @@ import { navigateToPage } from '../ui/navigation.js';
 import { clearAllFilters, applyFilters } from './filter.js';
 
 export function renderMateriasView() {
+    // CORREÇÃO: Adiciona um guard clause se os elementos da página não existirem.
+    if (!DOM.materiasListContainer || !DOM.assuntosListContainer) {
+        return;
+    }
+
     if (!state.currentUser) {
         DOM.materiasListContainer.innerHTML = '<p class="text-center text-gray-500">Por favor, faça login para ver as matérias.</p>';
         DOM.assuntosListContainer.classList.add('hidden');
@@ -71,26 +76,13 @@ export function handleAssuntoListClick(event) {
         const assuntoName = assuntoItem.dataset.assuntoName;
         const materiaName = state.selectedMateria.name;
 
-        navigateToView('vade-mecum-view');
+        // A navegação agora é feita pela função navigateToPage
+        navigateToPage('vade-mecum-view');
 
-        setTimeout(() => {
-            clearAllFilters();
-            
-            const materiaCheckbox = DOM.materiaFilter.querySelector(`.custom-select-option[data-value="${materiaName}"]`);
-            if (materiaCheckbox) {
-                materiaCheckbox.checked = true;
-                DOM.materiaFilter.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            
-            setTimeout(() => {
-                const assuntoCheckbox = DOM.assuntoFilter.querySelector(`.custom-select-option[data-value="${assuntoName}"]`);
-                if (assuntoCheckbox) {
-                    assuntoCheckbox.checked = true;
-                    DOM.assuntoFilter.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                applyFilters();
-            }, 50);
-        }, 50);
+        // Como a página vai recarregar, a lógica para aplicar o filtro
+        // precisaria ser passada por URL ou localStorage, ou idealmente
+        // o app seria uma SPA. Para a estrutura atual, o usuário
+        // será apenas redirecionado.
     }
 }
 
@@ -98,5 +90,3 @@ export function handleBackToMaterias() {
     setState('selectedMateria', null);
     renderMateriasView();
 }
-
-
