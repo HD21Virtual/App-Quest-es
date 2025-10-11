@@ -1,5 +1,27 @@
 import DOM from '../dom-elements.js';
 
+const viewToFileMap = {
+    "inicio-view": "index.html",
+    "vade-mecum-view": "questoes.html",
+    "cadernos-view": "cadernos.html",
+    "materias-view": "materias.html",
+    "revisao-view": "revisao.html",
+    "estatisticas-view": "estatisticas.html"
+};
+
+/**
+ * Navega para uma página diferente com base no ID da view.
+ * @param {string} viewId O ID da view de destino (ex: 'vade-mecum-view').
+ */
+export function navigateToPage(viewId) {
+    const fileName = viewToFileMap[viewId];
+    if (fileName) {
+        window.location.href = fileName;
+    } else {
+        console.error(`Página não encontrada para a view: ${viewId}`);
+    }
+}
+
 /**
  * Adiciona classes de estilo para destacar o link de navegação da página atual.
  */
@@ -33,30 +55,11 @@ export function highlightCurrentPageLink() {
         }
     });
 
-    // Lógica para renderizar a view correta na página carregada
-    const allViews = [
-        DOM.inicioView,
-        DOM.vadeMecumView,
-        DOM.cadernosView,
-        DOM.materiasView,
-        DOM.revisaoView,
-        DOM.estatisticasView
-    ];
-
-    allViews.forEach(view => {
-        if (view) {
-            // Esconde todas as views por padrão
-            view.classList.add('hidden');
-            // Mostra apenas a view que corresponde à página atual
-            if (view.id === activeView) {
-                view.classList.remove('hidden');
-            }
-        }
-    });
-
+    // A lógica de mostrar/esconder views foi removida, pois cada página agora é um arquivo HTML separado.
 
     // Fecha o menu mobile (se estiver aberto) após a verificação
     if (DOM.mobileMenu) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
+
