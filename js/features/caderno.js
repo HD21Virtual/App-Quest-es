@@ -1,7 +1,7 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
-import { navigateToView } from '../ui/navigation.js';
+import { navigateToPage } from '../ui/navigation.js';
 import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions } from './stats.js';
 import { showItemStatsModal, openNameModal } from '../ui/modal.js';
@@ -313,3 +313,4 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
+
