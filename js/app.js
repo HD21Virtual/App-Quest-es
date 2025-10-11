@@ -4,6 +4,7 @@ import { setupAllEventListeners } from './event-listeners.js';
 import { applyFilters, setupCustomSelects } from './features/filter.js';
 import { initDOM } from './dom-elements.js';
 import { highlightCurrentPageLink } from './ui/navigation.js';
+import { renderMateriasView } from './features/materias.js';
 
 async function main() {
     // 1. Inicializa todas as referências de elementos DOM agora que a página foi carregada
@@ -21,12 +22,15 @@ async function main() {
     // 5. Busca os dados iniciais necessários para o funcionamento do aplicativo
     await fetchAllQuestions();
 
-    // 6. Assim que os dados são buscados, configura os componentes da UI que dependem deles
-    setupCustomSelects();
-
-    // 7. Aplica filtros padrão para mostrar algumas questões inicialmente (apenas na página de questões)
+    // 6. CORREÇÃO: Executa inicializações específicas da página apenas se os elementos existirem.
+    // Assim que os dados são buscados, configura os componentes da UI que dependem deles.
     if (document.getElementById('vade-mecum-view')) {
+       setupCustomSelects();
        applyFilters();
+    }
+
+    if (document.getElementById('materias-view')) {
+        renderMateriasView();
     }
 }
 
