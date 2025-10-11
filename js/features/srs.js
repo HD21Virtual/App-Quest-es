@@ -1,7 +1,7 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
-import { navigateToView } from '../ui/navigation.js';
+import { navigateToPage } from '../ui/navigation.js';
 import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
 import { updateStatsPanel } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
@@ -108,4 +108,5 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
+
 
