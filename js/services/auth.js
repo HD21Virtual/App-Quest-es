@@ -23,10 +23,8 @@ export function initAuth() {
             updateUserUI(user);
             closeAuthModal();
             setupAllListeners(user.uid);
-            // Redireciona para a página inicial se o login for bem-sucedido e o usuário não estiver nela
-            if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
-                navigateToPage('inicio-view');
-            }
+            // CORREÇÃO: O redirecionamento foi removido daqui.
+            // Isso impedia a navegação para outras páginas após o login.
         } else {
             resetStateOnLogout();
             updateUserUI(null);
@@ -37,13 +35,24 @@ export function initAuth() {
 export async function handleAuth(action) {
     DOM.authError.classList.add('hidden');
     try {
+        let shouldRedirect = false;
         if (action === 'login') {
             await signInWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
+            shouldRedirect = true;
         } else if (action === 'register') {
             await createUserWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
+            shouldRedirect = true;
         } else if (action === 'logout') {
             await signOut(auth);
+            // Redireciona para o início após o logout
+            navigateToPage('inicio-view');
         }
+        
+        // CORREÇÃO: Redireciona para o início APENAS após o login/registro bem-sucedido.
+        if (shouldRedirect) {
+            navigateToPage('inicio-view');
+        }
+
     } catch (error) {
         DOM.authError.textContent = error.message;
         DOM.authError.classList.remove('hidden');
@@ -55,9 +64,10 @@ export async function handleGoogleAuth() {
     try {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
+        // CORREÇÃO: Redireciona para o início APENAS após o login com Google.
+        navigateToPage('inicio-view');
     } catch (error) {
         DOM.authError.textContent = error.message;
         DOM.authError.classList.remove('hidden');
     }
 }
-
