@@ -45,6 +45,17 @@ export function openCadernoModal(isCreatingWithFilter, folderId = null) {
     setState('createCadernoWithFilteredQuestions', isCreatingWithFilter);
     if (DOM.cadernoNameInput) DOM.cadernoNameInput.value = '';
     if (DOM.folderSelect) {
+        // Limpa opções anteriores, mas mantém o placeholder
+        DOM.folderSelect.innerHTML = '<option value="">Salvar em (opcional)</option>';
+        
+        // Popula com as pastas do usuário
+        state.userFolders.forEach(folder => {
+            const option = document.createElement('option');
+            option.value = folder.id;
+            option.textContent = folder.name;
+            DOM.folderSelect.appendChild(option);
+        });
+
         DOM.folderSelect.value = folderId || '';
         DOM.folderSelect.disabled = !!folderId;
     }
@@ -184,4 +195,3 @@ export async function showItemStatsModal(itemId, itemType, itemName) {
 function showInfoModal(title, message) {
     // Logic to show an info-only confirmation modal
 }
-
