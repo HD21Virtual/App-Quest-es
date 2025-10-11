@@ -15,9 +15,9 @@ const viewToFileMap = {
  */
 export function navigateToPage(viewId) {
     const fileName = viewToFileMap[viewId];
-    if (fileName) {
+    if (fileName && (window.location.pathname.split("/").pop() !== fileName)) {
         window.location.href = fileName;
-    } else {
+    } else if (!fileName) {
         console.error(`Página não encontrada para a view: ${viewId}`);
     }
 }
@@ -26,13 +26,10 @@ export function navigateToPage(viewId) {
  * Adiciona classes de estilo para destacar o link de navegação da página atual.
  */
 export function highlightCurrentPageLink() {
-    // Tenta obter o nome do arquivo da URL. Ex: "questoes.html"
-    const currentPageFile = window.location.pathname.split("/").pop();
+    const currentPageFile = window.location.pathname.split("/").pop() || "index.html";
 
-    // Mapeia o nome do arquivo para o data-view correspondente nos links
     const fileToViewMap = {
         "index.html": "inicio-view",
-        "": "inicio-view", // Para o caso de a URL ser apenas o domínio
         "questoes.html": "vade-mecum-view",
         "cadernos.html": "cadernos-view",
         "materias.html": "materias-view",
@@ -44,22 +41,16 @@ export function highlightCurrentPageLink() {
     const navLinks = document.querySelectorAll('.nav-link');
 
     navLinks.forEach(link => {
-        // Remove as classes de ativo/inativo de todos os links primeiro
         link.classList.remove('text-blue-700', 'bg-blue-100', 'text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
 
-        // Adiciona as classes corretas com base se o link é o da página ativa
         if (link.dataset.view === activeView) {
             link.classList.add('text-blue-700', 'bg-blue-100');
         } else {
             link.classList.add('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
         }
     });
-
-    // A lógica de mostrar/esconder views foi removida, pois cada página agora é um arquivo HTML separado.
-
-    // Fecha o menu mobile (se estiver aberto) após a verificação
+    
     if (DOM.mobileMenu) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
-
