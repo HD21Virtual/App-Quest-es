@@ -12,7 +12,6 @@ import { setupAllListeners } from '../services/firestore.js';
 import { updateUserUI } from '../ui/ui-helpers.js';
 import { closeAuthModal } from '../ui/modal.js';
 import DOM from '../dom-elements.js';
-import { navigateToView } from "../ui/navigation.js";
 
 export function initAuth() {
     onAuthStateChanged(auth, (user) => {
@@ -23,11 +22,9 @@ export function initAuth() {
             updateUserUI(user);
             closeAuthModal();
             setupAllListeners(user.uid);
-            navigateToView('inicio-view');
         } else {
             resetStateOnLogout();
             updateUserUI(null);
-            navigateToView('inicio-view');
         }
     });
 }
@@ -58,4 +55,3 @@ export async function handleGoogleAuth() {
         DOM.authError.classList.remove('hidden');
     }
 }
-
