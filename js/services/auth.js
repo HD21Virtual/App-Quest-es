@@ -12,6 +12,7 @@ import { setupAllListeners } from '../services/firestore.js';
 import { updateUserUI } from '../ui/ui-helpers.js';
 import { closeAuthModal } from '../ui/modal.js';
 import DOM from '../dom-elements.js';
+import { navigateToPage } from "../ui/navigation.js";
 
 export function initAuth() {
     onAuthStateChanged(auth, (user) => {
@@ -22,6 +23,10 @@ export function initAuth() {
             updateUserUI(user);
             closeAuthModal();
             setupAllListeners(user.uid);
+            // Redireciona para a página inicial se o login for bem-sucedido e o usuário não estiver nela
+            if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+                navigateToPage('inicio-view');
+            }
         } else {
             resetStateOnLogout();
             updateUserUI(null);
@@ -55,3 +60,4 @@ export async function handleGoogleAuth() {
         DOM.authError.classList.remove('hidden');
     }
 }
+
