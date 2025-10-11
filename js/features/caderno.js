@@ -24,11 +24,17 @@ async function renderCadernoContentView() {
     DOM.addQuestionsToCadernoBtn.classList.remove('hidden');
 
     // Clones the question solver UI from the main "Questões" tab and injects it here.
+    // This is a workaround for MPA. A better approach would be a shared component.
     const tempContainer = document.createElement('div');
-    const mainContentHtml = DOM.vadeMecumView.querySelector('#tabs-and-main-content').outerHTML;
-    tempContainer.innerHTML = mainContentHtml;
-    DOM.savedCadernosListContainer.innerHTML = '';
-    DOM.savedCadernosListContainer.appendChild(tempContainer.firstChild);
+    if (DOM.vadeMecumView) { // Check if the element exists
+        const mainContentHtml = DOM.vadeMecumView.querySelector('#tabs-and-main-content')?.outerHTML;
+        if(mainContentHtml) {
+            tempContainer.innerHTML = mainContentHtml;
+            DOM.savedCadernosListContainer.innerHTML = '';
+            DOM.savedCadernosListContainer.appendChild(tempContainer.firstChild);
+        }
+    }
+
 
     // Filters questions to show only those belonging to the current notebook.
     setState('filteredQuestions', state.allQuestions.filter(q => caderno.questionIds.includes(q.id)));
@@ -148,6 +154,10 @@ function renderRootCadernosView() {
 
 // Main function to control the rendering of the "Cadernos" tab view.
 export async function renderFoldersAndCadernos() {
+    // CORREÇÃO: Adicionado guard clause para evitar erro em páginas sem o container de cadernos.
+    if (!DOM.savedCadernosListContainer) {
+        return;
+    }
     DOM.savedCadernosListContainer.innerHTML = '';
 
     if (state.currentCadernoId) {
@@ -260,28 +270,32 @@ export function handleAddQuestionsToCaderno() {
     if (!caderno) return;
 
     setState('isAddingQuestionsMode', { active: true, cadernoId: state.currentCadernoId });
-    DOM.addQuestionsBanner.classList.remove('hidden');
-    DOM.addQuestionsBannerText.textContent = `Selecione questões para adicionar ao caderno "${caderno.name}".`;
-    navigateToView('vade-mecum-view');
+    // Navigate to the questions page to start adding
+    navigateToPage('vade-mecum-view');
 }
+
 
 // Exits the "add questions" mode.
 export function exitAddMode() {
     if (state.isAddingQuestionsMode.active) {
         setState('isAddingQuestionsMode', { active: false, cadernoId: null });
-        DOM.addQuestionsBanner.classList.add('hidden');
-        DOM.filterBtn.textContent = 'Filtrar questões';
-        DOM.filterBtn.disabled = false;
+        if (DOM.addQuestionsBanner) DOM.addQuestionsBanner.classList.add('hidden');
+        if (DOM.filterBtn) {
+            DOM.filterBtn.textContent = 'Filtrar questões';
+            DOM.filterBtn.disabled = false;
+        }
         
-        const mainContentContainer = DOM.vadeMecumContentArea.querySelector('#tabs-and-main-content');
-        if (mainContentContainer) mainContentContainer.classList.remove('hidden');
+        if(DOM.vadeMecumContentArea) {
+            const mainContentContainer = DOM.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+            if (mainContentContainer) mainContentContainer.classList.remove('hidden');
+        }
     }
 }
 
 // Cancels the "add questions" process and returns to the notebooks view.
 export function cancelAddQuestions() {
     exitAddMode();
-    navigateToView('cadernos-view');
+    navigateToPage('cadernos-view');
 }
 
 // Adds filtered questions to the current notebook.
@@ -305,7 +319,7 @@ export async function addFilteredQuestionsToCaderno() {
     exitAddMode();
     setState('isNavigatingBackFromAddMode', true); // Flag to prevent view reset
     setState('currentCadernoId', cadernoId);
-    navigateToView('cadernos-view');
+    navigateToPage('cadernos-view');
 }
 
 // Removes a specific question from the currently opened notebook.
@@ -313,4 +327,3 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
-
