@@ -1,6 +1,6 @@
 import DOM from '../dom-elements.js';
 import { state, setState } from '../state.js';
-import { navigateToView } from '../ui/navigation.js';
+import { navigateToPage } from '../ui/navigation.js';
 import { clearAllFilters, applyFilters } from './filter.js';
 
 export function renderMateriasView() {
@@ -98,4 +98,5 @@ export function handleBackToMaterias() {
     setState('selectedMateria', null);
     renderMateriasView();
 }
+
 
