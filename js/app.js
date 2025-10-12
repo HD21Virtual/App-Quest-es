@@ -3,36 +3,27 @@ import { fetchAllQuestions } from './services/firestore.js';
 import { setupAllEventListeners } from './event-listeners.js';
 import { applyFilters, setupCustomSelects } from './features/filter.js';
 import { initDOM } from './dom-elements.js';
-import { highlightCurrentPageLink } from './ui/navigation.js';
-import { renderMateriasView } from './features/materias.js';
 
 async function main() {
-    // 1. Inicializa todas as referências de elementos DOM agora que a página foi carregada
+    // 1. Initialize all DOM element references now that the page is loaded
     initDOM();
 
-    // 2. Destaca o link da página atual na navegação
-    highlightCurrentPageLink();
-
-    // 3. Inicializa a autenticação, que define o estado do usuário e a visualização inicial
+    // 2. Initialize authentication which sets up the user state and initial view
     initAuth();
 
-    // 4. Configura todos os event listeners para a aplicação
+    // 3. Set up all event listeners for the application
     setupAllEventListeners();
 
-    // 5. Busca os dados iniciais necessários para o funcionamento do aplicativo
+    // 4. Fetch initial data required for the app to function
     await fetchAllQuestions();
 
-    // 6. CORREÇÃO: Executa inicializações específicas da página apenas se os elementos existirem.
-    // Assim que os dados são buscados, configura os componentes da UI que dependem deles.
-    if (document.getElementById('vade-mecum-view')) {
-       setupCustomSelects();
-       applyFilters();
-    }
+    // 5. Once data is fetched, setup UI components that depend on it
+    setupCustomSelects();
 
-    if (document.getElementById('materias-view')) {
-        renderMateriasView();
-    }
+    // 6. Apply default filters to show some questions initially
+    applyFilters();
 }
 
-// Aguarda o DOM ser totalmente carregado antes de executar o script principal
+// Wait for the DOM to be fully loaded before running the main script
 document.addEventListener('DOMContentLoaded', main);
+

@@ -8,6 +8,7 @@ import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } 
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
 import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
 import { applyFilters, clearAllFilters, removeFilter } from './features/filter.js';
+import { navigateToView } from './ui/navigation.js';
 import { updateSelectedFiltersDisplay } from './ui/ui-helpers.js';
 
 // Handlers
@@ -160,6 +161,12 @@ export function setupAllEventListeners() {
             btn.innerHTML = isHidden
                 ? `<i class="fas fa-eye mr-2"></i> Mostrar Filtros`
                 : `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
+        }
+        
+        // --- Navigation ---
+        else if (target.closest('.nav-link')) {
+            event.preventDefault();
+            navigateToView(target.closest('.nav-link').dataset.view);
         }
     });
 
