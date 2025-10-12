@@ -1,7 +1,7 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
-import { navigateToPage } from '../ui/navigation.js';
+import { navigateToView } from '../ui/navigation.js';
 import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
 import { updateStatsPanel } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
@@ -55,11 +55,6 @@ export async function handleSrsFeedback(feedback) {
 }
 
 export function updateReviewCard() {
-    // CORREÇÃO: Adicionado guard clause para evitar erro em páginas que não têm o review-card.
-    if (!DOM.reviewCard) {
-        return;
-    }
-    
     if (!state.currentUser) {
         DOM.reviewCard.classList.add('hidden');
         return;
@@ -102,10 +97,15 @@ export async function handleStartReview() {
         setState('sessionStats', []);
         setState('currentQuestionIndex', 0);
 
-        navigateToPage('vade-mecum-view');
-        
-        // A lógica abaixo pode não funcionar como esperado devido ao redirecionamento de página.
-        // O ideal seria passar o estado de revisão via URL ou localStorage.
-        // Por enquanto, o usuário será apenas levado para a página de questões.
+        navigateToView('vade-mecum-view');
+
+        DOM.vadeMecumTitle.textContent = "Sessão de Revisão";
+        DOM.toggleFiltersBtn.classList.add('hidden');
+        DOM.filterCard.classList.add('hidden');
+        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Revisando ${state.filteredQuestions.length} questões.</span>`;
+
+        await displayQuestion();
+        updateStatsPanel();
     }
 }
+

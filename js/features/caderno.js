@@ -1,7 +1,7 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
-import { navigateToPage } from '../ui/navigation.js';
+import { navigateToView } from '../ui/navigation.js';
 import { displayQuestion } from './question-viewer.js';
 import { generateStatsForQuestions } from './stats.js';
 import { showItemStatsModal, openNameModal } from '../ui/modal.js';
@@ -23,10 +23,12 @@ async function renderCadernoContentView() {
     DOM.createFolderBtn.classList.add('hidden');
     DOM.addQuestionsToCadernoBtn.classList.remove('hidden');
 
-    // CORREÇÃO: Esconde a lista de cadernos e mostra a área de resolução de questões.
-    DOM.savedCadernosListContainer.classList.add('hidden');
-    if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.remove('hidden');
-
+    // Clones the question solver UI from the main "Questões" tab and injects it here.
+    const tempContainer = document.createElement('div');
+    const mainContentHtml = DOM.vadeMecumView.querySelector('#tabs-and-main-content').outerHTML;
+    tempContainer.innerHTML = mainContentHtml;
+    DOM.savedCadernosListContainer.innerHTML = '';
+    DOM.savedCadernosListContainer.appendChild(tempContainer.firstChild);
 
     // Filters questions to show only those belonging to the current notebook.
     setState('filteredQuestions', state.allQuestions.filter(q => caderno.questionIds.includes(q.id)));
@@ -47,10 +49,6 @@ function renderFolderContentView() {
         renderFoldersAndCadernos(); 
         return; 
     }
-
-    // CORREÇÃO: Garante que a view de questões do caderno esteja escondida
-    if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.add('hidden');
-    DOM.savedCadernosListContainer.classList.remove('hidden');
 
     DOM.cadernosViewTitle.textContent = folder.name;
     DOM.backToFoldersBtn.classList.remove('hidden');
@@ -83,10 +81,6 @@ function renderFolderContentView() {
 
 // Renders the root view of the "Cadernos" tab, showing all folders and unfiled notebooks.
 function renderRootCadernosView() {
-    // CORREÇÃO: Garante que a view de questões do caderno esteja escondida
-    if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.add('hidden');
-    DOM.savedCadernosListContainer.classList.remove('hidden');
-
     DOM.cadernosViewTitle.textContent = 'Meus Cadernos';
     DOM.backToFoldersBtn.classList.add('hidden');
     DOM.addCadernoToFolderBtn.classList.add('hidden');
@@ -154,10 +148,6 @@ function renderRootCadernosView() {
 
 // Main function to control the rendering of the "Cadernos" tab view.
 export async function renderFoldersAndCadernos() {
-    // CORREÇÃO: Adicionado guard clause para evitar erro em páginas sem o container de cadernos.
-    if (!DOM.savedCadernosListContainer) {
-        return;
-    }
     DOM.savedCadernosListContainer.innerHTML = '';
 
     if (state.currentCadernoId) {
@@ -270,32 +260,28 @@ export function handleAddQuestionsToCaderno() {
     if (!caderno) return;
 
     setState('isAddingQuestionsMode', { active: true, cadernoId: state.currentCadernoId });
-    // Navigate to the questions page to start adding
-    navigateToPage('vade-mecum-view');
+    DOM.addQuestionsBanner.classList.remove('hidden');
+    DOM.addQuestionsBannerText.textContent = `Selecione questões para adicionar ao caderno "${caderno.name}".`;
+    navigateToView('vade-mecum-view');
 }
-
 
 // Exits the "add questions" mode.
 export function exitAddMode() {
     if (state.isAddingQuestionsMode.active) {
         setState('isAddingQuestionsMode', { active: false, cadernoId: null });
-        if (DOM.addQuestionsBanner) DOM.addQuestionsBanner.classList.add('hidden');
-        if (DOM.filterBtn) {
-            DOM.filterBtn.textContent = 'Filtrar questões';
-            DOM.filterBtn.disabled = false;
-        }
+        DOM.addQuestionsBanner.classList.add('hidden');
+        DOM.filterBtn.textContent = 'Filtrar questões';
+        DOM.filterBtn.disabled = false;
         
-        if(DOM.vadeMecumContentArea) {
-            const mainContentContainer = DOM.vadeMecumContentArea.querySelector('#tabs-and-main-content');
-            if (mainContentContainer) mainContentContainer.classList.remove('hidden');
-        }
+        const mainContentContainer = DOM.vadeMecumContentArea.querySelector('#tabs-and-main-content');
+        if (mainContentContainer) mainContentContainer.classList.remove('hidden');
     }
 }
 
 // Cancels the "add questions" process and returns to the notebooks view.
 export function cancelAddQuestions() {
     exitAddMode();
-    navigateToPage('cadernos-view');
+    navigateToView('cadernos-view');
 }
 
 // Adds filtered questions to the current notebook.
@@ -319,7 +305,7 @@ export async function addFilteredQuestionsToCaderno() {
     exitAddMode();
     setState('isNavigatingBackFromAddMode', true); // Flag to prevent view reset
     setState('currentCadernoId', cadernoId);
-    navigateToPage('cadernos-view');
+    navigateToView('cadernos-view');
 }
 
 // Removes a specific question from the currently opened notebook.
