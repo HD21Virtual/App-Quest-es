@@ -71,7 +71,7 @@ export function handleAssuntoListClick(event) {
         const assuntoName = assuntoItem.dataset.assuntoName;
         const materiaName = state.selectedMateria.name;
 
-        navigateToView('vade-mecum-view');
+        navigateToView('vade-mecum-view', false);
 
         setTimeout(() => {
             clearAllFilters();
@@ -98,4 +98,3 @@ export function handleBackToMaterias() {
     setState('selectedMateria', null);
     renderMateriasView();
 }
-
