@@ -98,6 +98,51 @@
             <div id="saved-cadernos-list-container">
                 <!-- Pastas e cadernos serão inseridos aqui -->
             </div>
+
+             <!-- INÍCIO: Estrutura para resolver questões (oculta por padrão) -->
+            <div id="caderno-solver-view" class="hidden">
+                 <div id="tabs-and-main-content">
+                    <div class="mb-4">
+                        <nav id="tabs-container" class="flex space-x-1">
+                            <button data-tab="question" class="tab-button active">Questões</button>
+                            <button data-tab="stats" class="tab-button">Estatísticas</button>
+                        </nav>
+                    </div>
+                    
+                    <div id="main-content-container" class="bg-white rounded-b-lg rounded-tr-lg shadow-sm -mt-4">
+                        <div class="p-4 border-b border-gray-200">
+                            <h3 id="question-counter-top" class="flex items-baseline text-xl text-gray-800 hidden"></h3>
+                        </div>
+                        <div class="flex justify-between items-center p-4 border-b border-gray-200 text-sm">
+                            <div id="question-info-container" class="text-gray-600 space-y-1 hidden"></div>
+                            <div id="question-toolbar" class="flex items-center space-x-4 text-gray-600 hidden">
+                                 <!-- Toolbar será inserida aqui -->
+                            </div>
+                        </div>
+                         <div class="p-6">
+                            <div id="question-view">
+                                <div id="questions-container" class="space-y-6">
+                                    <!-- As questões serão inseridas aqui pelo JavaScript -->
+                                </div>
+                                <div id="navigation-controls" class="flex justify-start items-center mt-8 space-x-4 hidden">
+                                    <button id="prev-question-btn" class="p-3 border rounded-md bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                    </button>
+                                    <button id="next-question-btn" class="p-3 border rounded-md bg-white hover:bg-gray-100 transition">
+                                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="stats-view" class="hidden">
+                                 <div id="stats-content">
+                                    <!-- O conteúdo das estatísticas será inserido aqui -->
+                                 </div>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+             <!-- FIM: Estrutura para resolver questões -->
         </div>
     </main>
 
