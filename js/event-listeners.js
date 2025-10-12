@@ -174,4 +174,13 @@ export function setupAllEventListeners() {
     if (DOM.searchSavedFiltersInput) {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
+    // CORREÇÃO: Salva a sessão se o usuário fechar ou mudar de aba
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            if (state.currentUser && state.sessionStats.length > 0) {
+                saveSessionStats();
+            }
+        }
+    });
 }
+
