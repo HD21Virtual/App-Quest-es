@@ -4,61 +4,47 @@ import { getHistoricalCountsForQuestions } from '../services/firestore.js';
 import DOM from '../dom-elements.js';
 
 export function updateStatsPageUI() {
-    // Combina sessões históricas com a sessão atual para ter dados em tempo real
-    const combinedSessions = [...state.historicalSessions];
-    if (state.sessionStats.length > 0) {
-        const correct = state.sessionStats.filter(s => s.isCorrect).length;
-        const total = state.sessionStats.length;
-        const accuracy = total > 0 ? (correct / total * 100) : 0; 
-        
-        const currentSessionData = {
-            totalQuestions: state.sessionStats.length,
-            correctCount: correct,
-            accuracy: accuracy, 
-            details: state.sessionStats.reduce((acc, stat) => {
-                if (!acc[stat.materia]) acc[stat.materia] = { correct: 0, total: 0 };
-                acc[stat.materia].total++;
-                if (stat.isCorrect) acc[stat.materia].correct++;
-                return acc;
-            }, {}),
-            createdAt: { toDate: () => new Date() } // Simula um objeto de timestamp para a sessão atual
-        };
-        // Adiciona a sessão atual ao início para garantir que ela seja processada
-        combinedSessions.unshift(currentSessionData);
-    }
-
     let totalQuestions = 0;
     let totalCorrect = 0;
     const materiaTotals = {};
-    const processedSessions = new Set(); // Para evitar contagem dupla
 
-    // Calcula os totais a partir das sessões combinadas
-    combinedSessions.forEach(session => {
-        // Evita reprocessar sessões históricas que já foram salvas e reaparecem
-        if (session.id && processedSessions.has(session.id)) return;
-        if(session.id) processedSessions.add(session.id);
-
-        totalQuestions += session.totalQuestions;
-        totalCorrect += session.correctCount;
+    // 1. Processa as sessões históricas do Firestore
+    state.historicalSessions.forEach(session => {
+        totalQuestions += session.totalQuestions || 0;
+        totalCorrect += session.correctCount || 0;
         for (const materia in session.details) {
             if (!materiaTotals[materia]) materiaTotals[materia] = { correct: 0, total: 0 };
-            materiaTotals[materia].correct += session.details[materia].correct;
-            materiaTotals[materia].total += session.details[materia].total;
+            materiaTotals[materia].correct += session.details[materia].correct || 0;
+            materiaTotals[materia].total += session.details[materia].total || 0;
+        }
+    });
+
+    // 2. Adiciona as estatísticas da sessão atual (não salva) por cima
+    state.sessionStats.forEach(stat => {
+        totalQuestions += 1;
+        if (stat.isCorrect) {
+            totalCorrect += 1;
+        }
+        if (!materiaTotals[stat.materia]) {
+            materiaTotals[stat.materia] = { correct: 0, total: 0 };
+        }
+        materiaTotals[stat.materia].total += 1;
+        if (stat.isCorrect) {
+            materiaTotals[stat.materia].correct += 1;
         }
     });
     
-    // Atualiza os cards de estatísticas gerais na página inicial
+    // 3. Atualiza os elementos da UI (cards)
     if (DOM.statsTotalQuestionsEl) DOM.statsTotalQuestionsEl.textContent = totalQuestions;
     if (DOM.statsTotalCorrectEl) DOM.statsTotalCorrectEl.textContent = totalCorrect;
     if (DOM.statsTotalIncorrectEl) DOM.statsTotalIncorrectEl.textContent = totalQuestions - totalCorrect;
     const geralAccuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(0) : 0;
     if (DOM.statsGeralAccuracyEl) DOM.statsGeralAccuracyEl.textContent = `${geralAccuracy}%`;
 
-    // Renderiza os gráficos apenas se a aba "Início" estiver visível
-    if (DOM.inicioView && !DOM.inicioView.classList.contains('hidden')) {
-        renderHomePerformanceChart(materiaTotals);
-        renderWeeklyChart();
-    }
+    // 4. Atualiza os gráficos incondicionalmente
+    // As funções de renderização de gráficos têm as suas próprias verificações de existência do canvas.
+    renderHomePerformanceChart(materiaTotals);
+    renderWeeklyChart();
 }
 
 export async function updateStatsPanel(container = null) {
@@ -120,3 +106,4 @@ export async function generateStatsForQuestions(questionIds) {
 
     return { totalCorrect, totalIncorrect, statsByMateria };
 }
+
