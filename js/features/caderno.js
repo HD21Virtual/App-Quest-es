@@ -23,17 +23,9 @@ async function renderCadernoContentView() {
     DOM.createFolderBtn.classList.add('hidden');
     DOM.addQuestionsToCadernoBtn.classList.remove('hidden');
 
-    // Clones the question solver UI from the main "Questões" tab and injects it here.
-    // This is a workaround for MPA. A better approach would be a shared component.
-    const tempContainer = document.createElement('div');
-    if (DOM.vadeMecumView) { // Check if the element exists
-        const mainContentHtml = DOM.vadeMecumView.querySelector('#tabs-and-main-content')?.outerHTML;
-        if(mainContentHtml) {
-            tempContainer.innerHTML = mainContentHtml;
-            DOM.savedCadernosListContainer.innerHTML = '';
-            DOM.savedCadernosListContainer.appendChild(tempContainer.firstChild);
-        }
-    }
+    // CORREÇÃO: Em vez de clonar HTML, agora apenas mostra o container de questões que já existe na página.
+    DOM.savedCadernosListContainer.classList.add('hidden');
+    if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.remove('hidden');
 
 
     // Filters questions to show only those belonging to the current notebook.
@@ -55,6 +47,10 @@ function renderFolderContentView() {
         renderFoldersAndCadernos(); 
         return; 
     }
+
+    // CORREÇÃO: Garante que a view de questões do caderno esteja escondida
+    if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.add('hidden');
+    DOM.savedCadernosListContainer.classList.remove('hidden');
 
     DOM.cadernosViewTitle.textContent = folder.name;
     DOM.backToFoldersBtn.classList.remove('hidden');
@@ -87,6 +83,10 @@ function renderFolderContentView() {
 
 // Renders the root view of the "Cadernos" tab, showing all folders and unfiled notebooks.
 function renderRootCadernosView() {
+    // CORREÇÃO: Garante que a view de questões do caderno esteja escondida
+    if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.add('hidden');
+    DOM.savedCadernosListContainer.classList.remove('hidden');
+
     DOM.cadernosViewTitle.textContent = 'Meus Cadernos';
     DOM.backToFoldersBtn.classList.add('hidden');
     DOM.addCadernoToFolderBtn.classList.add('hidden');
@@ -327,3 +327,4 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
+
