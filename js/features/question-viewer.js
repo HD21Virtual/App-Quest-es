@@ -260,33 +260,37 @@ export async function displayQuestion() {
     const userAnswerData = state.userAnswers.get(question.id);
 
     questionCounterTop.innerHTML = `Questão ${state.currentQuestionIndex + 1} de ${state.filteredQuestions.length}`;
+    // MELHORIA: Aprimorada a exibição de informações da questão para melhor responsividade.
     questionInfoContainer.innerHTML = `
-        <div class="flex flex-col sm:flex-row sm:space-x-4">
-          <span class="text-gray-700">Matéria:</span><a href="#" class="text-blue-600 hover:underline">${question.materia}</a>
-        </div>
-        <div class="flex flex-col sm:flex-row sm:space-x-4">
-          <span class="text-gray-700">Assunto:</span><a href="#" class="text-blue-600 hover:underline">${question.assunto}</a>
+        <div class="text-sm sm:text-base">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+              <span class="text-gray-700 font-semibold">Matéria:</span><a href="#" class="text-blue-600 hover:underline">${question.materia}</a>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-1 sm:mt-0">
+              <span class="text-gray-700 font-semibold">Assunto:</span><a href="#" class="text-blue-600 hover:underline">${question.assunto}</a>
+            </div>
         </div>
     `;
 
+    // MELHORIA: A barra de ferramentas agora exibe apenas ícones em telas pequenas, melhorando a interface.
     let toolbarHTML = `
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-graduation-cap mr-2"></i>Gabarito Comentado</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-comment-dots mr-2"></i>Comentários</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-edit mr-2"></i>Criar Anotações</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-book mr-2"></i>Cadernos</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-chart-bar mr-2"></i>Desempenho</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-flag mr-2"></i>Notificar Erro</button>
+        <button class="flex items-center hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 sm:hover:bg-transparent sm:p-0" title="Gabarito Comentado"><i class="fas fa-graduation-cap text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Gabarito Comentado</span></button>
+        <button class="flex items-center hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 sm:hover:bg-transparent sm:p-0" title="Comentários"><i class="fas fa-comment-dots text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Comentários</span></button>
+        <button class="flex items-center hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 sm:hover:bg-transparent sm:p-0" title="Criar Anotações"><i class="fas fa-edit text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Criar Anotações</span></button>
+        <button class="flex items-center hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 sm:hover:bg-transparent sm:p-0" title="Cadernos"><i class="fas fa-book text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Cadernos</span></button>
+        <button class="flex items-center hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 sm:hover:bg-transparent sm:p-0" title="Desempenho"><i class="fas fa-chart-bar text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Desempenho</span></button>
+        <button class="flex items-center hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 sm:hover:bg-transparent sm:p-0" title="Notificar Erro"><i class="fas fa-flag text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Notificar Erro</span></button>
     `;
     
     if(state.currentCadernoId) {
         toolbarHTML += `
-            <button class="remove-question-btn text-red-500 hover:text-red-700 transition-colors text-sm flex items-center" data-question-id="${question.id}" title="Remover do caderno">
-                <i class="fas fa-trash-alt mr-2"></i>Remover
+            <button class="remove-question-btn text-red-500 hover:text-red-700 transition-colors text-sm flex items-center p-2 rounded-md hover:bg-red-50 sm:hover:bg-transparent sm:p-0" data-question-id="${question.id}" title="Remover do caderno">
+                <i class="fas fa-trash-alt text-lg sm:text-base sm:mr-2"></i><span class="hidden sm:inline">Remover</span>
             </button>
         `;
     }
     questionToolbar.innerHTML = toolbarHTML;
-    questionToolbar.className = 'flex items-center flex-wrap gap-x-4 gap-y-2 text-gray-600';
+    questionToolbar.className = 'flex items-center justify-center sm:justify-start flex-wrap gap-x-2 gap-y-2 text-gray-600';
 
 
     questionCounterTop.classList.remove('hidden');
@@ -342,3 +346,4 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
