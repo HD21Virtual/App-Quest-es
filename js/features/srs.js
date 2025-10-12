@@ -3,7 +3,7 @@ import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
 import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
-import { updateStatsPanel } from './stats.js';
+import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
 
 const reviewIntervals = [1, 3, 7, 15, 30, 90]; // Days
@@ -52,6 +52,7 @@ export async function handleSrsFeedback(feedback) {
 
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
     updateStatsPanel();
+    updateStatsPageUI(); // CORREÇÃO: Atualiza os stats da página inicial em tempo real
 }
 
 export function updateReviewCard() {
@@ -108,4 +109,3 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
-
