@@ -23,7 +23,7 @@ async function renderCadernoContentView() {
     DOM.createFolderBtn.classList.add('hidden');
     DOM.addQuestionsToCadernoBtn.classList.remove('hidden');
 
-    // CORREÇÃO: Em vez de clonar HTML, agora apenas mostra o container de questões que já existe na página.
+    // CORREÇÃO: Esconde a lista de cadernos e mostra a área de resolução de questões.
     DOM.savedCadernosListContainer.classList.add('hidden');
     if (DOM.cadernoSolverView) DOM.cadernoSolverView.classList.remove('hidden');
 
@@ -327,4 +327,3 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
-
