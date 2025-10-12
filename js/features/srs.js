@@ -98,7 +98,7 @@ export async function handleStartReview() {
         setState('sessionStats', []);
         setState('currentQuestionIndex', 0);
 
-        navigateToView('vade-mecum-view');
+        navigateToView('vade-mecum-view', false);
 
         DOM.vadeMecumTitle.textContent = "Sessão de Revisão";
         DOM.toggleFiltersBtn.classList.add('hidden');
