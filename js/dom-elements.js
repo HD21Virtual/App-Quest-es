@@ -44,6 +44,8 @@ export function initDOM() {
     DOM.createFolderBtn = document.getElementById('create-folder-btn');
     DOM.addQuestionsBanner = document.getElementById('add-questions-banner');
     DOM.addQuestionsBannerText = document.getElementById('add-questions-banner-text');
+    // CORREÇÃO: Adiciona referência para a área de resolução de questões na página de cadernos.
+    DOM.cadernoSolverView = document.getElementById('caderno-solver-view');
 
     // Materias View
     DOM.materiasViewTitle = document.getElementById('materias-view-title');
