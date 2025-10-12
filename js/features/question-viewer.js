@@ -1,6 +1,6 @@
 import { state, setState, getActiveContainer } from '../state.js';
 import { handleSrsFeedback } from './srs.js';
-import { updateStatsPanel } from './stats.js';
+import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { saveUserAnswer, updateQuestionHistory, saveCadernoState } from '../services/firestore.js';
 import { removeQuestionFromCaderno } from './caderno.js';
 
@@ -47,6 +47,7 @@ export async function checkAnswer() {
     const isFreshAnswer = true;
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, isFreshAnswer);
     updateStatsPanel();
+    updateStatsPageUI(); // CORREÇÃO: Atualiza os stats da página inicial em tempo real
 }
 
 export function handleDiscardOption(event) {
@@ -339,15 +340,3 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
-
-
-
-
-
-
-
-
-
-
-
-
