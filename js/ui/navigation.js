@@ -17,7 +17,7 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.estatisticasView
     ];
     
-    // CORREÇÃO: Sair do modo de adição apenas se estiver navegando para uma tela DIFERENTE da de questões.
+    // Sair do modo de adição apenas se estiver navegando para uma tela DIFERENTE da de questões.
     if (state.isAddingQuestionsMode.active && viewId !== 'vade-mecum-view') {
         exitAddMode();
     }
@@ -60,7 +60,7 @@ export function navigateToView(viewId, isUserClick = true) {
         setState('selectedMateria', null);
         renderMateriasView();
     } else if (viewId === 'inicio-view') {
-        // CORREÇÃO: Chamar a atualização das estatísticas sempre que a tela inicial for exibida
+        // Chamar a atualização das estatísticas sempre que a tela inicial for exibida
         updateStatsPageUI();
     }
 
