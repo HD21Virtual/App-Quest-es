@@ -4,6 +4,7 @@ import { getHistoricalCountsForQuestions } from '../services/firestore.js';
 import DOM from '../dom-elements.js';
 
 export function updateStatsPageUI() {
+    // Combina sessões históricas com a sessão atual para ter dados em tempo real
     const combinedSessions = [...state.historicalSessions];
     if (state.sessionStats.length > 0) {
         const correct = state.sessionStats.filter(s => s.isCorrect).length;
@@ -20,16 +21,23 @@ export function updateStatsPageUI() {
                 if (stat.isCorrect) acc[stat.materia].correct++;
                 return acc;
             }, {}),
-            createdAt: { toDate: () => new Date() }
+            createdAt: { toDate: () => new Date() } // Simula um objeto de timestamp para a sessão atual
         };
-        combinedSessions.push(currentSessionData);
+        // Adiciona a sessão atual ao início para garantir que ela seja processada
+        combinedSessions.unshift(currentSessionData);
     }
 
     let totalQuestions = 0;
     let totalCorrect = 0;
     const materiaTotals = {};
+    const processedSessions = new Set(); // Para evitar contagem dupla
 
+    // Calcula os totais a partir das sessões combinadas
     combinedSessions.forEach(session => {
+        // Evita reprocessar sessões históricas que já foram salvas e reaparecem
+        if (session.id && processedSessions.has(session.id)) return;
+        if(session.id) processedSessions.add(session.id);
+
         totalQuestions += session.totalQuestions;
         totalCorrect += session.correctCount;
         for (const materia in session.details) {
@@ -38,21 +46,19 @@ export function updateStatsPageUI() {
             materiaTotals[materia].total += session.details[materia].total;
         }
     });
-
-    // Only render home charts if the home view is active
-    if (DOM.inicioView && !DOM.inicioView.classList.contains('hidden')) {
-        renderHomePerformanceChart(materiaTotals);
-        renderWeeklyChart();
-    }
     
-    // Update general stats cards (they exist on the home page)
+    // Atualiza os cards de estatísticas gerais na página inicial
     if (DOM.statsTotalQuestionsEl) DOM.statsTotalQuestionsEl.textContent = totalQuestions;
     if (DOM.statsTotalCorrectEl) DOM.statsTotalCorrectEl.textContent = totalCorrect;
     if (DOM.statsTotalIncorrectEl) DOM.statsTotalIncorrectEl.textContent = totalQuestions - totalCorrect;
     const geralAccuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(0) : 0;
     if (DOM.statsGeralAccuracyEl) DOM.statsGeralAccuracyEl.textContent = `${geralAccuracy}%`;
 
-    // ... logic to update stats page containers
+    // Renderiza os gráficos apenas se a aba "Início" estiver visível
+    if (DOM.inicioView && !DOM.inicioView.classList.contains('hidden')) {
+        renderHomePerformanceChart(materiaTotals);
+        renderWeeklyChart();
+    }
 }
 
 export async function updateStatsPanel(container = null) {
@@ -114,4 +120,3 @@ export async function generateStatsForQuestions(questionIds) {
 
     return { totalCorrect, totalIncorrect, statsByMateria };
 }
-
