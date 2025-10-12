@@ -297,7 +297,9 @@ export async function displayQuestion() {
     renderUnansweredQuestion();
     
     const footer = activeContainer.querySelector('#card-footer');
-    if (userAnswerData && !state.isReviewSession) { // Don't show old SRS state, force re-evaluation
+    // MODIFICAÇÃO: A condição agora verifica se 'state.currentCadernoId' existe.
+    // Isso faz com que as respostas salvas só apareçam dentro de um caderno.
+    if (userAnswerData && !state.isReviewSession && state.currentCadernoId) {
         renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.userAnswer, false);
     } else if (footer) {
         footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
