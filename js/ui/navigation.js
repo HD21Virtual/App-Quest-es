@@ -1,7 +1,7 @@
 import DOM from '../dom-elements.js';
 import { exitAddMode, renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderMateriasView } from '../features/materias.js';
-import { clearAllFilters } from '../features/filter.js';
+import { clearAllFilters } from './filter.js';
 import { setState, state } from '../state.js';
 import { updateStatsPageUI } from '../features/stats.js';
 
@@ -48,11 +48,22 @@ export function navigateToView(viewId, isUserClick = true) {
     });
 
     if (viewId === 'vade-mecum-view') {
-        if (!state.isReviewSession && isUserClick && !state.isAddingQuestionsMode.active) {
-            DOM.vadeMecumTitle.textContent = "Vade Mecum de Questões";
-            DOM.toggleFiltersBtn.classList.remove('hidden');
-            DOM.filterCard.classList.remove('hidden');
-            clearAllFilters();
+        // Se a navegação for um clique direto do usuário na aba "Questões",
+        // devemos sempre redefinir a visualização para seu estado padrão,
+        // encerrando qualquer sessão de revisão ativa.
+        if (isUserClick) {
+            if (state.isReviewSession) {
+                setState('isReviewSession', false);
+            }
+            
+            // Esta parte é executada independentemente de haver uma sessão de revisão,
+            // desde que seja um clique do usuário e não esteja no modo "adicionar questões".
+            if (!state.isAddingQuestionsMode.active) {
+                DOM.vadeMecumTitle.textContent = "Vade Mecum de Questões";
+                DOM.toggleFiltersBtn.classList.remove('hidden');
+                DOM.filterCard.classList.remove('hidden');
+                clearAllFilters(); // Esta função também aciona applyFilters() que buscará e exibirá as questões.
+            }
         }
     } else if (viewId === 'cadernos-view') {
         renderFoldersAndCadernos();
