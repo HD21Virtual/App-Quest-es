@@ -262,7 +262,7 @@ export function handleAddQuestionsToCaderno() {
     setState('isAddingQuestionsMode', { active: true, cadernoId: state.currentCadernoId });
     DOM.addQuestionsBanner.classList.remove('hidden');
     DOM.addQuestionsBannerText.textContent = `Selecione questões para adicionar ao caderno "${caderno.name}".`;
-    navigateToView('vade-mecum-view');
+    navigateToView('vade-mecum-view', false);
 }
 
 // Exits the "add questions" mode.
