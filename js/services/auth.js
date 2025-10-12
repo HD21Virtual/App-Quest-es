@@ -12,7 +12,7 @@ import { setupAllListeners } from '../services/firestore.js';
 import { updateUserUI } from '../ui/ui-helpers.js';
 import { closeAuthModal } from '../ui/modal.js';
 import DOM from '../dom-elements.js';
-import { navigateToPage } from "../ui/navigation.js";
+import { navigateToView } from "../ui/navigation.js";
 
 export function initAuth() {
     onAuthStateChanged(auth, (user) => {
@@ -23,11 +23,11 @@ export function initAuth() {
             updateUserUI(user);
             closeAuthModal();
             setupAllListeners(user.uid);
-            // CORREÇÃO: O redirecionamento foi removido daqui.
-            // Isso impedia a navegação para outras páginas após o login.
+            navigateToView('inicio-view');
         } else {
             resetStateOnLogout();
             updateUserUI(null);
+            navigateToView('inicio-view');
         }
     });
 }
@@ -35,24 +35,13 @@ export function initAuth() {
 export async function handleAuth(action) {
     DOM.authError.classList.add('hidden');
     try {
-        let shouldRedirect = false;
         if (action === 'login') {
             await signInWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
-            shouldRedirect = true;
         } else if (action === 'register') {
             await createUserWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
-            shouldRedirect = true;
         } else if (action === 'logout') {
             await signOut(auth);
-            // Redireciona para o início após o logout
-            navigateToPage('inicio-view');
         }
-        
-        // CORREÇÃO: Redireciona para o início APENAS após o login/registro bem-sucedido.
-        if (shouldRedirect) {
-            navigateToPage('inicio-view');
-        }
-
     } catch (error) {
         DOM.authError.textContent = error.message;
         DOM.authError.classList.remove('hidden');
@@ -64,10 +53,9 @@ export async function handleGoogleAuth() {
     try {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
-        // CORREÇÃO: Redireciona para o início APENAS após o login com Google.
-        navigateToPage('inicio-view');
     } catch (error) {
         DOM.authError.textContent = error.message;
         DOM.authError.classList.remove('hidden');
     }
 }
+
