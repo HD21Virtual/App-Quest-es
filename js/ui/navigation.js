@@ -1,7 +1,7 @@
 import DOM from '../dom-elements.js';
 import { exitAddMode, renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderMateriasView } from '../features/materias.js';
-import { clearAllFilters } from './filter.js';
+import { clearAllFilters } from '../features/filter.js';
 import { setState, state } from '../state.js';
 import { updateStatsPageUI } from '../features/stats.js';
 
@@ -79,3 +79,4 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
+
