@@ -10,7 +10,6 @@ import { auth } from '../firebase-config.js';
 import { state, setState, resetStateOnLogout, clearUnsubscribes } from '../state.js';
 // CORREÇÃO: Importar saveSessionStats para salvar o progresso ao deslogar
 import { setupAllListeners, saveSessionStats } from '../services/firestore.js';
-import { setupAllListeners } from '../services/firestore.js';
 import { updateUserUI } from '../ui/ui-helpers.js';
 import { closeAuthModal } from '../ui/modal.js';
 import DOM from '../dom-elements.js';
@@ -60,4 +59,5 @@ export async function handleGoogleAuth() {
         DOM.authError.classList.remove('hidden');
     }
 }
+
 
