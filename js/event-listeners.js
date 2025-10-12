@@ -1,8 +1,10 @@
 import DOM from './dom-elements.js';
 import { state } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
-import { createCaderno, createOrUpdateName, saveFilter } from './services/firestore.js';
-import { handleAuth } from './services/auth.js';
+// CORREÇÃO: Importar saveSessionStats para salvar o progresso ao sair da página
+import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from './services/firestore.js';
+// CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
+import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
 import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
@@ -183,4 +185,5 @@ export function setupAllEventListeners() {
         }
     });
 }
+
 
