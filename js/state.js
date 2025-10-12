@@ -48,8 +48,13 @@ export function getState() {
 }
 
 export function getActiveContainer() {
-    return state.currentCadernoId ? DOM.savedCadernosListContainer : DOM.vadeMecumContentArea;
+    // CORREÇÃO: Retorna o container de resolução de questões correto dependendo da página/contexto.
+    if (state.currentCadernoId) {
+        return DOM.cadernoSolverView;
+    }
+    return DOM.vadeMecumContentArea;
 }
+
 
 export function addUnsubscribe(unsubscribe) {
     state.unsubscribes.push(unsubscribe);
@@ -83,4 +88,3 @@ export function clearSessionStats() {
 }
 
 export { state };
-
