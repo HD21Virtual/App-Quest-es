@@ -59,9 +59,27 @@ const handleCadernoConfirm = async () => {
 
 
 export function setupAllEventListeners() {
+    // Listener para o botão hamburger do menu mobile
+    if (DOM.hamburgerBtn) {
+        DOM.hamburgerBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Impede que o clique se propague para o listener do document
+            const isExpanded = DOM.hamburgerBtn.getAttribute('aria-expanded') === 'true';
+            DOM.hamburgerBtn.setAttribute('aria-expanded', !isExpanded);
+            DOM.mobileMenu.classList.toggle('hidden');
+        });
+    }
+
     document.addEventListener('click', async (event) => {
         const target = event.target;
         const targetId = target.id;
+        
+        // Esconde o menu mobile se o clique for fora dele
+        if (!target.closest('#mobile-menu') && !target.closest('#hamburger-btn')) {
+            if (DOM.mobileMenu && !DOM.mobileMenu.classList.contains('hidden')) {
+                DOM.mobileMenu.classList.add('hidden');
+                DOM.hamburgerBtn.setAttribute('aria-expanded', 'false');
+            }
+        }
         
         // Fecha os seletores customizados se o clique for fora deles
         if (!target.closest('.custom-select-container')) {
@@ -78,7 +96,7 @@ export function setupAllEventListeners() {
         } else if (targetId === 'register-btn') {
             await handleAuth('register');
         } else if (targetId === 'google-login-btn') {
-            await handleAuth('google');
+            await handleGoogleAuth();
         } else if (target.closest('#logout-btn') || target.closest('#logout-btn-mobile')) {
             await handleAuth('logout');
         }
@@ -185,4 +203,3 @@ export function setupAllEventListeners() {
         }
     });
 }
-
