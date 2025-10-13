@@ -270,18 +270,18 @@ export async function displayQuestion() {
     `;
 
     let toolbarHTML = `
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-graduation-cap mr-2"></i>Gabarito Comentado</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-comment-dots mr-2"></i>Comentários</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-edit mr-2"></i>Criar Anotações</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-book mr-2"></i>Cadernos</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-chart-bar mr-2"></i>Desempenho</button>
-        <button class="flex items-center hover:text-blue-600 transition-colors"><i class="fas fa-flag mr-2"></i>Notificar Erro</button>
+        <button class="toolbar-btn flex items-center hover:text-blue-600 transition-colors" title="Gabarito Comentado"><i class="fas fa-graduation-cap mr-2"></i><span class="toolbar-text">Gabarito Comentado</span></button>
+        <button class="toolbar-btn flex items-center hover:text-blue-600 transition-colors" title="Comentários"><i class="fas fa-comment-dots mr-2"></i><span class="toolbar-text">Comentários</span></button>
+        <button class="toolbar-btn flex items-center hover:text-blue-600 transition-colors" title="Criar Anotações"><i class="fas fa-edit mr-2"></i><span class="toolbar-text">Criar Anotações</span></button>
+        <button class="toolbar-btn flex items-center hover:text-blue-600 transition-colors" title="Cadernos"><i class="fas fa-book mr-2"></i><span class="toolbar-text">Cadernos</span></button>
+        <button class="toolbar-btn flex items-center hover:text-blue-600 transition-colors" title="Desempenho"><i class="fas fa-chart-bar mr-2"></i><span class="toolbar-text">Desempenho</span></button>
+        <button class="toolbar-btn flex items-center hover:text-blue-600 transition-colors" title="Notificar Erro"><i class="fas fa-flag mr-2"></i><span class="toolbar-text">Notificar Erro</span></button>
     `;
     
     if(state.currentCadernoId) {
         toolbarHTML += `
-            <button class="remove-question-btn text-red-500 hover:text-red-700 transition-colors text-sm flex items-center" data-question-id="${question.id}" title="Remover do caderno">
-                <i class="fas fa-trash-alt mr-2"></i>Remover
+            <button class="remove-question-btn toolbar-btn text-red-500 hover:text-red-700 transition-colors text-sm flex items-center" data-question-id="${question.id}" title="Remover do caderno">
+                <i class="fas fa-trash-alt mr-2"></i><span class="toolbar-text">Remover</span>
             </button>
         `;
     }
