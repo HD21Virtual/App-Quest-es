@@ -93,3 +93,39 @@ body {
     background-color: #eff6ff; /* blue-50 */
     border-left: 4px solid #3b82f6; /* blue-500 */
 }
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+    .toolbar-text {
+        display: none;
+    }
+
+    /* Target all buttons inside the toolbar for consistency */
+    #question-toolbar .toolbar-btn i {
+        margin-right: 0;
+    }
+    
+    #question-toolbar {
+        gap: 0.5rem;
+        justify-content: space-around;
+        flex-wrap: wrap; /* Allow wrapping if needed */
+    }
+    
+    #question-toolbar .toolbar-btn {
+         padding: 0.5rem;
+    }
+
+    /* Reduce font size for question text */
+    #questions-container p.text-lg {
+        font-size: 1rem; /* text-base */
+        line-height: 1.5rem;
+    }
+    
+    .option-text {
+        font-size: 0.9rem; /* Slightly smaller */
+    }
+
+    #question-info-container {
+         font-size: 0.8rem;
+    }
+}
