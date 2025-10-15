@@ -106,8 +106,9 @@ body {
     }
     
     #question-toolbar {
+        width: 100%; /* Garante que a barra de ferramentas ocupe toda a largura */
         gap: 0.5rem;
-        justify-content: space-around;
+        justify-content: space-between; /* Justifica os ícones */
         flex-wrap: wrap; /* Allow wrapping if needed */
     }
     
@@ -129,3 +130,4 @@ body {
          font-size: 0.8rem;
     }
 }
+
