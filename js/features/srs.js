@@ -120,12 +120,12 @@ export function renderReviewView() {
                 <tr>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" id="select-all-review-materias" class="rounded"></th>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">A Revisar</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Errei'">Errei</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Difícil'">Difícil</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Bom'">Bom</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Fácil'">Fácil</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">A Revisar</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Concluído</th>
                 </tr>
             </thead>
@@ -141,12 +141,12 @@ export function renderReviewView() {
             <tr class="${isDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50'}">
                 <td class="px-4 py-4 whitespace-nowrap"><input type="checkbox" class="materia-review-checkbox rounded" data-materia="${materia}" ${isDisabled ? 'disabled' : ''}></td>
                 <td class="px-4 py-4 whitespace-nowrap font-medium ${isDisabled ? '' : 'text-gray-900'}">${materia}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isDisabled ? '' : 'text-blue-600'}">${stats.aRevisar}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center">${stats.total}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${stats.errei}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${stats.dificil}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${stats.bom}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${stats.facil}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isDisabled ? '' : 'text-blue-600'}">${stats.aRevisar}</td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     <div class="flex items-center justify-center">
                         <span class="text-xs font-medium text-gray-700 w-8">${concluidoPercent}%</span>
