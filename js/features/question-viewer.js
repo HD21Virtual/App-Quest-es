@@ -176,7 +176,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             const easyLabel = getIntervalLabel(currentStage + 2);
             
             const srsButtonsHTML = `
-                <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full text-center text-sm">
+                <div class="mt-4 grid grid-cols-4 gap-2 w-full text-center text-sm">
                     <button class="srs-feedback-btn bg-red-100 text-red-700 font-semibold py-2 px-2 rounded-md hover:bg-red-200" data-feedback="again">Errei<br><span class="font-normal">(${againLabel})</span></button>
                     <button class="srs-feedback-btn bg-yellow-100 text-yellow-700 font-semibold py-2 px-2 rounded-md hover:bg-yellow-200" data-feedback="hard">Difícil<br><span class="font-normal">(${hardLabel})</span></button>
                     <button class="srs-feedback-btn bg-green-100 text-green-700 font-semibold py-2 px-2 rounded-md hover:bg-green-200" data-feedback="good">Bom<br><span class="font-normal">(${goodLabel})</span></button>
@@ -342,3 +342,4 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
