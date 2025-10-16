@@ -2,10 +2,11 @@ import { collection, getDocs, query, orderBy, onSnapshot, getDoc, doc, updateDoc
 import { db } from '../firebase-config.js';
 import { state, setState, addUnsubscribe } from '../state.js';
 import { renderFoldersAndCadernos } from '../features/caderno.js';
-import { updateReviewCard } from '../features/srs.js';
+import { renderReviewView } from '../features/srs.js';
 import { displayQuestion } from "../features/question-viewer.js";
 import { updateStatsPageUI } from "../features/stats.js";
 import { updateSavedFiltersList } from "../ui/modal.js";
+import DOM from "../dom-elements.js";
 
 export async function fetchAllQuestions() {
     try {
@@ -94,7 +95,9 @@ export function setupAllListeners(userId) {
                 state.userReviewItemsMap.delete(change.doc.id);
             }
         });
-        updateReviewCard();
+        if (DOM.revisaoView && !DOM.revisaoView.classList.contains('hidden')) {
+            renderReviewView();
+        }
     });
     addUnsubscribe(unsubReviewItems);
     
