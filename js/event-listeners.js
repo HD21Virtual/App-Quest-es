@@ -196,27 +196,83 @@ export function setupAllEventListeners() {
     }
     
     if (DOM.reviewTableContainer) {
+        DOM.reviewTableContainer.addEventListener('click', (event) => {
+            const materiaRow = event.target.closest('.materia-row');
+            if (materiaRow && !event.target.matches('input[type="checkbox"]')) {
+                const materia = materiaRow.dataset.materia;
+                const icon = materiaRow.querySelector('i.fa-chevron-right');
+                if (icon) {
+                    icon.classList.toggle('rotate-90');
+                }
+                document.querySelectorAll(`.assunto-row[data-parent-materia="${materia}"]`).forEach(row => {
+                    row.classList.toggle('hidden');
+                });
+            }
+        });
+
         DOM.reviewTableContainer.addEventListener('change', (event) => {
             const target = event.target;
             
             const updateButtonState = () => {
-                const anyChecked = DOM.reviewTableContainer.querySelector('.materia-review-checkbox:checked');
+                const anyChecked = DOM.reviewTableContainer.querySelector('.assunto-review-checkbox:checked, .materia-review-checkbox:checked');
                 DOM.startSelectedReviewBtn.disabled = !anyChecked;
             };
 
-            if (target.matches('.materia-review-checkbox')) {
-                if (!target.checked) {
-                    const selectAllCheckbox = DOM.reviewTableContainer.querySelector('#select-all-review-materias');
-                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
-                }
-                updateButtonState();
-            } else if (target.matches('#select-all-review-materias')) {
+            if (target.matches('#select-all-review-materias')) {
                 const isChecked = target.checked;
                 DOM.reviewTableContainer.querySelectorAll('.materia-review-checkbox:not(:disabled)').forEach(cb => {
                     cb.checked = isChecked;
+                    cb.indeterminate = false;
                 });
-                updateButtonState();
+                DOM.reviewTableContainer.querySelectorAll('.assunto-review-checkbox:not(:disabled)').forEach(cb => {
+                    cb.checked = isChecked;
+                });
+            } else if (target.matches('.materia-review-checkbox')) {
+                const isChecked = target.checked;
+                const materia = target.dataset.materia;
+                target.indeterminate = false;
+                document.querySelectorAll(`.assunto-review-checkbox[data-materia="${materia}"]:not(:disabled)`).forEach(cb => {
+                    cb.checked = isChecked;
+                });
+            } else if (target.matches('.assunto-review-checkbox')) {
+                const materia = target.dataset.materia;
+                const allAssuntos = document.querySelectorAll(`.assunto-review-checkbox[data-materia="${materia}"]:not(:disabled)`);
+                const checkedAssuntos = document.querySelectorAll(`.assunto-review-checkbox[data-materia="${materia}"]:checked`);
+                const materiaCheckbox = document.querySelector(`.materia-review-checkbox[data-materia="${materia}"]`);
+
+                if (materiaCheckbox) {
+                    if (checkedAssuntos.length === 0) {
+                        materiaCheckbox.checked = false;
+                        materiaCheckbox.indeterminate = false;
+                    } else if (checkedAssuntos.length === allAssuntos.length) {
+                        materiaCheckbox.checked = true;
+                        materiaCheckbox.indeterminate = false;
+                    } else {
+                        materiaCheckbox.checked = false;
+                        materiaCheckbox.indeterminate = true;
+                    }
+                }
             }
+            
+            const allMaterias = document.querySelectorAll('.materia-review-checkbox:not(:disabled)');
+            const checkedMaterias = document.querySelectorAll('.materia-review-checkbox:checked');
+            const indeterminateMaterias = document.querySelectorAll('.materia-review-checkbox:indeterminate');
+            const selectAllCheckbox = DOM.reviewTableContainer.querySelector('#select-all-review-materias');
+            
+            if (selectAllCheckbox) {
+                if (checkedMaterias.length === 0 && indeterminateMaterias.length === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkedMaterias.length === allMaterias.length) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = true;
+                }
+            }
+            
+            updateButtonState();
         });
     }
 
@@ -229,3 +285,4 @@ export function setupAllEventListeners() {
         }
     });
 }
+
