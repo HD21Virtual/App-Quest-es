@@ -52,9 +52,9 @@ export function initDOM() {
     DOM.backToMateriasBtn = document.getElementById('back-to-materias-btn');
 
     // Review View
-    DOM.reviewCard = document.getElementById('review-card');
-    DOM.reviewCountEl = document.getElementById('review-count');
-    DOM.startReviewBtn = document.getElementById('start-review-btn');
+    DOM.reviewTableContainer = document.getElementById('review-table-container');
+    DOM.startSelectedReviewBtn = document.getElementById('start-selected-review-btn');
+
 
     // Auth Modal
     DOM.authModal = document.getElementById('auth-modal');
