@@ -150,7 +150,7 @@ export function setupAllEventListeners() {
         else if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
         
         // --- Revisão ---
-        else if (target.closest('#start-review-btn')) await handleStartReview();
+        else if (target.closest('#start-selected-review-btn')) await handleStartReview();
 
         // --- Filters ---
         else if (target.closest('#filter-btn')) {
@@ -194,6 +194,32 @@ export function setupAllEventListeners() {
     if (DOM.searchSavedFiltersInput) {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
+    
+    if (DOM.reviewTableContainer) {
+        DOM.reviewTableContainer.addEventListener('change', (event) => {
+            const target = event.target;
+            
+            const updateButtonState = () => {
+                const anyChecked = DOM.reviewTableContainer.querySelector('.materia-review-checkbox:checked');
+                DOM.startSelectedReviewBtn.disabled = !anyChecked;
+            };
+
+            if (target.matches('.materia-review-checkbox')) {
+                if (!target.checked) {
+                    const selectAllCheckbox = DOM.reviewTableContainer.querySelector('#select-all-review-materias');
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                }
+                updateButtonState();
+            } else if (target.matches('#select-all-review-materias')) {
+                const isChecked = target.checked;
+                DOM.reviewTableContainer.querySelectorAll('.materia-review-checkbox:not(:disabled)').forEach(cb => {
+                    cb.checked = isChecked;
+                });
+                updateButtonState();
+            }
+        });
+    }
+
     // CORREÇÃO: Salva a sessão se o usuário fechar ou mudar de aba
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
