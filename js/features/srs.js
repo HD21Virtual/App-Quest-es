@@ -66,9 +66,9 @@ export function renderReviewView() {
         return;
     }
 
-    const questionIdToMateria = new Map();
+    const questionIdToDetails = new Map();
     state.allQuestions.forEach(q => {
-        questionIdToMateria.set(q.id, q.materia);
+        questionIdToDetails.set(q.id, { materia: q.materia, assunto: q.assunto });
     });
 
     const reviewStatsByMateria = {};
@@ -76,31 +76,46 @@ export function renderReviewView() {
     now.setHours(0, 0, 0, 0);
 
     state.userReviewItemsMap.forEach(item => {
-        const materia = questionIdToMateria.get(item.questionId);
-        if (!materia) return;
+        const details = questionIdToDetails.get(item.questionId);
+        if (!details) return;
+        const { materia, assunto } = details;
 
         if (!reviewStatsByMateria[materia]) {
             reviewStatsByMateria[materia] = {
+                total: 0, errei: 0, dificil: 0, bom: 0, facil: 0, aRevisar: 0,
+                questionIdsARevisar: [],
+                assuntos: {}
+            };
+        }
+
+        if (!reviewStatsByMateria[materia].assuntos[assunto]) {
+            reviewStatsByMateria[materia].assuntos[assunto] = {
                 total: 0, errei: 0, dificil: 0, bom: 0, facil: 0, aRevisar: 0,
                 questionIdsARevisar: []
             };
         }
 
-        const stats = reviewStatsByMateria[materia];
-        stats.total++;
+        const materiaStats = reviewStatsByMateria[materia];
+        const assuntoStats = reviewStatsByMateria[materia].assuntos[assunto];
+        
+        materiaStats.total++;
+        assuntoStats.total++;
+        
         const stage = item.stage || 0;
 
-        if (stage === 0) stats.errei++;
-        else if (stage === 1) stats.dificil++;
-        else if (stage === 2 || stage === 3) stats.bom++;
-        else if (stage >= 4) stats.facil++;
+        if (stage === 0) { materiaStats.errei++; assuntoStats.errei++; }
+        else if (stage === 1) { materiaStats.dificil++; assuntoStats.dificil++; }
+        else if (stage === 2 || stage === 3) { materiaStats.bom++; assuntoStats.bom++; }
+        else if (stage >= 4) { materiaStats.facil++; assuntoStats.facil++; }
 
         if (item.nextReview) {
             const reviewDate = item.nextReview.toDate();
             reviewDate.setHours(0, 0, 0, 0);
             if (reviewDate <= now) {
-                stats.aRevisar++;
-                stats.questionIdsARevisar.push(item.questionId);
+                materiaStats.aRevisar++;
+                assuntoStats.aRevisar++;
+                materiaStats.questionIdsARevisar.push(item.questionId);
+                assuntoStats.questionIdsARevisar.push(item.questionId);
             }
         }
     });
@@ -119,43 +134,72 @@ export function renderReviewView() {
             <thead class="bg-gray-50">
                 <tr>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" id="select-all-review-materias" class="rounded"></th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-black-500 tracking-wider">Matérias</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">Total</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Errei'">Errei</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Difícil'">Difícil</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Bom'">Bom</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Fácil'">Fácil</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">A revisar</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">Concluído</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria / Assunto</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Errei'">Errei</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Difícil'">Difícil</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Bom'">Bom</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Fácil'">Fácil</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">A Revisar</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Concluído</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">`;
 
     sortedMaterias.forEach(materia => {
-        const stats = reviewStatsByMateria[materia];
-        const isDisabled = stats.aRevisar === 0;
-        const concluidoPercent = stats.total > 0 ? Math.round(((stats.total - stats.aRevisar) / stats.total) * 100) : 100;
-        const progressColor = concluidoPercent >= 80 ? 'bg-green-500' : concluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+        const materiaStats = reviewStatsByMateria[materia];
+        const isMateriaDisabled = materiaStats.aRevisar === 0;
+        const materiaConcluidoPercent = materiaStats.total > 0 ? Math.round(((materiaStats.total - materiaStats.aRevisar) / materiaStats.total) * 100) : 100;
+        const materiaProgressColor = materiaConcluidoPercent >= 80 ? 'bg-green-500' : materiaConcluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
 
         tableHtml += `
-            <tr class="${isDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50'}">
-                <td class="px-4 py-4 whitespace-nowrap"><input type="checkbox" class="materia-review-checkbox rounded" data-materia="${materia}" ${isDisabled ? 'disabled' : ''}></td>
-                <td class="px-4 py-4 whitespace-nowrap font-medium ${isDisabled ? '' : 'text-gray-900'}">${materia}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center">${stats.total}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${stats.errei}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${stats.dificil}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${stats.bom}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${stats.facil}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isDisabled ? '' : 'text-blue-600'}">${stats.aRevisar}</td>
+            <tr class="materia-row ${isMateriaDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50 cursor-pointer'}" data-materia="${materia}">
+                <td class="px-4 py-4 whitespace-nowrap"><input type="checkbox" class="materia-review-checkbox rounded" data-materia="${materia}" ${isMateriaDisabled ? 'disabled' : ''}></td>
+                <td class="px-4 py-4 whitespace-nowrap font-medium ${isMateriaDisabled ? '' : 'text-gray-900'}">
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right transition-transform duration-200 mr-2 text-gray-400"></i>
+                        <span>${materia}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-center">${materiaStats.total}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${materiaStats.errei}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${materiaStats.dificil}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${materiaStats.bom}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${materiaStats.facil}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isMateriaDisabled ? '' : 'text-blue-600'}">${materiaStats.aRevisar}</td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     <div class="flex items-center justify-center">
-                        <span class="text-xs font-medium text-gray-700 w-8">${concluidoPercent}%</span>
-                        <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2">
-                            <div class="${progressColor} h-2.5 rounded-full" style="width: ${concluidoPercent}%"></div>
-                        </div>
+                        <span class="text-xs font-medium text-gray-700 w-8">${materiaConcluidoPercent}%</span>
+                        <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2"><div class="${materiaProgressColor} h-2.5 rounded-full" style="width: ${materiaConcluidoPercent}%"></div></div>
                     </div>
                 </td>
             </tr>`;
+
+        const sortedAssuntos = Object.keys(materiaStats.assuntos).sort();
+        sortedAssuntos.forEach(assunto => {
+            const assuntoStats = materiaStats.assuntos[assunto];
+            const isAssuntoDisabled = assuntoStats.aRevisar === 0;
+            const assuntoConcluidoPercent = assuntoStats.total > 0 ? Math.round(((assuntoStats.total - assuntoStats.aRevisar) / assuntoStats.total) * 100) : 100;
+            const assuntoProgressColor = assuntoConcluidoPercent >= 80 ? 'bg-green-500' : assuntoConcluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+
+            tableHtml += `
+                <tr class="assunto-row hidden bg-blue-50 hover:bg-blue-100" data-parent-materia="${materia}">
+                    <td class="pl-12 pr-4 py-3 whitespace-nowrap"><input type="checkbox" class="assunto-review-checkbox rounded" data-materia="${materia}" data-assunto="${assunto}" ${isAssuntoDisabled ? 'disabled' : ''}></td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-700">${assunto}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">${assuntoStats.total}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center text-red-500">${assuntoStats.errei}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center text-yellow-500">${assuntoStats.dificil}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center text-green-500">${assuntoStats.bom}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center text-blue-500">${assuntoStats.facil}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center font-medium ${isAssuntoDisabled ? '' : 'text-blue-600'}">${assuntoStats.aRevisar}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex items-center justify-center">
+                            <span class="text-xs text-gray-600 w-8">${assuntoConcluidoPercent}%</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2"><div class="${assuntoProgressColor} h-2.5 rounded-full" style="width: ${assuntoConcluidoPercent}%"></div></div>
+                        </div>
+                    </td>
+                </tr>`;
+        });
     });
 
     tableHtml += `</tbody></table>`;
@@ -166,21 +210,24 @@ export function renderReviewView() {
 export async function handleStartReview() {
     if (!state.currentUser) return;
     
-    const selectedCheckboxes = DOM.reviewTableContainer.querySelectorAll('.materia-review-checkbox:checked');
+    const selectedCheckboxes = DOM.reviewTableContainer.querySelectorAll('.assunto-review-checkbox:checked');
     if (selectedCheckboxes.length === 0) return;
 
-    const questionsToReviewIds = [];
+    const questionsToReviewIds = new Set();
     selectedCheckboxes.forEach(cb => {
         const materia = cb.dataset.materia;
-        const stats = state.reviewStatsByMateria[materia];
+        const assunto = cb.dataset.assunto;
+        const stats = state.reviewStatsByMateria[materia]?.assuntos[assunto];
         if (stats && stats.questionIdsARevisar) {
-            questionsToReviewIds.push(...stats.questionIdsARevisar);
+            stats.questionIdsARevisar.forEach(id => questionsToReviewIds.add(id));
         }
     });
 
-    if (questionsToReviewIds.length > 0) {
+    const uniqueQuestionIds = Array.from(questionsToReviewIds);
+
+    if (uniqueQuestionIds.length > 0) {
         setState('isReviewSession', true);
-        setState('filteredQuestions', state.allQuestions.filter(q => questionsToReviewIds.includes(q.id)));
+        setState('filteredQuestions', state.allQuestions.filter(q => uniqueQuestionIds.includes(q.id)));
         setState('sessionStats', []);
         setState('currentQuestionIndex', 0);
 
@@ -189,12 +236,10 @@ export async function handleStartReview() {
         DOM.vadeMecumTitle.textContent = "Sessão de Revisão";
         DOM.toggleFiltersBtn.classList.add('hidden');
         DOM.filterCard.classList.add('hidden');
-        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Revisando ${state.filteredQuestions.length} questões.</span>`;
+        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Revisando ${uniqueQuestionIds.length} questões.</span>`;
 
         await displayQuestion();
         updateStatsPanel();
     }
 }
-
-
 
