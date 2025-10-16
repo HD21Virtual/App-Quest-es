@@ -126,6 +126,7 @@ export function renderReviewView() {
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Difícil'">Difícil</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Bom'">Bom</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Fácil'">Fácil</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Concluído</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">`;
@@ -133,6 +134,9 @@ export function renderReviewView() {
     sortedMaterias.forEach(materia => {
         const stats = reviewStatsByMateria[materia];
         const isDisabled = stats.aRevisar === 0;
+        const concluidoPercent = stats.total > 0 ? Math.round(((stats.total - stats.aRevisar) / stats.total) * 100) : 100;
+        const progressColor = concluidoPercent >= 80 ? 'bg-green-500' : concluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+
         tableHtml += `
             <tr class="${isDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50'}">
                 <td class="px-4 py-4 whitespace-nowrap"><input type="checkbox" class="materia-review-checkbox rounded" data-materia="${materia}" ${isDisabled ? 'disabled' : ''}></td>
@@ -143,6 +147,14 @@ export function renderReviewView() {
                 <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${stats.dificil}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${stats.bom}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${stats.facil}</td>
+                <td class="px-4 py-4 whitespace-nowrap">
+                    <div class="flex items-center justify-center">
+                        <span class="text-xs font-medium text-gray-700 w-8">${concluidoPercent}%</span>
+                        <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2">
+                            <div class="${progressColor} h-2.5 rounded-full" style="width: ${concluidoPercent}%"></div>
+                        </div>
+                    </div>
+                </td>
             </tr>`;
     });
 
@@ -183,3 +195,4 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
+
