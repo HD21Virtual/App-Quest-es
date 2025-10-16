@@ -22,6 +22,7 @@ let state = {
     isNavigatingBackFromAddMode: false,
     isReviewSession: false,
     userReviewItems: [],
+    reviewStatsByMateria: {},
     historicalSessions: [],
     userAnswers: new Map(),
     userCadernoState: new Map(),
@@ -83,4 +84,3 @@ export function clearSessionStats() {
 }
 
 export { state };
-
