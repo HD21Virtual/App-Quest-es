@@ -261,10 +261,10 @@ export async function displayQuestion() {
 
     questionCounterTop.innerHTML = `Questão ${state.currentQuestionIndex + 1} de ${state.filteredQuestions.length}`;
     questionInfoContainer.innerHTML = `
-        <div class="flex flex-col sm:flex-row sm:space-x-4">
+        <div class="flex flex-col sm:flex-row sm:space-x-1">
           <span class="text-gray-700">Matéria:</span><a href="#" class="text-blue-600 hover:underline">${question.materia}</a>
         </div>
-        <div class="flex flex-col sm:flex-row sm:space-x-4">
+        <div class="flex flex-col sm:flex-row sm:space-x-1">
           <span class="text-gray-700">Assunto:</span><a href="#" class="text-blue-600 hover:underline">${question.assunto}</a>
         </div>
     `;
@@ -342,4 +342,5 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
