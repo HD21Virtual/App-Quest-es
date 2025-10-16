@@ -55,42 +55,116 @@ export async function handleSrsFeedback(feedback) {
     updateStatsPageUI(); // CORREÇÃO: Atualiza os stats da página inicial em tempo real
 }
 
-export function updateReviewCard() {
+export function renderReviewView() {
     if (!state.currentUser) {
-        DOM.reviewCard.classList.add('hidden');
+        DOM.reviewTableContainer.innerHTML = `<p class="text-center text-gray-500 p-8">Por favor, faça login para ver suas revisões.</p>`;
         return;
     }
+
+    if (state.userReviewItemsMap.size === 0) {
+        DOM.reviewTableContainer.innerHTML = `<p class="text-center text-gray-500 p-8">Você ainda não tem nenhuma questão para revisar. Resolva questões para começar.</p>`;
+        return;
+    }
+
+    const questionIdToMateria = new Map();
+    state.allQuestions.forEach(q => {
+        questionIdToMateria.set(q.id, q.materia);
+    });
+
+    const reviewStatsByMateria = {};
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    const questionsToReview = Array.from(state.userReviewItemsMap.values()).filter(item => {
-        if (!item.nextReview) return false;
-        const reviewDate = item.nextReview.toDate();
-        reviewDate.setHours(0, 0, 0, 0);
-        return reviewDate <= now;
+    state.userReviewItemsMap.forEach(item => {
+        const materia = questionIdToMateria.get(item.questionId);
+        if (!materia) return;
+
+        if (!reviewStatsByMateria[materia]) {
+            reviewStatsByMateria[materia] = {
+                total: 0, errei: 0, dificil: 0, bom: 0, facil: 0, aRevisar: 0,
+                questionIdsARevisar: []
+            };
+        }
+
+        const stats = reviewStatsByMateria[materia];
+        stats.total++;
+        const stage = item.stage || 0;
+
+        if (stage === 0) stats.errei++;
+        else if (stage === 1) stats.dificil++;
+        else if (stage === 2 || stage === 3) stats.bom++;
+        else if (stage >= 4) stats.facil++;
+
+        if (item.nextReview) {
+            const reviewDate = item.nextReview.toDate();
+            reviewDate.setHours(0, 0, 0, 0);
+            if (reviewDate <= now) {
+                stats.aRevisar++;
+                stats.questionIdsARevisar.push(item.questionId);
+            }
+        }
+    });
+    
+    setState('reviewStatsByMateria', reviewStatsByMateria);
+
+    const sortedMaterias = Object.keys(reviewStatsByMateria).sort();
+    
+    if (sortedMaterias.length === 0) {
+        DOM.reviewTableContainer.innerHTML = `<p class="text-center text-gray-500 p-8">Nenhuma matéria com questões para revisar.</p>`;
+        return;
+    }
+
+    let tableHtml = `
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" id="select-all-review-materias" class="rounded"></th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">A Revisar</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Errei'">Errei</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Difícil'">Difícil</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Bom'">Bom</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="Questões marcadas como 'Fácil'">Fácil</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">`;
+
+    sortedMaterias.forEach(materia => {
+        const stats = reviewStatsByMateria[materia];
+        const isDisabled = stats.aRevisar === 0;
+        tableHtml += `
+            <tr class="${isDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50'}">
+                <td class="px-4 py-4 whitespace-nowrap"><input type="checkbox" class="materia-review-checkbox rounded" data-materia="${materia}" ${isDisabled ? 'disabled' : ''}></td>
+                <td class="px-4 py-4 whitespace-nowrap font-medium ${isDisabled ? '' : 'text-gray-900'}">${materia}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isDisabled ? '' : 'text-blue-600'}">${stats.aRevisar}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center">${stats.total}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${stats.errei}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${stats.dificil}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${stats.bom}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${stats.facil}</td>
+            </tr>`;
     });
 
-    const count = questionsToReview.length;
-    DOM.reviewCountEl.textContent = count;
-    DOM.startReviewBtn.disabled = count === 0;
-    DOM.reviewCard.classList.remove('hidden');
+    tableHtml += `</tbody></table>`;
+    DOM.reviewTableContainer.innerHTML = tableHtml;
 }
+
 
 export async function handleStartReview() {
     if (!state.currentUser) return;
+    
+    const selectedCheckboxes = DOM.reviewTableContainer.querySelectorAll('.materia-review-checkbox:checked');
+    if (selectedCheckboxes.length === 0) return;
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
-    const questionsToReview = Array.from(state.userReviewItemsMap.values())
-        .filter(item => {
-            if (!item.nextReview) return false;
-            const reviewDate = item.nextReview.toDate();
-            reviewDate.setHours(0, 0, 0, 0);
-            return reviewDate <= now;
-        });
-
-    const questionsToReviewIds = questionsToReview.map(item => item.questionId);
+    const questionsToReviewIds = [];
+    selectedCheckboxes.forEach(cb => {
+        const materia = cb.dataset.materia;
+        const stats = state.reviewStatsByMateria[materia];
+        if (stats && stats.questionIdsARevisar) {
+            questionsToReviewIds.push(...stats.questionIdsARevisar);
+        }
+    });
 
     if (questionsToReviewIds.length > 0) {
         setState('isReviewSession', true);
