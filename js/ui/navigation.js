@@ -4,6 +4,7 @@ import { renderMateriasView } from '../features/materias.js';
 import { clearAllFilters } from '../features/filter.js';
 import { setState, state } from '../state.js';
 import { updateStatsPageUI } from '../features/stats.js';
+import { renderReviewView } from '../features/srs.js';
 
 export function navigateToView(viewId, isUserClick = true) {
     // Correction: Initialize the views array inside the function
@@ -73,10 +74,12 @@ export function navigateToView(viewId, isUserClick = true) {
     } else if (viewId === 'inicio-view') {
         // Chamar a atualização das estatísticas sempre que a tela inicial for exibida
         updateStatsPageUI();
+    } else if (viewId === 'revisao-view') {
+        renderReviewView();
     }
+
 
     if (DOM.mobileMenu) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
-
