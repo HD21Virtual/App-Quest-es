@@ -2,58 +2,161 @@ import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-fi
 import { state, setState } from '../state.js';
 import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
-import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
-import { updateStatsPanel, updateStatsPageUI } from './stats.js';
+import { displayQuestion } from './question-viewer.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
 
-const reviewIntervals = [1, 3, 7, 15, 30, 90]; // Days
-
-function getNextReviewDate(stage) {
-    const index = Math.min(stage, reviewIntervals.length - 1);
-    const daysToAdd = reviewIntervals[index];
+function getNextReviewDate(intervalInMinutes) {
     const date = new Date();
-    date.setDate(date.getDate() + daysToAdd);
+    date.setMinutes(date.getMinutes() + intervalInMinutes);
     return Timestamp.fromDate(date);
 }
+
+function formatInterval(minutes) {
+    if (minutes < 60) return `<${Math.round(minutes)}m`;
+    if (minutes < 1440) return `~${Math.round(minutes / 60)}h`;
+    const days = minutes / 1440;
+    if (days < 30) return `~${Math.round(days)}d`;
+    if (days < 365) return `~${Math.round(days / 30)}mo`;
+    return `~${Math.round(days / 365)}y`;
+}
+
+
+export function calculateNextIntervals(reviewItem) {
+    const settings = state.srsSettings;
+    const now = new Date();
+
+    const item = reviewItem || {
+        status: 'new',
+        easeFactor: settings.initialEaseFactor / 100,
+        interval: 0,
+        learningStep: 0,
+    };
+
+    const intervals = {};
+
+    switch (item.status) {
+        case 'new':
+        case 'learning':
+        case 'relearning':
+            const steps = item.status === 'relearning' ? settings.relearningSteps : settings.learningSteps;
+            intervals.again = formatInterval(steps[0]);
+            
+            if (item.learningStep + 1 < steps.length) {
+                intervals.good = formatInterval(steps[item.learningStep + 1]);
+            } else {
+                 intervals.good = formatInterval(settings.graduatingInterval * 1440);
+            }
+            intervals.easy = formatInterval(settings.easyInterval * 1440);
+            break;
+
+        case 'review':
+            intervals.again = formatInterval(settings.relearningSteps[0]);
+            intervals.hard = formatInterval(item.interval * 1.2 * 1440);
+            intervals.good = formatInterval(item.interval * item.easeFactor * 1440);
+            intervals.easy = formatInterval(item.interval * item.easeFactor * (settings.intervalMultiplier) * 1440);
+            break;
+    }
+    
+    return intervals;
+}
+
 
 export async function handleSrsFeedback(feedback) {
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const isCorrect = state.selectedAnswer === question.correctAnswer;
+    const settings = state.srsSettings;
+    
+    // 1. Get current review item or create a new one
+    const currentItem = state.userReviewItemsMap.get(question.id) || {
+        status: 'new',
+        easeFactor: settings.initialEaseFactor / 100,
+        interval: 0,
+        learningStep: 1,
+        questionId: question.id
+    };
 
-    if (!state.sessionStats.some(s => s.questionId === question.id)) {
+    const newItem = { ...currentItem };
+
+    // 2. Process based on current status and feedback
+    switch (newItem.status) {
+        case 'new':
+        case 'learning':
+            const learningSteps = settings.learningSteps;
+            if (feedback === 'again') {
+                newItem.learningStep = 1; // Reset to first step
+                newItem.nextReview = getNextReviewDate(learningSteps[0]);
+            } else if (feedback === 'good') {
+                if (newItem.learningStep < learningSteps.length) {
+                    newItem.nextReview = getNextReviewDate(learningSteps[newItem.learningStep]);
+                    newItem.learningStep += 1;
+                } else { // Graduate
+                    newItem.status = 'review';
+                    newItem.interval = settings.graduatingInterval;
+                    newItem.nextReview = getNextReviewDate(newItem.interval * 1440);
+                }
+            } else if (feedback === 'easy') { // Graduate immediately
+                newItem.status = 'review';
+                newItem.interval = settings.easyInterval;
+                newItem.nextReview = getNextReviewDate(newItem.interval * 1440);
+            }
+            break;
+
+        case 'review':
+            if (feedback === 'again') {
+                newItem.status = 'relearning';
+                newItem.learningStep = 1;
+                newItem.easeFactor = Math.max(1.3, newItem.easeFactor - 0.2);
+                newItem.interval = Math.max(1, newItem.interval * (settings.lapseIntervalMultiplier));
+                newItem.nextReview = getNextReviewDate(settings.relearningSteps[0]);
+            } else { // Hard, Good, Easy
+                if (feedback === 'hard') {
+                    newItem.easeFactor = Math.max(1.3, newItem.easeFactor - 0.15);
+                    newItem.interval *= 1.2;
+                } else if (feedback === 'good') {
+                    // Ease factor remains the same
+                } else if (feedback === 'easy') {
+                    newItem.easeFactor += 0.15;
+                }
+                newItem.interval *= newItem.easeFactor;
+                newItem.interval = Math.min(newItem.interval, settings.maximumInterval);
+                newItem.nextReview = getNextReviewDate(newItem.interval * 1440);
+            }
+            break;
+        
+        case 'relearning':
+             const relearningSteps = settings.relearningSteps;
+             if (feedback === 'again') {
+                newItem.learningStep = 1;
+                newItem.nextReview = getNextReviewDate(relearningSteps[0]);
+             } else if (feedback === 'good') {
+                 if (newItem.learningStep < relearningSteps.length) {
+                    newItem.nextReview = getNextReviewDate(relearningSteps[newItem.learningStep]);
+                    newItem.learningStep += 1;
+                 } else { // Graduate back to review
+                    newItem.status = 'review';
+                    newItem.nextReview = getNextReviewDate(newItem.interval * 1440);
+                 }
+             }
+            break;
+    }
+
+    // 3. Save all data
+    if (state.currentUser) {
+        await setSrsReviewItem(question.id, newItem);
+        await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
+        // Only count as 'correct' for history if it wasn't an 'again' feedback
+        await updateQuestionHistory(question.id, feedback !== 'again');
+    }
+
+    // 4. Update session stats
+     if (!state.sessionStats.some(s => s.questionId === question.id)) {
         state.sessionStats.push({
             questionId: question.id, isCorrect: isCorrect, materia: question.materia,
             assunto: question.assunto, userAnswer: state.selectedAnswer
         });
     }
-
-    if (state.currentUser) {
-        const reviewItem = state.userReviewItemsMap.get(question.id);
-        let currentStage = reviewItem ? reviewItem.stage : 0;
-        let newStage;
-
-        switch (feedback) {
-            case 'again': newStage = 0; break;
-            case 'hard': newStage = Math.max(0, currentStage - 1); break;
-            case 'good': newStage = currentStage + 1; break;
-            case 'easy': newStage = currentStage + 2; break;
-            default: newStage = currentStage;
-        }
-
-        const nextReview = getNextReviewDate(newStage);
-        const reviewData = { stage: newStage, nextReview: nextReview, questionId: question.id };
-        await setSrsReviewItem(question.id, reviewData);
-        state.userReviewItemsMap.set(question.id, reviewData);
-
-        await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
-        const historyIsCorrect = (feedback !== 'again') && isCorrect;
-        await updateQuestionHistory(question.id, historyIsCorrect);
-    }
-
-    renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
-    updateStatsPanel();
-    updateStatsPageUI(); // CORREÇÃO: Atualiza os stats da página inicial em tempo real
 }
+
 
 export function renderReviewView() {
     if (!state.currentUser) {
@@ -73,7 +176,6 @@ export function renderReviewView() {
 
     const reviewStatsByMateria = {};
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
 
     state.userReviewItemsMap.forEach(item => {
         const details = questionIdToDetails.get(item.questionId);
@@ -101,22 +203,15 @@ export function renderReviewView() {
         materiaStats.total++;
         assuntoStats.total++;
         
-        const stage = item.stage || 0;
+        const status = item.status || 'new';
 
-        if (stage === 0) { materiaStats.errei++; assuntoStats.errei++; }
-        else if (stage === 1) { materiaStats.dificil++; assuntoStats.dificil++; }
-        else if (stage === 2 || stage === 3) { materiaStats.bom++; assuntoStats.bom++; }
-        else if (stage >= 4) { materiaStats.facil++; assuntoStats.facil++; }
+        if(status === 'relearning') {materiaStats.errei++; assuntoStats.errei++;}
 
-        if (item.nextReview) {
-            const reviewDate = item.nextReview.toDate();
-            reviewDate.setHours(0, 0, 0, 0);
-            if (reviewDate <= now) {
-                materiaStats.aRevisar++;
-                assuntoStats.aRevisar++;
-                materiaStats.questionIdsARevisar.push(item.questionId);
-                assuntoStats.questionIdsARevisar.push(item.questionId);
-            }
+        if (item.nextReview && item.nextReview.toDate() <= now) {
+            materiaStats.aRevisar++;
+            assuntoStats.aRevisar++;
+            materiaStats.questionIdsARevisar.push(item.questionId);
+            assuntoStats.questionIdsARevisar.push(item.questionId);
         }
     });
     
@@ -134,14 +229,10 @@ export function renderReviewView() {
             <thead class="bg-gray-50">
                 <tr>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" id="select-all-review-materias" class="rounded"></th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-black-500 tracking-wider">Matérias e Assuntos</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">Total</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Errei'">Errei</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Difícil'">Difícil</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Bom'">Bom</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Fácil'">Fácil</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">A revisar</th>
-                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">Concluído</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria / Assunto</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">A Revisar</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Concluído</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">`;
@@ -162,10 +253,6 @@ export function renderReviewView() {
                     </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-center">${materiaStats.total}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${materiaStats.errei}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${materiaStats.dificil}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${materiaStats.bom}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${materiaStats.facil}</td>
                 <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isMateriaDisabled ? '' : 'text-blue-600'}">${materiaStats.aRevisar}</td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     <div class="flex items-center justify-center">
@@ -187,10 +274,6 @@ export function renderReviewView() {
                     <td class="pl-12 pr-4 py-3 whitespace-nowrap"><input type="checkbox" class="assunto-review-checkbox rounded" data-materia="${materia}" data-assunto="${assunto}" ${isAssuntoDisabled ? 'disabled' : ''}></td>
                     <td class="px-4 py-3 whitespace-nowrap text-gray-700">${assunto}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-center">${assuntoStats.total}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-red-500">${assuntoStats.errei}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-yellow-500">${assuntoStats.dificil}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-green-500">${assuntoStats.bom}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-blue-500">${assuntoStats.facil}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-center font-medium ${isAssuntoDisabled ? '' : 'text-blue-600'}">${assuntoStats.aRevisar}</td>
                     <td class="px-4 py-3 whitespace-nowrap">
                         <div class="flex items-center justify-center">
@@ -239,8 +322,6 @@ export async function handleStartReview() {
         DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Revisando ${uniqueQuestionIds.length} questões.</span>`;
 
         await displayQuestion();
-        updateStatsPanel();
     }
 }
-
 
