@@ -222,7 +222,7 @@ export function renderHomePerformanceChart(materiaTotals) {
             },
             scales: {
                 x: { grid: { display: false } },
-                y: { beginAtZero: true, position: 'left', stacked: true, grid: { color: '#e5e7eb' } },
+                y: { beginAtZero: true, grid: { color: '#e5e7eb' } },
                 y1: {
                     beginAtZero: false,
                     position: 'right',
@@ -258,3 +258,4 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
