@@ -51,6 +51,78 @@ questionsSolvedData.forEach((count, index) => {
     }
 });
 
+    // Destrói o gráfico anterior se ele já existir, para evitar sobreposição.
+    if (window.weeklyChartInstance) {
+        window.weeklyChartInstance.destroy();
+    }
+
+    // Cria o novo gráfico com os dados atualizados.
+    window.weeklyChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
+                    label: 'Questões Resolvidas',
+                    data: filteredData,
+                    backgroundColor: '#FFC000',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Questões Resolvidas (Últimos 7 Dias)',
+                    font: { size: 18 },
+                    color: '#4b5563',
+                    padding: {
+                        bottom: 20
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true
+                },
+                datalabels: {
+                    display: true,
+                    align: 'end',
+                    anchor: 'end',
+                    formatter: (value) => value > 0 ? value : '',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    color: '#FFC000'
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e5e7eb'
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                }
+            }
+        }
+    });
+}
+
 export function renderPerformanceChart(correct, incorrect) {
     const canvas = document.getElementById('performanceChart');
     if (!canvas) return;
@@ -254,6 +326,7 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
 
 
