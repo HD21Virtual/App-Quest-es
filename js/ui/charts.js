@@ -22,7 +22,7 @@ function getLast7DaysLabels() {
     for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(today.getDate() - i);
-                
+
         if (i === 0) {
             labels.push('Hoje');
         } else if (i === 1) {
@@ -30,98 +30,14 @@ function getLast7DaysLabels() {
         } else {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
-            const dayOfWeek = dayNames[date.getDay()];
             labels.push(`${day}/${month}`);
         }
     }
     return labels;
 }
 
-// Busca os dados reais do Firestore.
-const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
-const allLabels = getLast7DaysLabels();
-
-// Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
-const filteredLabels = [];
-const filteredData = [];
-questionsSolvedData.forEach((count, index) => {
-    if (count > 0) {
-        filteredLabels.push(allLabels[index]);
-        filteredData.push(count);
-    }
-});
-
-    // Destrói o gráfico anterior se ele já existir, para evitar sobreposição.
-    if (window.weeklyChartInstance) {
-        window.weeklyChartInstance.destroy();
-    }
-
-    // Cria o novo gráfico com os dados atualizados.
-    window.weeklyChartInstance = new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: filteredLabels,
-            datasets: [
-                {
-                    label: 'Questões Resolvidas',
-                    data: filteredData,
-                    backgroundColor: '#FFC000',
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Questões Resolvidas (Últimos 7 Dias)',
-                    font: { size: 18 },
-                    color: '#4b5563',
-                    padding: {
-                        bottom: 20
-                    }
-                },
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    enabled: true
-                },
-                datalabels: {
-                    display: true,
-                    align: 'end',
-                    anchor: 'end',
-                    formatter: (value) => value > 0 ? value : '',
-                    font: {
-                        weight: 'bold',
-                        size: 14
-                    },
-                    color: '#FFC000'
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#6b7280'
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#e5e7eb'
-                    },
-                    ticks: {
-                        color: '#6b7280'
-                    }
-                }
-            }
-        }
-    });
-}
+// O trecho de código que causava o erro foi removido daqui.
+// A lógica para renderizar o gráfico semanal já está corretamente implementada na função renderWeeklyChart.
 
 export function renderPerformanceChart(correct, incorrect) {
     const canvas = document.getElementById('performanceChart');
@@ -158,24 +74,39 @@ export function renderPerformanceChart(correct, incorrect) {
 }
 
 export function renderWeeklyChart() {
-    const canvas = DOM.weeklyChartCanvas; // Correção da referência
+    const canvas = DOM.weeklyChartCanvas;
     if (!canvas) return;
 
     getWeeklySolvedQuestionsData().then(questionsSolvedData => {
         if (weeklyChartInstance) {
             weeklyChartInstance.destroy();
         }
-        
+
         const labels = getLast7DaysLabels();
         const ctx = canvas.getContext('2d');
-        
+
+        // Filtra os dados e rótulos para mostrar apenas os dias com atividade
+        const filteredData = [];
+        const filteredLabels = [];
+        questionsSolvedData.forEach((count, index) => {
+            if (count > 0) {
+                filteredData.push(count);
+                filteredLabels.push(labels[index]);
+            }
+        });
+
+        // Se não houver dados, não renderiza o gráfico
+        if (filteredData.length === 0) {
+            return;
+        }
+
         weeklyChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: filteredLabels,
                 datasets: [{
                     label: 'Questões Resolvidas',
-                    data: questionsSolvedData,
+                    data: filteredData,
                     backgroundColor: '#FFC000',
                 }]
             },
@@ -208,15 +139,17 @@ export function renderWeeklyChart() {
             }
         });
     });
+}
+
 
 export function renderHomePerformanceChart(materiaTotals) {
-    const canvas = DOM.homeChartCanvas; // Correção da referência
+    const canvas = DOM.homeChartCanvas;
     if (!canvas) return;
 
     if (homePerformanceChart) {
         homePerformanceChart.destroy();
     }
-    
+
     const sortedMaterias = Object.keys(materiaTotals).sort((a, b) => materiaTotals[b].total - materiaTotals[a].total);
     const labels = sortedMaterias;
     const correctData = sortedMaterias.map(m => materiaTotals[m].correct);
@@ -275,10 +208,10 @@ export function renderHomePerformanceChart(materiaTotals) {
                     align: 'end',
                     anchor: 'end',
                     formatter: (value, context) => {
-                         if (context.dataset.type === 'line') {
+                        if (context.dataset.type === 'line') {
                             return Math.round(value) + '%';
-                         }
-                         return value > 0 ? value : '';
+                        }
+                        return value > 0 ? value : '';
                     },
                     font: { weight: 'bold' },
                     color: (context) => {
@@ -289,12 +222,12 @@ export function renderHomePerformanceChart(materiaTotals) {
             },
             scales: {
                 x: { grid: { display: false } },
-                y: { beginAtZero: true, position: 'left', grid: { color: '#e5e7eb' } },
+                y: { beginAtZero: true, position: 'left', stacked: true, grid: { color: '#e5e7eb' } },
                 y1: {
                     beginAtZero: false,
                     position: 'right',
                     grid: { drawOnChartArea: false },
-                    ticks: { callback: function(value) { return value + '%'; } }
+                    ticks: { callback: function (value) { return value + '%'; } }
                 }
             }
         }
@@ -325,9 +258,3 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
-
-
-
-
-
-
