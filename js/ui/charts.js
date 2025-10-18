@@ -202,7 +202,7 @@ export function renderHomePerformanceChart(materiaTotals) {
                     color: '#4b5563'
                 },
                 legend: { display: false },
-                tooltip: { enabled: false },
+                tooltip: { enabled: true },
                 datalabels: {
                     display: true,
                     align: 'end',
@@ -267,4 +267,5 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
