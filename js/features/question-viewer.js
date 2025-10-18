@@ -144,7 +144,7 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
     if (footer) {
         footer.innerHTML = ''; // Clear previous content
         
-        if (isFreshAnswer && state.isReviewSession) {
+        if (isFreshAnswer) {
             const reviewItem = state.userReviewItemsMap.get(question.id);
             const intervals = calculateNextIntervals(reviewItem);
 
@@ -281,7 +281,7 @@ export async function displayQuestion() {
     renderUnansweredQuestion();
     
     const footer = activeContainer.querySelector('#card-footer');
-    if (userAnswerData && !state.isReviewSession && !state.currentCadernoId) {
+    if (userAnswerData && !state.isReviewSession) {
         renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.userAnswer, false);
     } else if (footer) {
         footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
@@ -324,3 +324,4 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
