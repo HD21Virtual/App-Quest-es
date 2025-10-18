@@ -37,90 +37,94 @@ function getLast7DaysLabels() {
     return labels;
 }
 
-export function renderPerformanceChart(correct, incorrect) {
-    const canvas = document.getElementById('performanceChart');
-    if (!canvas) return;
+// Função para renderizar o gráfico semanal
+async function renderWeeklyChart() {
+    const ctx = document.getElementById('weeklyPerformanceChart');
+    if (!ctx) return;
 
-    if (performanceChart) {
-        performanceChart.destroy();
-    }
-    const answeredCount = correct + incorrect;
-    if (answeredCount > 0) {
-        const ctx = canvas.getContext('2d');
-        performanceChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Acertos', 'Erros'],
-                datasets: [{
-                    data: [correct, incorrect],
-                    backgroundColor: ['#22c55e', '#ef4444'],
-                    hoverBackgroundColor: ['#16a34a', '#dc2626'],
-                    borderColor: '#ffffff',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                cutout: '55%',
-                plugins: {
-                    legend: { display: true },
-                    tooltip: { enabled: true }
-                }
-            }
-        });
-    }
-}
+    // Busca os dados reais do Firestore.
+    const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
+    const allLabels = getLast7DaysLabels();
 
-export function renderWeeklyChart() {
-    const canvas = DOM.weeklyChartCanvas; // Correção da referência
-    if (!canvas) return;
-
-    getWeeklySolvedQuestionsData().then(questionsSolvedData => {
-        if (weeklyChartInstance) {
-            weeklyChartInstance.destroy();
+    // Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
+    const filteredLabels = [];
+    const filteredData = [];
+    questionsSolvedData.forEach((count, index) => {
+        if (count > 0) {
+            filteredLabels.push(allLabels[index]);
+            filteredData.push(count);
         }
-        
-        const labels = getLast7DaysLabels();
-        const ctx = canvas.getContext('2d');
-        
-        weeklyChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
+    });
+
+    // Destrói o gráfico anterior se ele já existir, para evitar sobreposição.
+    if (window.weeklyChartInstance) {
+        window.weeklyChartInstance.destroy();
+    }
+
+    // Cria o novo gráfico com os dados atualizados.
+    window.weeklyChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
                     label: 'Questões Resolvidas',
-                    data: questionsSolvedData,
+                    data: filteredData,
                     backgroundColor: '#FFC000',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Questões Resolvidas (Últimos 7 Dias)',
-                        font: { size: 18 },
-                        color: '#4b5563',
-                        padding: { bottom: 20 }
-                    },
-                    legend: { display: false },
-                    tooltip: { enabled: true },
-                    datalabels: {
-                        display: true,
-                        align: 'end',
-                        anchor: 'end',
-                        formatter: (value) => value > 0 ? value : '',
-                        font: { weight: 'bold', size: 14 },
-                        color: '#FFC000'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Questões Resolvidas (Últimos 7 Dias)',
+                    font: { size: 18 },
+                    color: '#4b5563',
+                    padding: {
+                        bottom: 20
                     }
                 },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#6b7280' } },
-                    y: { beginAtZero: true, grid: { color: '#e5e7eb' }, ticks: { color: '#6b7280' } }
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true
+                },
+                datalabels: {
+                    display: true,
+                    align: 'end',
+                    anchor: 'end',
+                    formatter: (value) => value > 0 ? value : '',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    color: '#FFC000'
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e5e7eb'
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
                 }
             }
-        });
+        }
     });
 }
 
@@ -240,3 +244,4 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
