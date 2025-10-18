@@ -203,6 +203,23 @@ export function renderHomePerformanceChart(materiaTotals) {
                 },
                 legend: { display: false },
                 tooltip: { enabled: true },
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            // Se for o dataset da linha de aproveitamento, adiciona o '%'
+                            if (context.dataset.type === 'line') {
+                                label += Math.round(context.parsed.y) + '%';
+                            } else {
+                                label += context.parsed.y;
+                            }
+                        }
+                        return label;
+                    }
+                }
                 datalabels: {
                     display: true,
                     align: 'end',
@@ -267,6 +284,7 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
 
 
