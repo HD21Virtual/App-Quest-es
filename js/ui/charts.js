@@ -71,6 +71,10 @@ export function renderPerformanceChart(correct, incorrect) {
     }
 }
 
+// Busca os dados reais do Firestore.
+const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
+const allLabels = getLast7DaysLabels();
+
 // Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
 const filteredLabels = [];
 const filteredData = [];
@@ -250,5 +254,6 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
 
