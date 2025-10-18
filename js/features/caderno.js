@@ -103,7 +103,7 @@ function renderRootCadernosView() {
             <div class="bg-white rounded-lg shadow-sm p-4 hover:bg-gray-50 transition folder-item mb-2" data-folder-id="${folder.id}">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center cursor-pointer flex-grow" data-action="open">
-                        <i class="fas fa-folder text-yellow-500 text-2xl mr-4"></i>
+                        <i class="fas fa-folder-open text-yellow-500 text-2xl mr-4"></i>
                         <div>
                             <span class="font-bold text-lg">${folder.name}</span>
                             <p class="text-sm text-gray-500">${folderCadernosCount} caderno(s)</p>
