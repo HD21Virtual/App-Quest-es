@@ -6,7 +6,6 @@ import { renderReviewView } from '../features/srs.js';
 import { displayQuestion } from "../features/question-viewer.js";
 import { updateStatsPageUI } from "../features/stats.js";
 import { updateSavedFiltersList } from "../ui/modal.js";
-import DOM from "../dom-elements.js";
 
 export async function fetchAllQuestions() {
     try {
@@ -44,6 +43,26 @@ export async function fetchAllQuestions() {
     }
 }
 
+export function setupSrsSettingsListener(userId) {
+    const settingsRef = doc(db, 'users', userId, 'settings', 'srs');
+    const unsub = onSnapshot(settingsRef, (doc) => {
+        if (doc.exists()) {
+            setState('srsSettings', { ...state.srsSettings, ...doc.data() });
+        } else {
+            // If no settings exist, save the default ones to Firestore
+            setDoc(settingsRef, state.srsSettings);
+        }
+    });
+    addUnsubscribe(unsub);
+}
+
+export async function saveSrsSettings(settings) {
+    if (!state.currentUser) return;
+    const settingsRef = doc(db, 'users', state.currentUser.uid, 'settings', 'srs');
+    await setDoc(settingsRef, settings, { merge: true });
+}
+
+
 export function setupAllListeners(userId) {
     // Queries must be declared before they are used in onSnapshot
     const cadernosQuery = query(collection(db, 'users', userId, 'cadernos'), orderBy('name'));
@@ -53,6 +72,9 @@ export function setupAllListeners(userId) {
     const reviewQuery = query(collection(db, 'users', userId, 'reviewItems'));
     const answersQuery = query(collection(db, 'users', userId, 'userQuestionState'));
     const stateQuery = query(collection(db, 'users', userId, 'cadernoState'));
+
+    // Set up SRS settings listener
+    setupSrsSettingsListener(userId);
 
     const unsubCadernos = onSnapshot(cadernosQuery, (snapshot) => {
         const userCadernos = [];
@@ -95,9 +117,7 @@ export function setupAllListeners(userId) {
                 state.userReviewItemsMap.delete(change.doc.id);
             }
         });
-        if (DOM.revisaoView && !DOM.revisaoView.classList.contains('hidden')) {
-            renderReviewView();
-        }
+        renderReviewView();
     });
     addUnsubscribe(unsubReviewItems);
     
@@ -167,7 +187,7 @@ export async function updateQuestionHistory(questionId, isCorrect) {
 export async function setSrsReviewItem(questionId, reviewData) {
     if (!state.currentUser) return;
     const reviewRef = doc(db, 'users', state.currentUser.uid, 'reviewItems', questionId);
-    await setDoc(reviewRef, reviewData, { merge: true });
+    await setDoc(reviewRef, { questionId, ...reviewData }, { merge: true });
 }
 
 export async function createCaderno(name, questionIds, folderId) {
@@ -347,3 +367,4 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
+
