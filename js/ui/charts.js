@@ -221,8 +221,14 @@ export function renderHomePerformanceChart(materiaTotals) {
                 }
             },
             scales: {
-                x: { grid: { display: false } },
-                y: { beginAtZero: true, position: 'left', grid: { color: '#e5e7eb' } },
+                x: { 
+                    grid: { display: false } 
+                },
+                y: { 
+                    beginAtZero: true, 
+                    position: 'left', 
+                    grid: { color: '#e5e7eb' } 
+                },
                 y1: {
                     beginAtZero: false,
                     position: 'right',
