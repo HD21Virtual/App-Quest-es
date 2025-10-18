@@ -21,7 +21,6 @@ let state = {
     deletingType: null,
     isNavigatingBackFromAddMode: false,
     isReviewSession: false,
-    userReviewItems: [],
     reviewStatsByMateria: {},
     historicalSessions: [],
     userAnswers: new Map(),
@@ -33,7 +32,17 @@ let state = {
     },
     savedFilters: [],
     selectedMateria: null,
-    unsubscribes: []
+    unsubscribes: [],
+    srsSettings: {
+        learningSteps: [10, 60, 1440],       // 10m, 1h, 1d
+        graduatingInterval: 1,             // 1 dia
+        easyInterval: 4,                   // 4 dias
+        intervalMultiplier: 2.0,           // 200%
+        maximumInterval: 365,              // 1 ano
+        initialEaseFactor: 250,            // 250%
+        relearningSteps: [10, 1440],         // 10m, 1d
+        lapseIntervalMultiplier: 0.3,      // 30%
+    }
 };
 
 export function setState(key, value) {
@@ -68,7 +77,6 @@ export function resetStateOnLogout() {
         currentUser: null,
         userFolders: [],
         userCadernos: [],
-        userReviewItems: [],
         historicalSessions: [],
         userAnswers: new Map(),
         userCadernoState: new Map(),
@@ -84,3 +92,4 @@ export function clearSessionStats() {
 }
 
 export { state };
+
