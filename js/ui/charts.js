@@ -181,7 +181,7 @@ export function renderHomePerformanceChart(materiaTotals) {
                 },
                 {
                     type: 'line',
-                    label: 'Desempenho',
+                    label: 'Aproveitamento',
                     data: accuracyData,
                     borderColor: '#3b82f6',
                     backgroundColor: '#3b82f6',
@@ -201,25 +201,29 @@ export function renderHomePerformanceChart(materiaTotals) {
                     font: { size: 18 },
                     color: '#4b5563'
                 },
-                legend: { display: false },
-                tooltip: { enabled: true },
-                callbacks: {
-                    label: function(context) {
-                        let label = context.dataset.label || '';
-                        if (label) {
-                            label += ': ';
-                        }
-                        if (context.parsed.y !== null) {
-                            // Se for o dataset da linha de aproveitamento, adiciona o '%'
-                            if (context.dataset.type === 'line') {
-                                label += Math.round(context.parsed.y) + '%';
-                            } else {
-                                label += context.parsed.y;
+                legend: { display: true }, // Ativado para melhor contexto no hover
+                tooltip: {
+                    enabled: true, // Habilita o efeito de hover
+                    mode: 'index', // Mostra tooltips para todos os datasets no mesmo ponto
+                    intersect: false, // Mostra o tooltip mesmo que não esteja exatamente sobre o item
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
                             }
+                            if (context.parsed.y !== null) {
+                                // Se for o dataset da linha de aproveitamento, adiciona o '%'
+                                if (context.dataset.type === 'line') {
+                                    label += Math.round(context.parsed.y) + '%';
+                                } else {
+                                    label += context.parsed.y;
+                                }
+                            }
+                            return label;
                         }
-                        return label;
                     }
-                }
+                },
                 datalabels: {
                     display: true,
                     align: 'end',
@@ -238,16 +242,16 @@ export function renderHomePerformanceChart(materiaTotals) {
                 }
             },
             scales: {
-                x: { 
+                x: {
                     grid: { display: false },
                     // Estas propriedades fazem as barras de um mesmo grupo ficarem coladas
                     categoryPercentage: 0.8, // Controla o espaço ENTRE os grupos de barras (disciplinas)
                     barPercentage: 1.0       // Controla o espaço DENTRO de um grupo (entre acertos e erros)
                 },
-                y: { 
-                    beginAtZero: true, 
-                    position: 'left', 
-                    grid: { color: '#e5e7eb' } 
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    grid: { color: '#e5e7eb' }
                 },
                 y1: {
                     beginAtZero: false,
@@ -284,7 +288,4 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
-
-
-
 
