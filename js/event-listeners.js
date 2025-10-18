@@ -1,12 +1,14 @@
 import DOM from './dom-elements.js';
-import { state, setState } from './state.js';
-import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal, openSrsSettingsModal, closeSrsSettingsModal } from './ui/modal.js';
-import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats, saveSrsSettings } from './services/firestore.js';
+import { state } from './state.js';
+import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
+// CORREÇÃO: Importar saveSessionStats para salvar o progresso ao sair da página
+import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from './services/firestore.js';
+// CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
 import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
-import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption, renderAnsweredQuestion } from './features/question-viewer.js';
+import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
 import { applyFilters, clearAllFilters, removeFilter } from './features/filter.js';
 import { navigateToView } from './ui/navigation.js';
 import { updateSelectedFiltersDisplay } from './ui/ui-helpers.js';
@@ -60,7 +62,7 @@ export function setupAllEventListeners() {
     // Listener para o botão hamburger do menu mobile
     if (DOM.hamburgerBtn) {
         DOM.hamburgerBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
+            event.stopPropagation(); // Impede que o clique se propague para o listener do document
             const isExpanded = DOM.hamburgerBtn.getAttribute('aria-expanded') === 'true';
             DOM.hamburgerBtn.setAttribute('aria-expanded', !isExpanded);
             DOM.mobileMenu.classList.toggle('hidden');
@@ -71,6 +73,7 @@ export function setupAllEventListeners() {
         const target = event.target;
         const targetId = target.id;
         
+        // Esconde o menu mobile se o clique for fora dele
         if (!target.closest('#mobile-menu') && !target.closest('#hamburger-btn')) {
             if (DOM.mobileMenu && !DOM.mobileMenu.classList.contains('hidden')) {
                 DOM.mobileMenu.classList.add('hidden');
@@ -78,6 +81,7 @@ export function setupAllEventListeners() {
             }
         }
         
+        // Fecha os seletores customizados se o clique for fora deles
         if (!target.closest('.custom-select-container')) {
             document.querySelectorAll('.custom-select-panel').forEach(panel => {
                 panel.classList.add('hidden');
@@ -85,11 +89,17 @@ export function setupAllEventListeners() {
         }
 
         // --- Auth ---
-        if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) openAuthModal();
-        else if (targetId === 'login-btn') await handleAuth('login');
-        else if (targetId === 'register-btn') await handleAuth('register');
-        else if (targetId === 'google-login-btn') await handleGoogleAuth();
-        else if (target.closest('#logout-btn') || target.closest('#logout-btn-mobile')) await handleAuth('logout');
+        if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
+            openAuthModal();
+        } else if (targetId === 'login-btn') {
+            await handleAuth('login');
+        } else if (targetId === 'register-btn') {
+            await handleAuth('register');
+        } else if (targetId === 'google-login-btn') {
+            await handleGoogleAuth();
+        } else if (target.closest('#logout-btn') || target.closest('#logout-btn-mobile')) {
+            await handleAuth('logout');
+        }
 
         // --- Modals ---
         else if (target.closest('#close-auth-modal')) closeAuthModal();
@@ -114,9 +124,6 @@ export function setupAllEventListeners() {
         else if (target.closest('#confirm-delete-btn')) await handleConfirmation();
         
         else if (target.closest('#close-stats-modal')) closeStatsModal();
-        
-        else if (target.closest('#srs-settings-btn')) openSrsSettingsModal();
-        else if (target.closest('#close-srs-settings-modal') || target.closest('#cancel-srs-settings-btn')) closeSrsSettingsModal();
 
         // --- Questions ---
         else if (target.closest('#prev-question-btn')) await navigateQuestion('prev');
@@ -124,12 +131,7 @@ export function setupAllEventListeners() {
         else if (target.closest('.option-item') && !target.closest('.discard-btn')) handleOptionSelect(event);
         else if (target.closest('#submit-btn')) await checkAnswer();
         else if (target.closest('.discard-btn')) handleDiscardOption(event);
-        else if (target.closest('.srs-feedback-btn')) {
-            await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
-            const question = state.filteredQuestions[state.currentQuestionIndex];
-            const isCorrect = state.selectedAnswer === question.correctAnswer;
-            renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
-        }
+        else if (target.closest('.srs-feedback-btn')) await handleSrsFeedback(target.closest('.srs-feedback-btn').dataset.feedback);
         else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
 
         // --- Cadernos / Folders ---
@@ -140,6 +142,7 @@ export function setupAllEventListeners() {
         else if (target.closest('#back-to-folders-btn')) handleBackToFolders();
         else if (target.closest('#add-questions-to-caderno-btn')) handleAddQuestionsToCaderno();
         else if (target.closest('#cancel-add-questions-btn')) cancelAddQuestions();
+
 
         // --- Materias / Assuntos ---
         else if (target.closest('#materias-list-container')) handleMateriaListClick(event);
@@ -187,25 +190,7 @@ export function setupAllEventListeners() {
         }
     });
 
-    if (DOM.srsSettingsForm) {
-        DOM.srsSettingsForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(DOM.srsSettingsForm);
-            const settings = {
-                learningSteps: formData.get('learningSteps').split(' ').map(Number),
-                graduatingInterval: Number(formData.get('graduatingInterval')),
-                easyInterval: Number(formData.get('easyInterval')),
-                intervalMultiplier: Number(formData.get('intervalMultiplier')),
-                maximumInterval: Number(formData.get('maximumInterval')),
-                initialEaseFactor: Number(formData.get('initialEaseFactor')),
-                relearningSteps: formData.get('relearningSteps').split(' ').map(Number),
-                lapseIntervalMultiplier: Number(formData.get('lapseIntervalMultiplier')) / 100,
-            };
-            await saveSrsSettings(settings);
-            closeSrsSettingsModal();
-        });
-    }
-
+    // Input/Change listeners
     if (DOM.searchSavedFiltersInput) {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
@@ -216,7 +201,9 @@ export function setupAllEventListeners() {
             if (materiaRow && !event.target.matches('input[type="checkbox"]')) {
                 const materia = materiaRow.dataset.materia;
                 const icon = materiaRow.querySelector('i.fa-chevron-right');
-                if (icon) icon.classList.toggle('rotate-90');
+                if (icon) {
+                    icon.classList.toggle('rotate-90');
+                }
                 document.querySelectorAll(`.assunto-row[data-parent-materia="${materia}"]`).forEach(row => {
                     row.classList.toggle('hidden');
                 });
@@ -289,6 +276,7 @@ export function setupAllEventListeners() {
         });
     }
 
+    // CORREÇÃO: Salva a sessão se o usuário fechar ou mudar de aba
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             if (state.currentUser && state.sessionStats.length > 0) {
