@@ -31,7 +31,7 @@ function getLast7DaysLabels() {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const dayOfWeek = dayNames[date.getDay()];
-            labels.push(`${day}/${month} (${dayOfWeek})`);
+            labels.push(`${day}/${month}`);
         }
     }
     return labels;
@@ -240,3 +240,4 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
