@@ -181,7 +181,7 @@ export function renderHomePerformanceChart(materiaTotals) {
                 },
                 {
                     type: 'line',
-                    label: 'Aproveitamento',
+                    label: 'Desempenho',
                     data: accuracyData,
                     borderColor: '#3b82f6',
                     backgroundColor: '#3b82f6',
@@ -267,5 +267,6 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
 
