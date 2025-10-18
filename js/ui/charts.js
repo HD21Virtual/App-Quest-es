@@ -71,6 +71,16 @@ export function renderPerformanceChart(correct, incorrect) {
     }
 }
 
+// Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
+const filteredLabels = [];
+const filteredData = [];
+questionsSolvedData.forEach((count, index) => {
+    if (count > 0) {
+        filteredLabels.push(allLabels[index]);
+        filteredData.push(count);
+    }
+});
+
 export function renderWeeklyChart() {
     const canvas = DOM.weeklyChartCanvas; // Correção da referência
     if (!canvas) return;
@@ -240,4 +250,5 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
