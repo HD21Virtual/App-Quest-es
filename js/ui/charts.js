@@ -222,7 +222,10 @@ export function renderHomePerformanceChart(materiaTotals) {
             },
             scales: {
                 x: { 
-                    grid: { display: false } 
+                    grid: { display: false },
+                    // Estas propriedades fazem as barras de um mesmo grupo ficarem coladas
+                    categoryPercentage: 0.8, // Controla o espaço ENTRE os grupos de barras (disciplinas)
+                    barPercentage: 1.0       // Controla o espaço DENTRO de um grupo (entre acertos e erros)
                 },
                 y: { 
                     beginAtZero: true, 
