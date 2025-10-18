@@ -37,6 +37,20 @@ function getLast7DaysLabels() {
     return labels;
 }
 
+// Busca os dados reais do Firestore.
+const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
+const allLabels = getLast7DaysLabels();
+
+// Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
+const filteredLabels = [];
+const filteredData = [];
+questionsSolvedData.forEach((count, index) => {
+    if (count > 0) {
+        filteredLabels.push(allLabels[index]);
+        filteredData.push(count);
+    }
+});
+
 export function renderPerformanceChart(correct, incorrect) {
     const canvas = document.getElementById('performanceChart');
     if (!canvas) return;
@@ -70,20 +84,6 @@ export function renderPerformanceChart(correct, incorrect) {
         });
     }
 }
-
-// Busca os dados reais do Firestore.
-const questionsSolvedData = await getWeeklySolvedQuestionsData(); 
-const allLabels = getLast7DaysLabels();
-
-// Usa todos os 7 dias, mas esconde o rótulo se o valor for 0
-const filteredLabels = [];
-const filteredData = [];
-questionsSolvedData.forEach((count, index) => {
-    if (count > 0) {
-        filteredLabels.push(allLabels[index]);
-        filteredData.push(count);
-    }
-});
 
 export function renderWeeklyChart() {
     const canvas = DOM.weeklyChartCanvas; // Correção da referência
@@ -254,6 +254,7 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
 
 
