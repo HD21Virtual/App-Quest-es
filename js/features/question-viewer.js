@@ -1,5 +1,5 @@
 import { state, setState, getActiveContainer } from '../state.js';
-import { handleSrsFeedback, calculateNextIntervals } from './srs.js';
+import { handleSrsFeedback } from './srs.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { saveUserAnswer, updateQuestionHistory, saveCadernoState } from '../services/firestore.js';
 import { removeQuestionFromCaderno } from './caderno.js';
@@ -36,11 +36,18 @@ export async function checkAnswer() {
     if (!state.selectedAnswer) return;
     const isCorrect = state.selectedAnswer === question.correctAnswer;
 
+    if (!state.sessionStats.some(s => s.questionId === question.id)) {
+        state.sessionStats.push({
+            questionId: question.id, isCorrect: isCorrect, materia: question.materia,
+            assunto: question.assunto, userAnswer: state.selectedAnswer
+        });
+    }
+
     // This flag indicates that the answer is fresh and should trigger SRS
     const isFreshAnswer = true;
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, isFreshAnswer);
     updateStatsPanel();
-    updateStatsPageUI();
+    updateStatsPageUI(); // CORREÇÃO: Atualiza os stats da página inicial em tempo real
 }
 
 export function handleDiscardOption(event) {
@@ -143,36 +150,45 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
     const footer = activeContainer.querySelector('#card-footer');
     if (footer) {
         footer.innerHTML = ''; // Clear previous content
+        const resultClass = isCorrect ? 'text-green-600' : 'text-red-600';
+        const resultText = isCorrect ? 'Correta!' : 'Incorreta!';
         
-        if (isFreshAnswer) {
-            const reviewItem = state.userReviewItemsMap.get(question.id);
-            const intervals = calculateNextIntervals(reviewItem);
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'flex items-center space-x-4 w-full';
+        feedbackDiv.innerHTML = `<span class="font-bold text-lg ${resultClass}">${resultText}</span>`;
 
+        if (isFreshAnswer) {
+            const reviewIntervals = [1, 3, 7, 15, 30, 90];
+            const reviewItem = state.userReviewItemsMap.get(question.id);
+            const currentStage = reviewItem ? reviewItem.stage : 0;
+            
+            const getIntervalLabel = (stage) => {
+                const index = Math.min(stage, reviewIntervals.length - 1);
+                const days = reviewIntervals[index];
+                if (!days) return "";
+                if (days < 30) return `${days}d`;
+                return `${Math.round(days/30)}m`;
+            };
+
+            const againLabel = getIntervalLabel(0);
+            const hardLabel = getIntervalLabel(Math.max(0, currentStage - 1));
+            const goodLabel = getIntervalLabel(currentStage + 1);
+            const easyLabel = getIntervalLabel(currentStage + 2);
+            
             const srsButtonsHTML = `
                 <div class="mt-4 grid grid-cols-4 gap-2 w-full text-center text-sm">
-                    <button class="srs-feedback-btn bg-red-100 text-red-700 font-semibold py-2 px-2 rounded-md hover:bg-red-200" data-feedback="again">
-                        <span class="text-xs">${intervals.again || ''}</span><br>Errei
-                    </button>
-                    <button class="srs-feedback-btn bg-yellow-100 text-yellow-700 font-semibold py-2 px-2 rounded-md hover:bg-yellow-200" data-feedback="hard">
-                        <span class="text-xs">${intervals.hard || ''}</span><br>Difícil
-                    </button>
-                    <button class="srs-feedback-btn bg-green-100 text-green-700 font-semibold py-2 px-2 rounded-md hover:bg-green-200" data-feedback="good">
-                         <span class="text-xs">${intervals.good || ''}</span><br>Bom
-                    </button>
-                    <button class="srs-feedback-btn bg-blue-100 text-blue-700 font-semibold py-2 px-2 rounded-md hover:bg-blue-200" data-feedback="easy">
-                        <span class="text-xs">${intervals.easy || ''}</span><br>Fácil
-                    </button>
+                    <button class="srs-feedback-btn bg-red-100 text-red-700 font-semibold py-2 px-2 rounded-md hover:bg-red-200" data-feedback="again">Errei<br><span class="font-normal">(${againLabel})</span></button>
+                    <button class="srs-feedback-btn bg-yellow-100 text-yellow-700 font-semibold py-2 px-2 rounded-md hover:bg-yellow-200" data-feedback="hard">Difícil<br><span class="font-normal">(${hardLabel})</span></button>
+                    <button class="srs-feedback-btn bg-green-100 text-green-700 font-semibold py-2 px-2 rounded-md hover:bg-green-200" data-feedback="good">Bom<br><span class="font-normal">(${goodLabel})</span></button>
+                    <button class="srs-feedback-btn bg-blue-100 text-blue-700 font-semibold py-2 px-2 rounded-md hover:bg-blue-200" data-feedback="easy">Fácil<br><span class="font-normal">(${easyLabel})</span></button>
                 </div>
             `;
-            footer.innerHTML = `<div class="w-full">${srsButtonsHTML}</div>`;
+            footer.innerHTML = `<div class="w-full">${feedbackDiv.innerHTML} ${srsButtonsHTML}</div>`;
         } else {
-             const resultClass = isCorrect ? 'text-green-600' : 'text-red-600';
-             const resultText = isCorrect ? 'Correta!' : 'Incorreta!';
-             const feedbackDiv = document.createElement('div');
-             feedbackDiv.className = 'flex items-center space-x-4 w-full';
-             feedbackDiv.innerHTML = `
-               <span class="font-bold text-lg ${resultClass}">${resultText}</span>
-               <button class="view-resolution-btn text-sm text-blue-600 hover:underline">Ver resolução</button>
+             
+             feedbackDiv.innerHTML += `
+               
+                <button class="view-resolution-btn text-sm text-blue-600 hover:underline">Ver resolução</button>
              `;
              footer.appendChild(feedbackDiv);
         }
@@ -281,7 +297,9 @@ export async function displayQuestion() {
     renderUnansweredQuestion();
     
     const footer = activeContainer.querySelector('#card-footer');
-    if (userAnswerData && !state.isReviewSession) {
+    // MODIFICAÇÃO: A condição agora verifica se 'state.currentCadernoId' existe.
+    // Isso faz com que as respostas salvas só apareçam dentro de um caderno.
+    if (userAnswerData && !state.isReviewSession && state.currentCadernoId) {
         renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.userAnswer, false);
     } else if (footer) {
         footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
@@ -324,4 +342,6 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
+
 
