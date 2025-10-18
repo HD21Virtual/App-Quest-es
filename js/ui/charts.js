@@ -181,7 +181,7 @@ export function renderHomePerformanceChart(materiaTotals) {
                 },
                 {
                     type: 'line',
-                    label: 'Aproveitamento',
+                    label: 'Rendimento',
                     data: accuracyData,
                     borderColor: '#3b82f6',
                     backgroundColor: '#3b82f6',
@@ -201,11 +201,11 @@ export function renderHomePerformanceChart(materiaTotals) {
                     font: { size: 18 },
                     color: '#4b5563'
                 },
-                legend: { display: true }, // Ativado para melhor contexto no hover
+                legend: { display: false }, // Ativado para melhor contexto no hover
                 tooltip: {
                     enabled: true, // Habilita o efeito de hover
-                    mode: 'index', // Mostra tooltips para todos os datasets no mesmo ponto
-                    intersect: false, // Mostra o tooltip mesmo que não esteja exatamente sobre o item
+                    
+                    intersect: true, // Mostra o tooltip mesmo que não esteja exatamente sobre o item
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
@@ -288,4 +288,5 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
