@@ -92,6 +92,25 @@ export function closeStatsModal() {
     if(DOM.statsModal) DOM.statsModal.classList.add('hidden');
 }
 
+export function openSrsSettingsModal() {
+    const settings = state.srsSettings;
+    const form = DOM.srsSettingsForm;
+    form.elements.learningSteps.value = settings.learningSteps.join(' ');
+    form.elements.graduatingInterval.value = settings.graduatingInterval;
+    form.elements.easyInterval.value = settings.easyInterval;
+    form.elements.intervalMultiplier.value = settings.intervalMultiplier;
+    form.elements.maximumInterval.value = settings.maximumInterval;
+    form.elements.initialEaseFactor.value = settings.initialEaseFactor;
+    form.elements.relearningSteps.value = settings.relearningSteps.join(' ');
+    form.elements.lapseIntervalMultiplier.value = settings.lapseIntervalMultiplier * 100;
+    
+    if(DOM.srsSettingsModal) DOM.srsSettingsModal.classList.remove('hidden');
+}
+
+export function closeSrsSettingsModal() {
+    if(DOM.srsSettingsModal) DOM.srsSettingsModal.classList.add('hidden');
+}
+
 
 export async function handleConfirmation() {
     if (!state.currentUser || !state.deletingType) return;
