@@ -83,3 +83,4 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
+
