@@ -208,7 +208,6 @@ export function renderWeeklyChart() {
             }
         });
     });
-}
 
 export function renderHomePerformanceChart(materiaTotals) {
     const canvas = DOM.homeChartCanvas; // Correção da referência
@@ -326,6 +325,7 @@ export function renderItemPerformanceChart(correct, incorrect) {
         }
     });
 }
+
 
 
 
