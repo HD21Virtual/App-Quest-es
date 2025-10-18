@@ -54,6 +54,7 @@ export function initDOM() {
     // Review View
     DOM.reviewTableContainer = document.getElementById('review-table-container');
     DOM.startSelectedReviewBtn = document.getElementById('start-selected-review-btn');
+    DOM.srsSettingsBtn = document.getElementById('srs-settings-btn');
 
 
     // Auth Modal
@@ -94,6 +95,11 @@ export function initDOM() {
     DOM.statsModal = document.getElementById('stats-modal');
     DOM.statsModalTitle = document.getElementById('stats-modal-title');
     DOM.statsModalContent = document.getElementById('stats-modal-content');
+
+    // SRS Settings Modal
+    DOM.srsSettingsModal = document.getElementById('srs-settings-modal');
+    DOM.srsSettingsForm = document.getElementById('srs-settings-form');
 }
 
 export default DOM;
+
