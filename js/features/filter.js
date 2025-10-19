@@ -16,18 +16,24 @@ export async function applyFilters() {
     DOM.assuntoFilter.querySelector('.custom-select-panel').classList.add('hidden');
 
     const selectedMaterias = JSON.parse(DOM.materiaFilter.dataset.value || '[]');
-    const selectedAssuntos = JSON.parse(DOM.assuntoFilter.dataset.value || '[]');
+    const selectedAssuntosAndSub = JSON.parse(DOM.assuntoFilter.dataset.value || '[]');
     const activeTipoBtn = DOM.tipoFilterGroup.querySelector('.active-filter');
     const selectedTipo = activeTipoBtn ? activeTipoBtn.dataset.value : 'todos';
     const searchTerm = DOM.searchInput.value.toLowerCase();
 
     const filtered = state.allQuestions.filter(q => {
         const materiaMatch = selectedMaterias.length === 0 || selectedMaterias.includes(q.materia);
-        const assuntoMatch = selectedAssuntos.length === 0 || selectedAssuntos.includes(q.assunto);
+        
+        const assuntoMatch = selectedAssuntosAndSub.length === 0 || 
+                             selectedAssuntosAndSub.includes(q.assunto) || 
+                             (q.subAssunto && selectedAssuntosAndSub.includes(q.subAssunto));
+
         const tipoMatch = selectedTipo === 'todos' || q.tipo === selectedTipo;
-        const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm);
+        const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm) || (q.assunto && q.assunto.toLowerCase().includes(searchTerm)) || (q.subAssunto && q.subAssunto.toLowerCase().includes(searchTerm));
+        
         return materiaMatch && assuntoMatch && tipoMatch && searchMatch;
     });
+
     setState('filteredQuestions', filtered);
     setState('currentQuestionIndex', 0);
 
@@ -67,35 +73,65 @@ function setupCustomSelect(container) {
     button.addEventListener('click', () => {
         if (button.disabled) return;
 
-        // Fecha outros painéis de filtro que possam estar abertos
         document.querySelectorAll('.custom-select-container').forEach(otherContainer => {
             if (otherContainer !== container) {
                 otherContainer.querySelector('.custom-select-panel').classList.add('hidden');
             }
         });
         
-        // Alterna a visibilidade do painel atual
         panel.classList.toggle('hidden');
     });
     
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
-        optionsContainer.querySelectorAll('label, .font-bold').forEach(el => {
-            if(el.classList.contains('font-bold')) { 
-                 el.style.display = ''; 
-            } else {
-                const text = el.textContent.toLowerCase();
-                el.style.display = text.includes(searchTerm) ? '' : 'none';
-            }
+        optionsContainer.querySelectorAll('label, .assunto-group > div').forEach(el => {
+            const text = el.textContent.toLowerCase();
+            el.style.display = text.includes(searchTerm) ? '' : 'none';
         });
     });
 
-    optionsContainer.addEventListener('change', () => {
+    optionsContainer.addEventListener('change', (e) => {
+        const changedCheckbox = e.target;
+        
+        if (container.id === 'assunto-filter' && changedCheckbox.matches('.custom-select-option')) {
+            const isChecked = changedCheckbox.checked;
+            const type = changedCheckbox.dataset.type;
+
+            if (type === 'assunto') {
+                const parentGroup = changedCheckbox.closest('.assunto-group');
+                const sublist = parentGroup.querySelector('.sub-assunto-list');
+                if (sublist) {
+                    sublist.querySelectorAll('.custom-select-option[data-type="subassunto"]').forEach(childCb => {
+                        childCb.checked = isChecked;
+                    });
+                }
+            } else if (type === 'subassunto') {
+                const parentGroup = changedCheckbox.closest('.assunto-group');
+                const parentCheckbox = parentGroup.querySelector('.custom-select-option[data-type="assunto"]');
+                if (parentCheckbox) {
+                    const allSiblings = Array.from(parentGroup.querySelectorAll('.custom-select-option[data-type="subassunto"]'));
+                    const checkedSiblings = allSiblings.filter(cb => cb.checked);
+
+                    if (checkedSiblings.length === 0) {
+                        parentCheckbox.checked = false;
+                        parentCheckbox.indeterminate = false;
+                    } else if (checkedSiblings.length === allSiblings.length) {
+                        parentCheckbox.checked = true;
+                        parentCheckbox.indeterminate = false;
+                    } else {
+                        parentCheckbox.checked = false;
+                        parentCheckbox.indeterminate = true;
+                    }
+                }
+            }
+        }
+
         const selected = [];
         const selectedText = [];
         optionsContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => {
             selected.push(cb.dataset.value);
-            selectedText.push(cb.nextElementSibling.textContent);
+            const label = cb.closest('label');
+            selectedText.push(label && label.querySelector('span') ? label.querySelector('span').textContent : cb.dataset.value);
         });
 
         container.dataset.value = JSON.stringify(selected);
@@ -107,7 +143,7 @@ function setupCustomSelect(container) {
             valueSpan.textContent = selectedText[0];
             valueSpan.classList.remove('text-gray-500');
         } else {
-            valueSpan.textContent = `${selected.length} ${originalText.toLowerCase()}s selecionados`;
+            valueSpan.textContent = `${selected.length} itens selecionados`;
             valueSpan.classList.remove('text-gray-500');
         }
         
@@ -122,7 +158,6 @@ function setupCustomSelect(container) {
 }
 
 export function setupCustomSelects() {
-    // Popula a lista de matérias inicialmente
     const materiaOptions = state.filterOptions.materia.map(m => m.name);
     const materiaContainer = DOM.materiaFilter.querySelector('.custom-select-options');
     if (materiaContainer) {
@@ -147,7 +182,12 @@ export function clearAllFilters() {
     materiaContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => cb.checked = false);
     
     updateAssuntoFilter([]);
-    
+    const assuntoContainer = DOM.assuntoFilter;
+    assuntoContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+        cb.indeterminate = false;
+    });
+
     const activeTipo = DOM.tipoFilterGroup.querySelector('.active-filter');
     if (activeTipo) activeTipo.classList.remove('active-filter');
     DOM.tipoFilterGroup.querySelector('[data-value="todos"]').classList.add('active-filter');
@@ -156,20 +196,15 @@ export function clearAllFilters() {
 }
 
 export function removeFilter(type, value) {
+    let container;
+    let shouldApplyFilter = true;
     switch (type) {
         case 'materia': {
-            const container = DOM.materiaFilter;
-            const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
-            if (checkbox) checkbox.checked = false;
-            // Dispara o evento de mudança para atualizar o estado e a UI
-            container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+            container = DOM.materiaFilter;
             break;
         }
         case 'assunto': {
-            const container = DOM.assuntoFilter;
-            const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
-            if (checkbox) checkbox.checked = false;
-            container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+            container = DOM.assuntoFilter;
             break;
         }
         case 'tipo': {
@@ -182,7 +217,19 @@ export function removeFilter(type, value) {
             DOM.searchInput.value = '';
             break;
         }
+        default:
+             shouldApplyFilter = false;
     }
-    applyFilters();
-}
 
+    if (container) {
+        const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+    
+    if (shouldApplyFilter) {
+        applyFilters();
+    }
+}
