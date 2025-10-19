@@ -50,7 +50,7 @@ export function renderMateriasView() {
 
             listItemsHtml += `
                 <li class="assunto-group">
-                    <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
+                    <div class="flex justify-between items-center p-2 hover:bg-gray-100">
                         <div class="flex items-center flex-grow cursor-pointer" data-action="toggle">
                             ${subAssuntos.length > 0 ? '<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 transition-transform duration-200 rotate-90"></i>' : '<span class="w-6 mr-2"></span>'}
                             <span class="font-semibold text-gray-800">${assunto}</span>
@@ -66,7 +66,7 @@ export function renderMateriasView() {
                 subAssuntos.forEach(sub => {
                     const totalQuestoesSubAssunto = countQuestions(state.selectedMateria.name, assunto, sub);
                     listItemsHtml += `
-                        <li class="sub-assunto-item cursor-pointer flex justify-between items-center p-2 rounded-md hover:bg-blue-50" data-materia-name="${state.selectedMateria.name}" data-assunto-name="${assunto}" data-subassunto-name="${sub}">
+                        <li class="sub-assunto-item cursor-pointer flex justify-between items-center p-2 hover:bg-blue-50" data-materia-name="${state.selectedMateria.name}" data-assunto-name="${assunto}" data-subassunto-name="${sub}">
                             <span>${sub}</span>
                             <div class="w-20 flex justify-center">
                                <span class="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-md w-full text-center">${totalQuestoesSubAssunto}</span>
@@ -80,7 +80,7 @@ export function renderMateriasView() {
         });
 
         const assuntosHtml = `
-            <div class="bg-white p-4 rounded-lg shadow-sm">
+            <div class="bg-white p-4 shadow-sm">
                 <div class="flex justify-between items-center p-2 mb-2 border-b">
                     <h3 class="font-bold text-gray-600">Assuntos desta matéria</h3>
                     <div class="w-20 text-center">
@@ -108,7 +108,7 @@ export function renderMateriasView() {
         const materiasHtml = state.filterOptions.materia.map(materia => {
             const totalQuestoes = countQuestions(materia.name);
              return `
-            <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer materia-item" data-materia-name="${materia.name}">
+            <div class="bg-white p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer materia-item" data-materia-name="${materia.name}">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center">
                         <i class="fas fa-book-open text-blue-500 mr-4 text-xl"></i>
