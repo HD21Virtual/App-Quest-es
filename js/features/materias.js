@@ -80,14 +80,14 @@ export function renderMateriasView() {
         });
 
         const searchBarHtml = `
-            <div class="mb-4 flex items-center">
+            <div class="mb-4 flex items-center gap-2">
                 <div class="relative flex-grow">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-search text-gray-400"></i>
                     </span>
                     <input type="text" id="assunto-search-input" placeholder="Digite o nome ou trecho do assunto." class="w-full p-2 pl-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <button id="assunto-search-btn" class="bg-blue-600 text-white font-bold py-2 px-4 hover:bg-blue-700 ml-[-1px]">BUSCAR</button>
+                <button id="assunto-search-btn" class="bg-blue-600 text-white font-bold py-2 px-4 hover:bg-blue-700">Buscar</button>
             </div>
         `;
 
@@ -148,8 +148,6 @@ export function renderMateriasView() {
                 performSearch();
             }
         });
-        searchInput.addEventListener('input', performSearch);
-
 
     } else {
         DOM.materiasViewTitle.textContent = 'Matérias';
