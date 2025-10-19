@@ -6,7 +6,7 @@ import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
 
-// --- IMPLEMENTAÇÃO DO ALGORITMO SM-2 ---
+// --- IMPLEMENTAÇÃO DO ALGORITMO SM-2 (AJUSTADO) ---
 
 const MIN_EASE_FACTOR = 1.3;
 const INITIAL_EASE_FACTOR = 2.5;
@@ -20,14 +20,16 @@ const INITIAL_EASE_FACTOR = 2.5;
 function calculateSm2(reviewItem, quality) {
     let { easeFactor = INITIAL_EASE_FACTOR, interval = 0, repetitions = 0 } = reviewItem || {};
 
-    if (quality < 2) { // 'Errei' ou 'Difícil' com erro (considerado 'Errei')
-        repetitions = 0;
-        interval = 1; // Reseta para 1 dia
-        easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.20);
+    // 1. Lida com respostas incorretas (qualidade 0)
+    if (quality === 0) {
+        repetitions = 0; // Reseta o progresso
+        interval = 1;    // Agenda para o próximo dia
+        easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.20); // Penaliza o 'ease'
     } else {
-        // A resposta foi correta
+    // 2. Lida com respostas corretas (qualidade 1, 2, 3)
         repetitions += 1;
 
+        // Calcula o novo intervalo base para 'Bom'
         if (repetitions === 1) {
             interval = 1;
         } else if (repetitions === 2) {
@@ -35,19 +37,29 @@ function calculateSm2(reviewItem, quality) {
         } else {
             interval = Math.ceil(interval * easeFactor);
         }
-
-        // Atualiza o Fator de Facilidade (Ease Factor)
-        // A fórmula original do SM-2 usa q (0-5), aqui adaptamos para 0-3
-        // 'Errei' (q < 2), 'Difícil' (q=1), 'Bom' (q=2), 'Fácil' (q=3)
-        // A lógica do SM-2 é complexa para "quality". Simplificaremos:
-        // 'Difícil' (-0.15), 'Bom' (não muda), 'Fácil' (+0.15)
-        if (quality === 1) { // Difícil
-             easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.15);
-        } else if (quality === 3) { // Fácil
-             easeFactor += 0.15;
+        
+        // Aplica modificadores para 'Difícil' e 'Fácil'
+        if (quality === 1) { // 'Difícil'
+            // Multiplica o intervalo ANTERIOR por 1.2, um comportamento padrão do Anki.
+            interval = Math.ceil((reviewItem?.interval || 1) * 1.2);
+        } else if (quality === 3) { // 'Fácil'
+            // Aplica um bônus de 30% sobre o intervalo recém-calculado.
+            interval = Math.ceil(interval * 1.3);
         }
-        // 'Bom' (quality === 2) não altera o easeFactor
     }
+
+    // 3. Atualiza o Fator de Facilidade (apenas para respostas corretas)
+    if (quality > 0) {
+        if (quality === 1) { // 'Difícil'
+            easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.15);
+        } else if (quality === 3) { // 'Fácil'
+            easeFactor += 0.15;
+        }
+        // 'Bom' (quality 2) não altera o easeFactor
+    }
+    
+    // Garante que o intervalo mínimo seja 1.
+    interval = Math.max(1, interval);
 
     const date = new Date();
     date.setDate(date.getDate() + interval);
@@ -78,7 +90,7 @@ export async function handleSrsFeedback(feedback) {
     const qualityMap = { 'again': 0, 'hard': 1, 'good': 2, 'easy': 3 };
     let quality = qualityMap[feedback];
     
-    // Se a resposta estiver incorreta, a qualidade é sempre 0 (Errei)
+    // Se a resposta estiver incorreta, a qualidade é sempre 0 (Errei), não importa o botão clicado
     if (!isCorrect) {
         quality = 0;
     }
@@ -104,8 +116,7 @@ export async function handleSrsFeedback(feedback) {
         state.userReviewItemsMap.set(question.id, reviewDataToSave);
 
         await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
-        // Apenas respostas corretas (qualidade >= 2) contam para o histórico positivo de SRS
-        await updateQuestionHistory(question.id, quality >= 2);
+        await updateQuestionHistory(question.id, isCorrect);
     }
 
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
@@ -301,3 +312,4 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
+
