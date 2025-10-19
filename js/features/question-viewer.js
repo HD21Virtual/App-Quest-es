@@ -127,23 +127,32 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
 
     const question = state.filteredQuestions[state.currentQuestionIndex];
     
-    activeContainer.querySelectorAll('.action-icon-container').forEach(icon => icon.innerHTML = '');
+    // **CORREÇÃO:** Somente limpa os ícones de ação se for uma resposta nova (isFreshAnswer).
+    // Se for uma resposta antiga (dentro de um caderno), os ícones devem ser recriados.
+    if (isFreshAnswer) {
+        activeContainer.querySelectorAll('.action-icon-container').forEach(icon => icon.innerHTML = '');
+    }
 
     activeContainer.querySelectorAll('.option-item').forEach(item => {
         item.classList.add('is-answered');
         item.style.cursor = 'default';
         const option = item.dataset.option;
         
+        // Limpa classes antigas para garantir que o estado seja sempre o correto
+        item.classList.remove('correct-answer', 'incorrect-answer');
+
         if (option === question.correctAnswer) {
             item.classList.add('correct-answer');
-             if(item.querySelector('.action-icon-container')) {
-                item.querySelector('.action-icon-container').innerHTML = `<i class="fas fa-check text-green-500 text-xl"></i>`;
+            const iconContainer = item.querySelector('.action-icon-container');
+            if(iconContainer) {
+                iconContainer.innerHTML = `<i class="fas fa-check text-green-500 text-xl"></i>`;
             }
         }
         if (option === userAnswer && !isCorrect) {
             item.classList.add('incorrect-answer');
-             if(item.querySelector('.action-icon-container')) {
-                item.querySelector('.action-icon-container').innerHTML = `<i class="fas fa-times text-red-500 text-xl"></i>`;
+            const iconContainer = item.querySelector('.action-icon-container');
+            if(iconContainer) {
+                iconContainer.innerHTML = `<i class="fas fa-times text-red-500 text-xl"></i>`;
             }
         }
         item.classList.remove('hover:border-blue-300');
