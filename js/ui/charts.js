@@ -313,6 +313,38 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
         return;
     }
 
+    // Plugin customizado para desenhar o texto no centro do gráfico
+    const centerTextPlugin = {
+        id: 'doughnutCenterText',
+        afterDraw: (chart) => {
+            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            if (total === 0) return;
+
+            const { ctx, chartArea: { left, right, top, bottom } } = chart;
+            const correctValue = chart.data.datasets[0].data[0];
+            const percentage = total > 0 ? Math.round((correctValue / total) * 100) : 0;
+            const text = `${percentage}%`;
+            
+            ctx.save();
+            const x = (left + right) / 2;
+            const y = (top + bottom) / 2;
+
+            // Texto do Percentual
+            ctx.font = 'bold 32px Inter, sans-serif';
+            ctx.fillStyle = '#374151'; // gray-700
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y - 8);
+
+            // Texto "de Acertos"
+            ctx.font = '500 14px Inter, sans-serif';
+            ctx.fillStyle = '#6b7280'; // gray-500
+            ctx.fillText('de Acertos', x, y + 18);
+
+            ctx.restore();
+        }
+    };
+
     statsPagePerformanceChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -328,7 +360,7 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
+            cutout: '80%', // Aumenta o buraco central, deixando o anel mais fino
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -353,8 +385,15 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
                     padding: {
                         bottom: 20
                     }
+                },
+                // Desativa o plugin de datalabels para este gráfico específico
+                datalabels: {
+                    display: false
                 }
             }
-        }
+        },
+        // Registra o plugin customizado apenas para esta instância do gráfico
+        plugins: [centerTextPlugin]
     });
 }
+
