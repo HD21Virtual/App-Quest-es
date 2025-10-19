@@ -174,18 +174,18 @@ export function renderReviewView() {
         materiaStats.total++;
         assuntoStats.total++;
         
-        // **CORREÇÃO:** A lógica de classificação foi melhorada para ser mais precisa.
-        const { repetitions = 0, interval = 0 } = item;
-        if (repetitions === 0) {
+        // **CORREÇÃO:** Lógica de classificação agora se baseia no Fator de Facilidade (Ease Factor).
+        const { repetitions = 0, easeFactor = INITIAL_EASE_FACTOR } = item;
+        if (repetitions === 0) { // Se a questão foi errada na última vez, 'repetitions' é 0.
             materiaStats.errei++;
             assuntoStats.errei++;
-        } else if (interval <= 2) { // Intervalos muito curtos indicam dificuldade.
+        } else if (easeFactor < 2.4) { // Fator de facilidade baixo indica uma questão difícil.
             materiaStats.dificil++;
             assuntoStats.dificil++;
-        } else if (interval <= 21) { // Intervalos de até 3 semanas são considerados "Bom".
+        } else if (easeFactor < 2.6) { // Fator de facilidade na média.
             materiaStats.bom++;
             assuntoStats.bom++;
-        } else { // Intervalos maiores indicam que a questão é "Fácil".
+        } else { // Fator de facilidade alto indica uma questão fácil.
             materiaStats.facil++;
             assuntoStats.facil++;
         }
