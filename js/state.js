@@ -21,6 +21,7 @@ let state = {
     deletingType: null,
     isNavigatingBackFromAddMode: false,
     isReviewSession: false,
+    isUpdatingAnswer: false, // Flag para controlar a re-renderização
     userReviewItems: [],
     reviewStatsByMateria: {},
     historicalSessions: [],
