@@ -35,7 +35,7 @@ export function updateAssuntoFilter(disciplinas) {
                         <div class="assunto-group">
                             <div class="flex items-center p-1 rounded-md hover:bg-gray-100">
                                 ${hasSubAssuntos ? 
-                                    `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle"></i>` : 
+                                    `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle rotate-90"></i>` : 
                                     `<span class="w-6 mr-2"></span>`
                                 }
                                 <label class="flex-grow flex items-center space-x-2 cursor-pointer">
@@ -46,7 +46,7 @@ export function updateAssuntoFilter(disciplinas) {
                     `;
                     
                     if (hasSubAssuntos) {
-                        
+                        newHtml += `<div class="sub-assunto-list pl-6 mt-1 space-y-1">`;
                         assunto.subAssuntos.forEach(subAssunto => {
                             newHtml += `
                                 <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
