@@ -1,8 +1,8 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { state, setState } from '../state.js';
+import { state, setState, getActiveContainer } from '../state.js';
 import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
-import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
+import { renderAnsweredQuestion } from './question-viewer.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
 
@@ -83,6 +83,8 @@ export function formatInterval(intervalInDays) {
 
 
 export async function handleSrsFeedback(feedback) {
+    setState('isUpdatingAnswer', true); // BUG FIX: Set flag to prevent snapshot re-render
+
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const isCorrect = state.selectedAnswer === question.correctAnswer;
     
@@ -125,6 +127,8 @@ export async function handleSrsFeedback(feedback) {
     
     // **CORREÇÃO:** Força a atualização da estrutura de dados da tela de revisão em tempo real.
     renderReviewView();
+
+    setState('isUpdatingAnswer', false); // BUG FIX: Unset flag after updates
 }
 
 
@@ -325,4 +329,3 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
-
