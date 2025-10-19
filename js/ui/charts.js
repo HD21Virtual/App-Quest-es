@@ -12,6 +12,7 @@ if (window.ChartDataLabels) {
 let performanceChart = null;
 let homePerformanceChart = null;
 let weeklyChartInstance = null;
+let statsPagePerformanceChart = null;
 
 // Função auxiliar para obter os rótulos dos últimos 7 dias
 function getLast7DaysLabels() {
@@ -289,4 +290,71 @@ export function renderItemPerformanceChart(correct, incorrect) {
     });
 }
 
+export function renderStatsPagePerformanceChart(correct, incorrect) {
+    const canvas = DOM.statsPagePerformanceChartCanvas;
+    if (!canvas) return;
 
+    if (statsPagePerformanceChart) {
+        statsPagePerformanceChart.destroy();
+    }
+
+    const answeredCount = correct + incorrect;
+    const ctx = canvas.getContext('2d');
+
+    if (answeredCount === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "16px 'Inter', sans-serif";
+        ctx.fillStyle = "#9ca3af";
+        ctx.fillText("Nenhum dado para exibir.", canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+        return;
+    }
+
+    statsPagePerformanceChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Acertos', 'Erros'],
+            datasets: [{
+                data: [correct, incorrect],
+                backgroundColor: ['#22c55e', '#ef4444'],
+                hoverBackgroundColor: ['#16a34a', '#dc2626'],
+                borderColor: '#f9fafb', // Cor de fundo do card (bg-gray-50)
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 20,
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true
+                },
+                title: {
+                    display: true,
+                    text: 'Desempenho Geral de Respostas',
+                    font: {
+                        size: 16
+                    },
+                    color: '#4b5563',
+                    padding: {
+                        bottom: 20
+                    }
+                }
+            }
+        }
+    });
+}
