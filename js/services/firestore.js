@@ -133,6 +133,12 @@ export function setupAllListeners(userId) {
                 state.userAnswers.delete(change.doc.id);
             }
         });
+
+        // BUG FIX: Suppress re-render if an answer update is already in progress.
+        if (state.isUpdatingAnswer) {
+            return;
+        }
+
         if (state.currentCadernoId || (state.vadeMecumView && !state.vadeMecumView.classList.contains('hidden'))) {
             displayQuestion();
         }
