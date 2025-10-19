@@ -19,24 +19,24 @@
 <body class="bg-f0f2f5">
 
     <!-- Menu Superior Fixo (Header) -->
-    <header class="bg-white shadow-md sticky top-0 z-40">
+    <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747h18"/>
                         </svg>
-                        <span class="text-xl font-bold text-gray-800 ml-2">QuestõesApp</span>
+                        <span class="text-xl font-bold text-gray-100 ml-2">QuestõesApp</span>
                     </div>
                     <nav id="main-nav" class="hidden md:block ml-10">
                         <div class="flex items-baseline space-x-4">
-                            <a href="#" data-view="inicio-view" class="nav-link text-blue-700 bg-blue-100 px-3 py-2 rounded-md text-sm font-medium">Início</a>
-                            <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Questões</a>
-                            <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Cadernos</a>
-                            <a href="#" data-view="materias-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Matérias</a>
-                            <a href="#" data-view="revisao-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Revisão</a>
-                            <a href="#" data-view="estatisticas-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Estatísticas</a>
+                            <a href="#" data-view="inicio-view" class="nav-link active-nav text-gray-300 hover:text-white px-3 rounded-md text-sm font-medium">Início</a>
+                            <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-300 hover:text-white px-3 rounded-md text-sm font-medium">Questões</a>
+                            <a href="#" data-view="cadernos-view" class="nav-link text-gray-300 hover:text-white px-3 rounded-md text-sm font-medium">Cadernos</a>
+                            <a href="#" data-view="materias-view" class="nav-link text-gray-300 hover:text-white px-3 rounded-md text-sm font-medium">Matérias</a>
+                            <a href="#" data-view="revisao-view" class="nav-link text-gray-300 hover:text-white px-3 rounded-md text-sm font-medium">Revisão</a>
+                            <a href="#" data-view="estatisticas-view" class="nav-link text-gray-300 hover:text-white px-3 rounded-md text-sm font-medium">Estatísticas</a>
                         </div>
                     </nav>
                 </div>
@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="-mr-2 flex md:hidden">
-                    <button id="hamburger-btn" type="button" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
+                    <button id="hamburger-btn" type="button" class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
                         <span class="sr-only">Abrir menu principal</span>
                         <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -56,15 +56,15 @@
             </div>
         </div>
         <!-- Menu Mobile -->
-        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+        <div id="mobile-menu" class="md:hidden hidden bg-gray-800 border-t border-gray-700">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#" data-view="inicio-view" class="nav-link text-blue-700 bg-blue-100 block px-3 py-2 rounded-md text-base font-medium">Início</a>
-                <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Questões</a>
-                <a href="#" data-view="cadernos-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Cadernos</a>
-                <a href="#" data-view="materias-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Matérias</a>
-                <a href="#" data-view="revisao-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Revisão</a>
-                <a href="#" data-view="estatisticas-view" class="nav-link text-gray-500 hover:bg-gray-100 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">Estatísticas</a>
-                 <div id="user-account-container-mobile" class="border-t border-gray-200 mt-2 pt-2">
+                <a href="#" data-view="inicio-view" class="nav-link active-nav text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Início</a>
+                <a href="#" data-view="vade-mecum-view" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Questões</a>
+                <a href="#" data-view="cadernos-view" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Cadernos</a>
+                <a href="#" data-view="materias-view" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Matérias</a>
+                <a href="#" data-view="revisao-view" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Revisão</a>
+                <a href="#" data-view="estatisticas-view" class="nav-link text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Estatísticas</a>
+                 <div id="user-account-container-mobile" class="border-t border-gray-700 mt-2 pt-2">
                     <!-- Será preenchido pelo JavaScript -->
                  </div>
             </div>
@@ -222,7 +222,7 @@
                         </div>
                         <div class="flex flex-wrap justify-between items-center gap-y-2 gap-x-4 p-4 border-b border-gray-200 text-sm">
                             <div id="question-info-container" class="text-gray-600 space-y-1 hidden"></div>
-                            <div id="question-toolbar" class="flex items-center space-x-4 text-gray-600 hidden">
+                            <div id="question-toolbar" class="flex items-center flex-wrap gap-x-4 gap-y-2 text-gray-600 hidden">
                                  <!-- Toolbar será inserida aqui -->
                             </div>
                         </div>
