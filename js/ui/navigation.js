@@ -3,7 +3,7 @@ import { exitAddMode, renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderMateriasView } from '../features/materias.js';
 import { clearAllFilters } from '../features/filter.js';
 import { setState, state } from '../state.js';
-import { updateStatsPageUI } from '../features/stats.js';
+import { updateStatsPageUI, renderEstatisticasView } from '../features/stats.js';
 import { renderReviewView } from '../features/srs.js';
 
 export function navigateToView(viewId, isUserClick = true) {
@@ -75,6 +75,8 @@ export function navigateToView(viewId, isUserClick = true) {
         updateStatsPageUI();
     } else if (viewId === 'revisao-view') {
         renderReviewView();
+    } else if (viewId === 'estatisticas-view') {
+        renderEstatisticasView();
     }
 
 
