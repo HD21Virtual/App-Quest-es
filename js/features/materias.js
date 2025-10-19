@@ -42,21 +42,13 @@ export function renderMateriasView() {
         DOM.backToMateriasBtn.classList.remove('hidden');
 
         const hierarchy = buildHierarchy(state.allQuestions, state.selectedMateria.name);
-        let assuntosHtml = `
-            <div class="flex justify-between items-center p-2 mb-2 border-b">
-                <h3 class="font-bold text-gray-600">Assuntos desta matéria</h3>
-                <div class="w-20 text-center">
-                    <h3 class="font-bold text-gray-600">Questões</h3>
-                </div>
-            </div>
-            <ul class="space-y-1">
-        `;
+        let listItemsHtml = '';
 
         hierarchy.forEach((subAssuntosSet, assunto) => {
             const subAssuntos = Array.from(subAssuntosSet).sort();
             const totalQuestoesAssunto = countQuestions(state.selectedMateria.name, assunto);
 
-            assuntosHtml += `
+            listItemsHtml += `
                 <li class="assunto-group">
                     <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
                         <div class="flex items-center flex-grow cursor-pointer" data-action="toggle">
@@ -70,10 +62,10 @@ export function renderMateriasView() {
             `;
 
             if (subAssuntos.length > 0) {
-                assuntosHtml += '<ul class="pl-8 mt-1 space-y-1">';
+                listItemsHtml += '<ul class="pl-8 mt-1 space-y-1">';
                 subAssuntos.forEach(sub => {
                     const totalQuestoesSubAssunto = countQuestions(state.selectedMateria.name, assunto, sub);
-                    assuntosHtml += `
+                    listItemsHtml += `
                         <li class="sub-assunto-item cursor-pointer flex justify-between items-center p-2 rounded-md hover:bg-blue-50" data-materia-name="${state.selectedMateria.name}" data-assunto-name="${assunto}" data-subassunto-name="${sub}">
                             <span>${sub}</span>
                             <div class="w-20 flex justify-center">
@@ -82,12 +74,24 @@ export function renderMateriasView() {
                         </li>
                     `;
                 });
-                assuntosHtml += '</ul>';
+                listItemsHtml += '</ul>';
             }
-            assuntosHtml += '</li>';
+            listItemsHtml += '</li>';
         });
 
-        assuntosHtml += '</ul>';
+        const assuntosHtml = `
+            <div class="bg-white p-4 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center p-2 mb-2 border-b">
+                    <h3 class="font-bold text-gray-600">Assuntos desta matéria</h3>
+                    <div class="w-20 text-center">
+                        <h3 class="font-bold text-gray-600">Questões</h3>
+                    </div>
+                </div>
+                <ul class="space-y-1">
+                    ${listItemsHtml}
+                </ul>
+            </div>
+        `;
         DOM.assuntosListContainer.innerHTML = assuntosHtml;
 
     } else {
