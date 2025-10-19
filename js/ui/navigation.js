@@ -38,14 +38,13 @@ export function navigateToView(viewId, isUserClick = true) {
         targetView.classList.remove('hidden');
     }
 
+    // NEW LOGIC for navigation links
     document.querySelectorAll('.nav-link').forEach(navLink => {
-        navLink.classList.remove('text-blue-700', 'bg-blue-100');
-        navLink.classList.add('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
+        navLink.classList.remove('active-nav');
     });
 
     document.querySelectorAll(`.nav-link[data-view="${viewId}"]`).forEach(matchingLink => {
-        matchingLink.classList.add('text-blue-700', 'bg-blue-100');
-        matchingLink.classList.remove('text-gray-500', 'hover:bg-gray-100', 'hover:text-gray-900');
+        matchingLink.classList.add('active-nav');
     });
 
     if (viewId === 'vade-mecum-view') {
