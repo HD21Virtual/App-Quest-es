@@ -42,7 +42,13 @@ export function renderMateriasView() {
         DOM.backToMateriasBtn.classList.remove('hidden');
 
         const hierarchy = buildHierarchy(state.allQuestions, state.selectedMateria.name);
-        let assuntosHtml = '<ul class="space-y-1">';
+        let assuntosHtml = `
+            <div class="flex justify-between items-center p-2 mb-2 border-b">
+                <h3 class="font-bold text-gray-600">Assuntos desta matéria</h3>
+                <h3 class="font-bold text-gray-600">Questões</h3>
+            </div>
+            <ul class="space-y-1">
+        `;
 
         hierarchy.forEach((subAssuntosSet, assunto) => {
             const subAssuntos = Array.from(subAssuntosSet).sort();
