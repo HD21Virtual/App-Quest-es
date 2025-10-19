@@ -115,7 +115,7 @@ export function updateSavedFiltersList() {
         DOM.savedFiltersListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum filtro encontrado.</p>`;
     } else {
         DOM.savedFiltersListContainer.innerHTML = filtered.map(f => `
-            <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
+            <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-100">
                 <button class="load-filter-btn text-left" data-id="${f.id}">${f.name}</button>
                 <button class="delete-filter-btn text-red-500 hover:text-red-700" data-id="${f.id}">
                     <i class="fas fa-trash-alt pointer-events-none"></i>
