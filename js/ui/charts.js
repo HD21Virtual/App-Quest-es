@@ -337,9 +337,7 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
             ctx.fillText(text, x, y - 8);
 
             // Texto "de Acertos"
-            ctx.font = '500 14px Inter, sans-serif';
-            ctx.fillStyle = '#6b7280'; // gray-500
-            ctx.fillText('de Acertos', x, y + 18);
+            
 
             ctx.restore();
         }
@@ -360,7 +358,7 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '80%', // Aumenta o buraco central, deixando o anel mais fino
+            cutout: '50%', // Aumenta o buraco central, deixando o anel mais fino
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -377,7 +375,7 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
                 },
                 title: {
                     display: true,
-                    text: 'Desempenho Geral de Respostas',
+                    text: 'Desempenho Geral',
                     font: {
                         size: 16
                     },
@@ -396,4 +394,5 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
         plugins: [centerTextPlugin]
     });
 }
+
 
