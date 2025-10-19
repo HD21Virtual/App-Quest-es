@@ -141,3 +141,52 @@ body {
          font-size: 0.8rem;
     }
 }
+
+/* New Professional Header Styles */
+#main-nav .nav-link, #mobile-menu .nav-link {
+    transition: color 0.2s ease-in-out;
+    position: relative;
+    padding-bottom: 0.75rem; /* 12px */
+    padding-top: 0.75rem;   /* 12px */
+}
+
+/* Underline indicator for active and hovered links on DESKTOP */
+#main-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0.75rem;  /* px-3 */
+    right: 0.75rem; /* px-3 */
+    height: 3px;
+    background-color: #3b82f6; /* blue-500 */
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+#main-nav .nav-link:hover::after,
+#main-nav .nav-link.active-nav::after {
+    transform: scaleX(1);
+}
+
+/* Active link text color on DESKTOP */
+#main-nav .nav-link.active-nav {
+    color: white;
+}
+
+/* Reset mobile menu link padding */
+#mobile-menu .nav-link {
+    padding: 0.5rem 0.75rem; /* py-2 px-3 */
+}
+
+/* Remove underline effect for mobile */
+#mobile-menu .nav-link::after {
+    display: none;
+}
+
+/* Mobile menu active state - use background color instead */
+#mobile-menu .nav-link.active-nav {
+    background-color: #1f2937; /* gray-800 */
+    color: white;
+}
