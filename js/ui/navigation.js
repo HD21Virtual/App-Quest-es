@@ -50,24 +50,20 @@ export function navigateToView(viewId, isUserClick = true) {
     if (viewId === 'vade-mecum-view') {
         // Se a navegação for um clique direto do usuário na aba "Questões",
         // devemos sempre redefinir a visualização para seu estado padrão,
-        // encerrando qualquer sessão de revisão ou modo de adição de questões.
+        // encerrando qualquer sessão de revisão ativa.
         if (isUserClick) {
             if (state.isReviewSession) {
                 setState('isReviewSession', false);
             }
-            if (state.isAddingQuestionsMode.active) {
-                exitAddMode();
-            }
             
-            // Resetar a view para o estado padrão
-            DOM.vadeMecumTitle.textContent = "Vade Mecum de Questões";
-            DOM.toggleFiltersBtn.classList.remove('hidden');
-            DOM.filterCard.classList.remove('hidden');
-            const toggleBtn = DOM.toggleFiltersBtn;
-            if (toggleBtn) {
-                toggleBtn.innerHTML = `<i class="fas fa-eye-slash mr-2"></i> Ocultar Filtros`;
+            // Esta parte é executada independentemente de haver uma sessão de revisão,
+            // desde que seja um clique do usuário e não esteja no modo "adicionar questões".
+            if (!state.isAddingQuestionsMode.active) {
+                DOM.vadeMecumTitle.textContent = "Vade Mecum de Questões";
+                DOM.toggleFiltersBtn.classList.remove('hidden');
+                DOM.filterCard.classList.remove('hidden');
+                clearAllFilters(); // Esta função também aciona applyFilters() que buscará e exibirá as questões.
             }
-            clearAllFilters(); // Esta função também aciona applyFilters() que buscará e exibirá as questões.
         }
     } else if (viewId === 'cadernos-view') {
         renderFoldersAndCadernos();
@@ -80,7 +76,7 @@ export function navigateToView(viewId, isUserClick = true) {
     } else if (viewId === 'revisao-view') {
         renderReviewView();
     } else if (viewId === 'estatisticas-view') {
-        updateStatsPageUI();
+        renderEstatisticasView();
     }
 
 
@@ -88,4 +84,3 @@ export function navigateToView(viewId, isUserClick = true) {
         DOM.mobileMenu.classList.add('hidden');
     }
 }
-
