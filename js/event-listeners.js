@@ -188,6 +188,24 @@ export function setupAllEventListeners() {
             event.preventDefault();
             navigateToView(target.closest('.nav-link').dataset.view);
         }
+        // --- Stats Tabs ---
+        else if (target.closest('#stats-tabs-container .tab-button')) {
+            const tabButton = target.closest('#stats-tabs-container .tab-button');
+            const tabName = tabButton.dataset.tab;
+
+            if (!tabButton.classList.contains('active')) {
+                // Remove a classe ativa de todos os botões e conteúdos
+                DOM.statsTabsContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('#stats-tabs-content-container .stats-tab-content').forEach(content => content.classList.add('hidden'));
+
+                // Adiciona a classe ativa ao botão clicado e ao conteúdo correspondente
+                tabButton.classList.add('active');
+                const activeContent = document.getElementById(`${tabName}-tab`);
+                if (activeContent) {
+                    activeContent.classList.remove('hidden');
+                }
+            }
+        }
     });
 
     // Input/Change listeners
