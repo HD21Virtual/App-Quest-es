@@ -33,7 +33,7 @@ export function updateAssuntoFilter(disciplinas) {
                     const hasSubAssuntos = assunto.subAssuntos && assunto.subAssuntos.length > 0;
                     newHtml += `
                         <div class="assunto-group">
-                            <div class="flex items-center p-1 rounded-md hover:bg-gray-100">
+                            <div class="flex items-center p-1 rounded-lg hover:bg-gray-100">
                                 ${hasSubAssuntos ? 
                                     `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle rotate-90"></i>` : 
                                     `<span class="w-6 mr-2"></span>`
@@ -49,7 +49,7 @@ export function updateAssuntoFilter(disciplinas) {
                         newHtml += `<div class="sub-assunto-list pl-6 mt-1 space-y-1">`;
                         assunto.subAssuntos.forEach(subAssunto => {
                             newHtml += `
-                                <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                                <label class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 cursor-pointer">
                                     <input type="checkbox" data-value="${subAssunto}" data-parent-assunto="${assunto.name}" data-type="subassunto" class="custom-select-option rounded">
                                     <span>${subAssunto}</span>
                                 </label>
@@ -82,7 +82,7 @@ export function updateSelectedFiltersDisplay() {
     const createFilterTag = (type, value, label) => {
         hasFilters = true;
         const tag = document.createElement('div');
-        tag.className = 'flex items-center bg-gray-100 border border-gray-300 rounded-md pl-2 pr-1 py-1 text-sm';
+        tag.className = 'flex items-center bg-gray-200 border border-gray-300 rounded-lg pl-2 pr-1 py-1 text-sm';
         tag.innerHTML = `
             <span class="font-semibold mr-1">${label}:</span>
             <span class="mr-1">${value}</span>
@@ -123,14 +123,15 @@ export function updateUserUI(user) {
     mobileContainer.innerHTML = '';
 
     if (user) {
-        const loggedInHTML = `<div class="flex items-center"><span class="text-gray-300 text-sm mr-4">${user.email}</span><button id="logout-btn" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
-        const loggedInHTMLMobile = `<div class="flex items-center justify-between"><span class="text-gray-300 text-sm">${user.email}</span><button id="logout-btn-mobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium">Sair</button></div>`;
+        const loggedInHTML = `<div class="flex items-center"><span class="text-gray-300 text-sm mr-4">${user.email}</span><button id="logout-btn" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-lg text-sm font-medium">Sair</button></div>`;
+        const loggedInHTMLMobile = `<div class="flex items-center justify-between"><span class="text-gray-300 text-sm">${user.email}</span><button id="logout-btn-mobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-lg text-base font-medium">Sair</button></div>`;
         desktopContainer.innerHTML = loggedInHTML;
         mobileContainer.innerHTML = loggedInHTMLMobile;
     } else {
-        const loggedOutHTML = `<button id="show-login-modal-btn" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Minha Conta</button>`;
-        const loggedOutHTMLMobile = `<button id="show-login-modal-btn-mobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium">Minha Conta</button>`;
+        const loggedOutHTML = `<button id="show-login-modal-btn" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-lg text-sm font-medium">Minha Conta</button>`;
+        const loggedOutHTMLMobile = `<button id="show-login-modal-btn-mobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-lg text-base font-medium">Minha Conta</button>`;
         desktopContainer.innerHTML = loggedOutHTML;
         mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
+
