@@ -15,6 +15,7 @@ export function updateAssuntoFilter(disciplinas) {
     valueSpan.textContent = 'Assunto';
     valueSpan.classList.add('text-gray-500');
     assuntoContainer.dataset.value = '[]';
+    optionsContainer.innerHTML = '';
 
     if (disciplinas.length === 0) {
         assuntoButton.disabled = true;
@@ -23,23 +24,54 @@ export function updateAssuntoFilter(disciplinas) {
         assuntoButton.disabled = false;
         let newHtml = '';
         
-        disciplinas.forEach(disciplina => {
-            const materiaObj = state.filterOptions.materia.find(m => m.name === disciplina);
+        disciplinas.forEach(disciplinaName => {
+            const materiaObj = state.filterOptions.materia.find(m => m.name === disciplinaName);
             if (materiaObj && materiaObj.assuntos.length > 0) {
                 newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
                 
                 materiaObj.assuntos.forEach(assunto => {
+                    const hasSubAssuntos = assunto.subAssuntos && assunto.subAssuntos.length > 0;
                     newHtml += `
-                        <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
-                            <input type="checkbox" data-value="${assunto}" class="custom-select-option rounded">
-                            <span>${assunto}</span>
-                        </label>
+                        <div class="assunto-group">
+                            <div class="flex items-center p-1 rounded-md hover:bg-gray-100">
+                                ${hasSubAssuntos ? 
+                                    `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle"></i>` : 
+                                    `<span class="w-6 mr-2"></span>`
+                                }
+                                <label class="flex-grow flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" data-value="${assunto.name}" data-type="assunto" class="custom-select-option rounded">
+                                    <span>${assunto.name}</span>
+                                </label>
+                            </div>
                     `;
+                    
+                    if (hasSubAssuntos) {
+                        newHtml += `<div class="sub-assunto-list hidden pl-6 mt-1 space-y-1">`;
+                        assunto.subAssuntos.forEach(subAssunto => {
+                            newHtml += `
+                                <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                                    <input type="checkbox" data-value="${subAssunto}" data-parent-assunto="${assunto.name}" data-type="subassunto" class="custom-select-option rounded">
+                                    <span>${subAssunto}</span>
+                                </label>
+                            `;
+                        });
+                        newHtml += `</div>`;
+                    }
+                    newHtml += `</div>`;
                 });
             }
         });
         
         optionsContainer.innerHTML = newHtml;
+
+        optionsContainer.querySelectorAll('.assunto-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const parent = e.target.closest('.assunto-group');
+                parent.querySelector('.sub-assunto-list').classList.toggle('hidden');
+                e.target.classList.toggle('rotate-90');
+            });
+        });
     }
 }
 
@@ -50,11 +82,11 @@ export function updateSelectedFiltersDisplay() {
     const createFilterTag = (type, value, label) => {
         hasFilters = true;
         const tag = document.createElement('div');
-        tag.className = 'flex items-center bg-gray-100 border border-gray-300 rounded-md pl-2 pr-1 py-1';
+        tag.className = 'flex items-center bg-gray-100 border border-gray-300 rounded-md pl-2 pr-1 py-1 text-sm';
         tag.innerHTML = `
-            <span class="font-bold mr-2">${label}:</span>
-            <span>${value}</span>
-            <button data-filter-type="${type}" data-filter-value="${value}" class="remove-filter-btn ml-2 text-gray-500 hover:text-gray-800">
+            <span class="font-semibold mr-1">${label}:</span>
+            <span class="mr-1">${value}</span>
+            <button data-filter-type="${type}" data-filter-value="${value}" class="remove-filter-btn ml-1 text-gray-500 hover:text-gray-800">
                 <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         `;
@@ -69,15 +101,15 @@ export function updateSelectedFiltersDisplay() {
     
     const activeTipoBtn = DOM.tipoFilterGroup.querySelector('.active-filter');
     if (activeTipoBtn && activeTipoBtn.dataset.value !== 'todos') {
-        createFilterTag('tipo', activeTipoBtn.dataset.value, 'Tipo');
+        createFilterTag('tipo', activeTipoBtn.textContent, 'Tipo');
     }
 
     if (DOM.searchInput.value) {
-        createFilterTag('search', DOM.searchInput.value, 'Palavra-chave');
+        createFilterTag('search', DOM.searchInput.value, 'Busca');
     }
 
     if (!hasFilters) {
-        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Seus filtros aparecerão aqui</span>`;
+        DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500 text-sm">Nenhum filtro aplicado.</span>`;
     }
 }
 
@@ -102,4 +134,3 @@ export function updateUserUI(user) {
         mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
-
