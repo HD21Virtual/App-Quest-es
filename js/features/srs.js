@@ -122,6 +122,9 @@ export async function handleSrsFeedback(feedback) {
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
     updateStatsPanel();
     updateStatsPageUI();
+    
+    // **CORREÇÃO:** Força a atualização da estrutura de dados da tela de revisão em tempo real.
+    renderReviewView();
 }
 
 
@@ -171,11 +174,21 @@ export function renderReviewView() {
         materiaStats.total++;
         assuntoStats.total++;
         
-        const easeFactor = item.easeFactor || INITIAL_EASE_FACTOR;
-        if (easeFactor < 1.8) { materiaStats.errei++; assuntoStats.errei++; }
-        else if (easeFactor < 2.2) { materiaStats.dificil++; assuntoStats.dificil++; }
-        else if (easeFactor < 3.0) { materiaStats.bom++; assuntoStats.bom++; }
-        else { materiaStats.facil++; assuntoStats.facil++; }
+        // **CORREÇÃO:** A lógica de classificação foi melhorada para ser mais precisa.
+        const { repetitions = 0, interval = 0 } = item;
+        if (repetitions === 0) {
+            materiaStats.errei++;
+            assuntoStats.errei++;
+        } else if (interval <= 2) { // Intervalos muito curtos indicam dificuldade.
+            materiaStats.dificil++;
+            assuntoStats.dificil++;
+        } else if (interval <= 21) { // Intervalos de até 3 semanas são considerados "Bom".
+            materiaStats.bom++;
+            assuntoStats.bom++;
+        } else { // Intervalos maiores indicam que a questão é "Fácil".
+            materiaStats.facil++;
+            assuntoStats.facil++;
+        }
 
 
         if (item.nextReviewDate) {
