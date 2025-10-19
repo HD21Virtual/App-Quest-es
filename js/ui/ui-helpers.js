@@ -46,7 +46,7 @@ export function updateAssuntoFilter(disciplinas) {
                     `;
                     
                     if (hasSubAssuntos) {
-                        newHtml += `<div class="sub-assunto-list hidden pl-6 mt-1 space-y-1">`;
+                        
                         assunto.subAssuntos.forEach(subAssunto => {
                             newHtml += `
                                 <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
@@ -134,3 +134,4 @@ export function updateUserUI(user) {
         mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
+
