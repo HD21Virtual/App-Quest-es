@@ -1,5 +1,5 @@
 import { state, getActiveContainer } from '../state.js';
-import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart } from '../ui/charts.js';
+import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart, renderStatsPagePerformanceChart } from '../ui/charts.js';
 import { getHistoricalCountsForQuestions } from '../services/firestore.js';
 import DOM from '../dom-elements.js';
 
@@ -45,6 +45,47 @@ export function updateStatsPageUI() {
     // As funções de renderização de gráficos têm as suas próprias verificações de existência do canvas.
     renderHomePerformanceChart(materiaTotals);
     renderWeeklyChart();
+}
+
+export function renderEstatisticasView() {
+    if (!state.currentUser) {
+        DOM.statsMainContent.innerHTML = '<p class="text-center text-gray-500 p-8">Por favor, faça login para ver suas estatísticas.</p>';
+        return;
+    }
+
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    const materiasSet = new Set();
+
+    // 1. Processa as sessões históricas do Firestore
+    state.historicalSessions.forEach(session => {
+        totalQuestions += session.totalQuestions || 0;
+        totalCorrect += session.correctCount || 0;
+        for (const materia in session.details) {
+            materiasSet.add(materia);
+        }
+    });
+
+    // 2. Adiciona as estatísticas da sessão atual (não salva)
+    state.sessionStats.forEach(stat => {
+        totalQuestions += 1;
+        if (stat.isCorrect) {
+            totalCorrect += 1;
+        }
+        materiasSet.add(stat.materia);
+    });
+    
+    const totalIncorrect = totalQuestions - totalCorrect;
+    const totalMaterias = materiasSet.size;
+
+    // 3. Atualiza os elementos da UI (cards)
+    if (DOM.statsGeralResolvidas) DOM.statsGeralResolvidas.textContent = totalQuestions;
+    if (DOM.statsGeralAcertos) DOM.statsGeralAcertos.textContent = totalCorrect;
+    if (DOM.statsGeralErros) DOM.statsGeralErros.textContent = totalIncorrect;
+    if (DOM.statsGeralMaterias) DOM.statsGeralMaterias.textContent = totalMaterias;
+    
+    // 4. Renderiza o gráfico de desempenho
+    renderStatsPagePerformanceChart(totalCorrect, totalIncorrect);
 }
 
 export async function updateStatsPanel(container = null) {
@@ -106,4 +147,3 @@ export async function generateStatsForQuestions(questionIds) {
 
     return { totalCorrect, totalIncorrect, statsByMateria };
 }
-
