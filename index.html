@@ -320,8 +320,47 @@
                 </button>
             </div>
             <div id="stats-main-content">
-                <div class="bg-gray-50 p-6 rounded-xl shadow-md text-center">
-                    <p class="text-gray-500">Novas estatísticas serão adicionadas aqui em breve.</p>
+                <!-- Abas de Navegação -->
+                <div class="mb-4">
+                    <nav id="stats-tabs-container" class="flex space-x-1">
+                        <button data-tab="desempenho-geral" class="tab-button active">Desempenho Geral</button>
+                        <!-- Outras abas podem ser adicionadas aqui no futuro -->
+                    </nav>
+                </div>
+
+                <!-- Container do Conteúdo das Abas -->
+                <div id="stats-tabs-content-container" class="bg-gray-50 rounded-b-xl rounded-tr-xl shadow-md -mt-4 p-6">
+                    <!-- Aba de Desempenho Geral -->
+                    <div id="desempenho-geral-tab" class="stats-tab-content">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <!-- Coluna dos Cards -->
+                            <div class="lg:col-span-1 space-y-6">
+                                <div class="bg-white p-6 rounded-xl shadow text-center">
+                                    <h3 class="text-sm font-medium text-gray-500">Questões Resolvidas</h3>
+                                    <p id="stats-geral-resolvidas" class="mt-1 text-3xl font-semibold text-gray-900">0</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow text-center">
+                                    <h3 class="text-sm font-medium text-gray-500">Acertos</h3>
+                                    <p id="stats-geral-acertos" class="mt-1 text-3xl font-semibold text-green-600">0</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow text-center">
+                                    <h3 class="text-sm font-medium text-gray-500">Erros</h3>
+                                    <p id="stats-geral-erros" class="mt-1 text-3xl font-semibold text-red-600">0</p>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow text-center">
+                                    <h3 class="text-sm font-medium text-gray-500">Total de Matérias</h3>
+                                    <p id="stats-geral-materias" class="mt-1 text-3xl font-semibold text-blue-600">0</p>
+                                </div>
+                            </div>
+                            <!-- Coluna do Gráfico -->
+                            <div class="lg:col-span-2 flex items-center justify-center">
+                                <div class="relative w-full max-w-md mx-auto h-96">
+                                    <canvas id="statsPagePerformanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Outras abas de conteúdo aqui -->
                 </div>
             </div>
         </div>
@@ -484,4 +523,3 @@
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
-
