@@ -12,31 +12,53 @@ export async function fetchAllQuestions() {
     try {
         const querySnapshot = await getDocs(collection(db, "questions"));
         const questions = [];
-        const materiaMap = new Map();
+        // Estrutura: Map<nomeMateria, Map<nomeAssunto, Set<nomeSubAssunto>>>
+        const hierarchy = new Map();
 
         querySnapshot.forEach((doc) => {
             const question = { id: doc.id, ...doc.data() };
             questions.push(question);
 
-            if (question.materia && question.assunto) {
-                if (!materiaMap.has(question.materia)) {
-                    materiaMap.set(question.materia, new Set());
+            const { materia, assunto, subAssunto } = question;
+
+            if (materia && assunto) {
+                if (!hierarchy.has(materia)) {
+                    hierarchy.set(materia, new Map());
                 }
-                materiaMap.get(question.materia).add(question.assunto);
+                const assuntosMap = hierarchy.get(materia);
+
+                if (!assuntosMap.has(assunto)) {
+                    assuntosMap.set(assunto, new Set());
+                }
+                
+                if (subAssunto) {
+                    assuntosMap.get(assunto).add(subAssunto);
+                }
             }
         });
 
         setState('allQuestions', questions);
 
-        const newFilterOptions = { materia: [], allAssuntos: [] };
-        const allAssuntosSet = new Set();
-        for (const [materia, assuntosSet] of materiaMap.entries()) {
-            const assuntos = Array.from(assuntosSet).sort();
-            newFilterOptions.materia.push({ name: materia, assuntos: assuntos });
-            assuntos.forEach(assunto => allAssuntosSet.add(assunto));
+        const newFilterOptions = { materia: [] };
+        
+        const sortedMaterias = Array.from(hierarchy.keys()).sort();
+
+        for (const materiaName of sortedMaterias) {
+            const materiaData = { name: materiaName, assuntos: [] };
+            const assuntosMap = hierarchy.get(materiaName);
+            const sortedAssuntos = Array.from(assuntosMap.keys()).sort();
+
+            for (const assuntoName of sortedAssuntos) {
+                const subAssuntosSet = assuntosMap.get(assuntoName);
+                const sortedSubAssuntos = Array.from(subAssuntosSet).sort();
+                materiaData.assuntos.push({
+                    name: assuntoName,
+                    subAssuntos: sortedSubAssuntos
+                });
+            }
+            newFilterOptions.materia.push(materiaData);
         }
-        newFilterOptions.materia.sort((a, b) => a.name.localeCompare(b.name));
-        newFilterOptions.allAssuntos = Array.from(allAssuntosSet).sort();
+
         setState('filterOptions', newFilterOptions);
 
     } catch (error) {
