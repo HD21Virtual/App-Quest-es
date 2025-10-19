@@ -123,15 +123,14 @@ export function updateUserUI(user) {
     mobileContainer.innerHTML = '';
 
     if (user) {
-        const loggedInHTML = `<div class="flex items-center"><span class="text-gray-600 text-sm mr-4">${user.email}</span><button id="logout-btn" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
-        const loggedInHTMLMobile = `<div class="flex items-center justify-between"><span class="text-gray-600 text-sm">${user.email}</span><button id="logout-btn-mobile" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
+        const loggedInHTML = `<div class="flex items-center"><span class="text-gray-300 text-sm mr-4">${user.email}</span><button id="logout-btn" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Sair</button></div>`;
+        const loggedInHTMLMobile = `<div class="flex items-center justify-between"><span class="text-gray-300 text-sm">${user.email}</span><button id="logout-btn-mobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium">Sair</button></div>`;
         desktopContainer.innerHTML = loggedInHTML;
         mobileContainer.innerHTML = loggedInHTMLMobile;
     } else {
-        const loggedOutHTML = `<button id="show-login-modal-btn" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Minha Conta</button>`;
-        const loggedOutHTMLMobile = `<button id="show-login-modal-btn-mobile" class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 block w-full text-left px-3 py-2 rounded-md text-base font-medium">Minha Conta</button>`;
+        const loggedOutHTML = `<button id="show-login-modal-btn" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Minha Conta</button>`;
+        const loggedOutHTMLMobile = `<button id="show-login-modal-btn-mobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium">Minha Conta</button>`;
         desktopContainer.innerHTML = loggedOutHTML;
         mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
-
