@@ -334,7 +334,7 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
             ctx.fillStyle = '#374151'; // gray-700
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(text, x, y - 8);
+            ctx.fillText(text, x, y);
 
             // Texto "de Acertos"
             
@@ -394,5 +394,6 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
         plugins: [centerTextPlugin]
     });
 }
+
 
 
