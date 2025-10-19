@@ -94,6 +94,17 @@ body {
     border-left: 4px solid #3b82f6; /* blue-500 */
 }
 
+/* NOVOS Estilos para o filtro de árvore de Assuntos */
+.assunto-toggle.rotate-90 {
+    transform: rotate(90deg);
+}
+
+.sub-assunto-list {
+    border-left: 1px solid #e5e7eb; /* gray-200 */
+    margin-left: 0.75rem; 
+}
+
+
 /* Media query for smaller screens */
 @media (max-width: 768px) {
     .toolbar-text {
@@ -130,4 +141,3 @@ body {
          font-size: 0.8rem;
     }
 }
-
