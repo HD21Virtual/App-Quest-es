@@ -45,7 +45,9 @@ export function renderMateriasView() {
         let assuntosHtml = `
             <div class="flex justify-between items-center p-2 mb-2 border-b">
                 <h3 class="font-bold text-gray-600">Assuntos desta matéria</h3>
-                <h3 class="font-bold text-gray-600">Questões</h3>
+                <div class="w-20 text-center">
+                    <h3 class="font-bold text-gray-600">Questões</h3>
+                </div>
             </div>
             <ul class="space-y-1">
         `;
@@ -58,21 +60,25 @@ export function renderMateriasView() {
                 <li class="assunto-group">
                     <div class="flex justify-between items-center p-2 rounded-md hover:bg-gray-100">
                         <div class="flex items-center flex-grow cursor-pointer" data-action="toggle">
-                            ${subAssuntos.length > 0 ? '<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 transition-transform duration-200"></i>' : '<span class="w-6 mr-2"></span>'}
+                            ${subAssuntos.length > 0 ? '<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 transition-transform duration-200 rotate-90"></i>' : '<span class="w-6 mr-2"></span>'}
                             <span class="font-semibold text-gray-800">${assunto}</span>
                         </div>
-                        <span class="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-md">${totalQuestoesAssunto}</span>
+                        <div class="w-20 flex justify-center">
+                            <span class="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-md w-full text-center">${totalQuestoesAssunto}</span>
+                        </div>
                     </div>
             `;
 
             if (subAssuntos.length > 0) {
-                assuntosHtml += '<ul class="hidden pl-8 mt-1 space-y-1">';
+                assuntosHtml += '<ul class="pl-8 mt-1 space-y-1">';
                 subAssuntos.forEach(sub => {
                     const totalQuestoesSubAssunto = countQuestions(state.selectedMateria.name, assunto, sub);
                     assuntosHtml += `
                         <li class="sub-assunto-item cursor-pointer flex justify-between items-center p-2 rounded-md hover:bg-blue-50" data-materia-name="${state.selectedMateria.name}" data-assunto-name="${assunto}" data-subassunto-name="${sub}">
                             <span>${sub}</span>
-                            <span class="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-md">${totalQuestoesSubAssunto}</span>
+                            <div class="w-20 flex justify-center">
+                               <span class="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-md w-full text-center">${totalQuestoesSubAssunto}</span>
+                            </div>
                         </li>
                     `;
                 });
@@ -150,9 +156,6 @@ export function handleAssuntoListClick(event) {
         setTimeout(() => {
             clearAllFilters();
             
-            // Lógica para preencher os filtros. A implementação exata dependerá
-            // de como os filtros de assunto/subassunto serão tratados na UI de filtros.
-            // Por enquanto, vamos filtrar por matéria e assunto.
             const materiaCheckbox = DOM.materiaFilter.querySelector(`.custom-select-option[data-value="${materiaName}"]`);
             if (materiaCheckbox) {
                 materiaCheckbox.checked = true;
@@ -160,13 +163,18 @@ export function handleAssuntoListClick(event) {
             }
             
             setTimeout(() => {
-                // Aqui seria o ideal ter um filtro para sub-assunto também.
-                // Como não temos, vamos aplicar o filtro para o assunto principal.
                 const assuntoCheckbox = DOM.assuntoFilter.querySelector(`.custom-select-option[data-value="${assuntoName}"]`);
                 if (assuntoCheckbox) {
                     assuntoCheckbox.checked = true;
-                     DOM.assuntoFilter.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                
+                const subAssuntoCheckbox = DOM.assuntoFilter.querySelector(`.custom-select-option[data-value="${subassuntoName}"]`);
+                if (subAssuntoCheckbox) {
+                    subAssuntoCheckbox.checked = true;
+                }
+
+                DOM.assuntoFilter.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
+
                 applyFilters(); 
             }, 100);
         }, 50);
@@ -177,3 +185,4 @@ export function handleBackToMaterias() {
     setState('selectedMateria', null);
     renderMateriasView();
 }
+
