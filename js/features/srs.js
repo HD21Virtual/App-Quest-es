@@ -6,19 +6,82 @@ import { displayQuestion, renderAnsweredQuestion } from './question-viewer.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
 
-const reviewIntervals = [1, 3, 7, 15, 30, 90]; // Days
+// --- IMPLEMENTAÇÃO DO ALGORITMO SM-2 ---
 
-function getNextReviewDate(stage) {
-    const index = Math.min(stage, reviewIntervals.length - 1);
-    const daysToAdd = reviewIntervals[index];
+const MIN_EASE_FACTOR = 1.3;
+const INITIAL_EASE_FACTOR = 2.5;
+
+/**
+ * Calcula os próximos parâmetros do SRS com base no algoritmo SM-2.
+ * @param {object} reviewItem - O item de revisão atual da questão.
+ * @param {number} quality - A qualidade da resposta (0: Errei, 1: Difícil, 2: Bom, 3: Fácil).
+ * @returns {object} Novo item de revisão com { easeFactor, interval, repetitions, nextReviewDate }.
+ */
+function calculateSm2(reviewItem, quality) {
+    let { easeFactor = INITIAL_EASE_FACTOR, interval = 0, repetitions = 0 } = reviewItem || {};
+
+    if (quality < 2) { // 'Errei' ou 'Difícil' com erro (considerado 'Errei')
+        repetitions = 0;
+        interval = 1; // Reseta para 1 dia
+        easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.20);
+    } else {
+        // A resposta foi correta
+        repetitions += 1;
+
+        if (repetitions === 1) {
+            interval = 1;
+        } else if (repetitions === 2) {
+            interval = 6;
+        } else {
+            interval = Math.ceil(interval * easeFactor);
+        }
+
+        // Atualiza o Fator de Facilidade (Ease Factor)
+        // A fórmula original do SM-2 usa q (0-5), aqui adaptamos para 0-3
+        // 'Errei' (q < 2), 'Difícil' (q=1), 'Bom' (q=2), 'Fácil' (q=3)
+        // A lógica do SM-2 é complexa para "quality". Simplificaremos:
+        // 'Difícil' (-0.15), 'Bom' (não muda), 'Fácil' (+0.15)
+        if (quality === 1) { // Difícil
+             easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.15);
+        } else if (quality === 3) { // Fácil
+             easeFactor += 0.15;
+        }
+        // 'Bom' (quality === 2) não altera o easeFactor
+    }
+
     const date = new Date();
-    date.setDate(date.getDate() + daysToAdd);
-    return Timestamp.fromDate(date);
+    date.setDate(date.getDate() + interval);
+    const nextReviewDate = Timestamp.fromDate(date);
+
+    return { easeFactor, interval, repetitions, nextReviewDate };
 }
+
+
+/**
+ * Formata um intervalo em dias para uma string legível (ex: "3d", "2m", "1a").
+ * @param {number} intervalInDays - O intervalo em dias.
+ * @returns {string} O intervalo formatado.
+ */
+export function formatInterval(intervalInDays) {
+    if (intervalInDays < 1) return "<1d";
+    if (intervalInDays < 30) return `${Math.round(intervalInDays)}d`;
+    if (intervalInDays < 365) return `${Math.round(intervalInDays / 30)}m`;
+    return `${(intervalInDays / 365).toFixed(1)}a`;
+}
+
 
 export async function handleSrsFeedback(feedback) {
     const question = state.filteredQuestions[state.currentQuestionIndex];
     const isCorrect = state.selectedAnswer === question.correctAnswer;
+    
+    // Mapeia o feedback do botão para a qualidade numérica
+    const qualityMap = { 'again': 0, 'hard': 1, 'good': 2, 'easy': 3 };
+    let quality = qualityMap[feedback];
+    
+    // Se a resposta estiver incorreta, a qualidade é sempre 0 (Errei)
+    if (!isCorrect) {
+        quality = 0;
+    }
 
     if (!state.sessionStats.some(s => s.questionId === question.id)) {
         state.sessionStats.push({
@@ -28,32 +91,28 @@ export async function handleSrsFeedback(feedback) {
     }
 
     if (state.currentUser) {
-        const reviewItem = state.userReviewItemsMap.get(question.id);
-        let currentStage = reviewItem ? reviewItem.stage : 0;
-        let newStage;
+        const currentReviewItem = state.userReviewItemsMap.get(question.id);
+        const newReviewData = calculateSm2(currentReviewItem, quality);
+        
+        const reviewDataToSave = { 
+            ...newReviewData,
+            questionId: question.id,
+            lastReviewed: Timestamp.now()
+        };
 
-        switch (feedback) {
-            case 'again': newStage = 0; break;
-            case 'hard': newStage = Math.max(0, currentStage - 1); break;
-            case 'good': newStage = currentStage + 1; break;
-            case 'easy': newStage = currentStage + 2; break;
-            default: newStage = currentStage;
-        }
-
-        const nextReview = getNextReviewDate(newStage);
-        const reviewData = { stage: newStage, nextReview: nextReview, questionId: question.id };
-        await setSrsReviewItem(question.id, reviewData);
-        state.userReviewItemsMap.set(question.id, reviewData);
+        await setSrsReviewItem(question.id, reviewDataToSave);
+        state.userReviewItemsMap.set(question.id, reviewDataToSave);
 
         await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
-        const historyIsCorrect = (feedback !== 'again') && isCorrect;
-        await updateQuestionHistory(question.id, historyIsCorrect);
+        // Apenas respostas corretas (qualidade >= 2) contam para o histórico positivo de SRS
+        await updateQuestionHistory(question.id, quality >= 2);
     }
 
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
     updateStatsPanel();
-    updateStatsPageUI(); // CORREÇÃO: Atualiza os stats da página inicial em tempo real
+    updateStatsPageUI();
 }
+
 
 export function renderReviewView() {
     if (!state.currentUser) {
@@ -101,15 +160,15 @@ export function renderReviewView() {
         materiaStats.total++;
         assuntoStats.total++;
         
-        const stage = item.stage || 0;
+        const easeFactor = item.easeFactor || INITIAL_EASE_FACTOR;
+        if (easeFactor < 1.8) { materiaStats.errei++; assuntoStats.errei++; }
+        else if (easeFactor < 2.2) { materiaStats.dificil++; assuntoStats.dificil++; }
+        else if (easeFactor < 3.0) { materiaStats.bom++; assuntoStats.bom++; }
+        else { materiaStats.facil++; assuntoStats.facil++; }
 
-        if (stage === 0) { materiaStats.errei++; assuntoStats.errei++; }
-        else if (stage === 1) { materiaStats.dificil++; assuntoStats.dificil++; }
-        else if (stage === 2 || stage === 3) { materiaStats.bom++; assuntoStats.bom++; }
-        else if (stage >= 4) { materiaStats.facil++; assuntoStats.facil++; }
 
-        if (item.nextReview) {
-            const reviewDate = item.nextReview.toDate();
+        if (item.nextReviewDate) {
+            const reviewDate = item.nextReviewDate.toDate();
             reviewDate.setHours(0, 0, 0, 0);
             if (reviewDate <= now) {
                 materiaStats.aRevisar++;
@@ -242,5 +301,3 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
-
-
