@@ -88,7 +88,7 @@ function renderUnansweredQuestion() {
             </svg>`;
 
         return `
-            <div data-option="${option}" class="option-item group flex items-center p-2 rounded-md cursor-pointer transition duration-200">
+            <div data-option="${option}" class="option-item group flex items-center p-2 rounded-lg cursor-pointer transition duration-200">
                <div class="action-icon-container w-8 h-8 flex-shrink-0 flex items-center justify-center mr-1">
                     <div class="discard-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-100 rounded-full p-1.5">
                         ${scissorIconSVG}
@@ -177,10 +177,10 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
             
             const srsButtonsHTML = `
                 <div class="mt-4 grid grid-cols-4 gap-2 w-full text-center text-sm">
-                    <button class="srs-feedback-btn bg-red-100 text-red-700 font-semibold py-2 px-2 rounded-md hover:bg-red-200" data-feedback="again">Errei<br><span class="font-normal">(${againLabel})</span></button>
-                    <button class="srs-feedback-btn bg-yellow-100 text-yellow-700 font-semibold py-2 px-2 rounded-md hover:bg-yellow-200" data-feedback="hard">Difícil<br><span class="font-normal">(${hardLabel})</span></button>
-                    <button class="srs-feedback-btn bg-green-100 text-green-700 font-semibold py-2 px-2 rounded-md hover:bg-green-200" data-feedback="good">Bom<br><span class="font-normal">(${goodLabel})</span></button>
-                    <button class="srs-feedback-btn bg-blue-100 text-blue-700 font-semibold py-2 px-2 rounded-md hover:bg-blue-200" data-feedback="easy">Fácil<br><span class="font-normal">(${easyLabel})</span></button>
+                    <button class="srs-feedback-btn bg-red-100 text-red-700 font-semibold py-2 px-2 rounded-lg hover:bg-red-200" data-feedback="again">Errei<br><span class="font-normal">(${againLabel})</span></button>
+                    <button class="srs-feedback-btn bg-yellow-100 text-yellow-700 font-semibold py-2 px-2 rounded-lg hover:bg-yellow-200" data-feedback="hard">Difícil<br><span class="font-normal">(${hardLabel})</span></button>
+                    <button class="srs-feedback-btn bg-green-100 text-green-700 font-semibold py-2 px-2 rounded-lg hover:bg-green-200" data-feedback="good">Bom<br><span class="font-normal">(${goodLabel})</span></button>
+                    <button class="srs-feedback-btn bg-blue-100 text-blue-700 font-semibold py-2 px-2 rounded-lg hover:bg-blue-200" data-feedback="easy">Fácil<br><span class="font-normal">(${easyLabel})</span></button>
                 </div>
             `;
             footer.innerHTML = `<div class="w-full">${feedbackDiv.innerHTML} ${srsButtonsHTML}</div>`;
@@ -302,7 +302,7 @@ export async function displayQuestion() {
     if (userAnswerData && !state.isReviewSession && state.currentCadernoId) {
         renderAnsweredQuestion(userAnswerData.isCorrect, userAnswerData.userAnswer, false);
     } else if (footer) {
-        footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
+        footer.innerHTML = `<button id="submit-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-400 disabled:cursor-not-allowed" disabled>Resolver</button>`;
     }
     
     await updateNavigation();
@@ -342,6 +342,3 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
-
-
-
