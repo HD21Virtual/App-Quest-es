@@ -332,6 +332,37 @@
                 <div id="stats-tabs-content-container" class="bg-gray-50 rounded-b-xl rounded-tr-xl shadow-md -mt-4 p-6">
                     <!-- Aba de Desempenho Geral -->
                     <div id="desempenho-geral-tab" class="stats-tab-content">
+                        <!-- Filtro de Desempenho -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                                <!-- Período -->
+                                <div>
+                                    <label for="stats-periodo-filter" class="text-sm font-medium text-gray-700 mb-1 block">Período</label>
+                                    <input type="text" id="stats-periodo-filter" placeholder="dd/mm/aaaa - dd/mm/aaaa" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <!-- Matéria -->
+                                <div>
+                                    <label for="stats-materia-filter" class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
+                                    <select id="stats-materia-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Todas</option>
+                                        <!-- Opções de matéria aqui -->
+                                    </select>
+                                </div>
+                                <!-- Pasta -->
+                                <div>
+                                    <label for="stats-pasta-filter" class="text-sm font-medium text-gray-700 mb-1 block">Pasta</label>
+                                    <select id="stats-pasta-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Todas</option>
+                                        <!-- Opções de pasta aqui -->
+                                    </select>
+                                </div>
+                                <!-- Botão Filtrar -->
+                                <div>
+                                    <button id="stats-filter-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 w-full">Filtrar</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <!-- Coluna dos Cards -->
                             <div class="lg:col-span-1 grid grid-cols-2 gap-6">
