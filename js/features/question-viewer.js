@@ -160,21 +160,47 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
         feedbackDiv.innerHTML = `<span class="font-bold text-lg ${resultClass}">${resultText}</span>`;
 
         if (isFreshAnswer) {
-            // Lógica do SRS para mostrar os botões de feedback
             const reviewItem = state.userReviewItemsMap.get(question.id) || {};
-            const { interval = 0, easeFactor = 2.5 } = reviewItem;
+            const { interval: lastInterval = 0, easeFactor = 2.5, repetitions = 0 } = reviewItem;
 
-            // Simula os próximos intervalos para exibir nos botões
-            const nextIntervalGood = formatInterval(Math.ceil(Math.max(interval, 1) * easeFactor));
-            const nextIntervalHard = formatInterval(Math.ceil(Math.max(interval, 1) * Math.max(1.3, easeFactor - 0.15)));
-            const nextIntervalEasy = formatInterval(Math.ceil(Math.max(interval, 1) * (easeFactor + 0.15)));
+            let nextIntervalHard, nextIntervalGood, nextIntervalEasy;
+
+            // --- Lógica de Previsão de Intervalo (espelhando srs.js) ---
+
+            // Previsão para "Bom"
+            if (repetitions === 0) {
+                nextIntervalGood = 1;
+            } else if (repetitions === 1) {
+                nextIntervalGood = 6;
+            } else {
+                nextIntervalGood = Math.ceil(lastInterval * easeFactor);
+            }
+
+            // Previsão para "Difícil" (baseado no intervalo anterior * 1.2)
+            nextIntervalHard = Math.ceil(Math.max(lastInterval, 1) * 1.2);
+
+            // Previsão para "Fácil" (baseado no intervalo 'Bom' * 1.3)
+            nextIntervalEasy = Math.ceil(nextIntervalGood * 1.3);
+
+            // Garante que os intervalos sejam no mínimo 1 e cresçam logicamente
+            nextIntervalHard = Math.max(1, nextIntervalHard);
+            nextIntervalGood = Math.max(1, nextIntervalGood);
+            nextIntervalEasy = Math.max(1, nextIntervalEasy);
+            
+            // Garante que Bom > Dificil e Fácil > Bom
+            if(nextIntervalGood <= nextIntervalHard) {
+                nextIntervalGood = nextIntervalHard + 1;
+            }
+            if(nextIntervalEasy <= nextIntervalGood) {
+                nextIntervalEasy = nextIntervalGood + 1;
+            }
 
             const srsButtonsHTML = `
                 <div class="mt-4 grid grid-cols-4 gap-2 w-full text-center text-sm">
                     <button class="srs-feedback-btn srs-btn-again" data-feedback="again">Errei<br><span class="font-normal">(1d)</span></button>
-                    <button class="srs-feedback-btn srs-btn-hard" data-feedback="hard">Difícil<br><span class="font-normal">(${nextIntervalHard})</span></button>
-                    <button class="srs-feedback-btn srs-btn-good" data-feedback="good">Bom<br><span class="font-normal">(${nextIntervalGood})</span></button>
-                    <button class="srs-feedback-btn srs-btn-easy" data-feedback="easy">Fácil<br><span class="font-normal">(${nextIntervalEasy})</span></button>
+                    <button class="srs-feedback-btn srs-btn-hard" data-feedback="hard">Difícil<br><span class="font-normal">(${formatInterval(nextIntervalHard)})</span></button>
+                    <button class="srs-feedback-btn srs-btn-good" data-feedback="good">Bom<br><span class="font-normal">(${formatInterval(nextIntervalGood)})</span></button>
+                    <button class="srs-feedback-btn srs-btn-easy" data-feedback="easy">Fácil<br><span class="font-normal">(${formatInterval(nextIntervalEasy)})</span></button>
                 </div>
             `;
             footer.innerHTML = `<div class="w-full">${feedbackDiv.innerHTML} ${srsButtonsHTML}</div>`;
