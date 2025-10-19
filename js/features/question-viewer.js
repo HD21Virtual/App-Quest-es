@@ -127,30 +127,31 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
 
     const question = state.filteredQuestions[state.currentQuestionIndex];
     
-    // **CORREÇÃO:** Somente limpa os ícones de ação se for uma resposta nova (isFreshAnswer).
-    // Se for uma resposta antiga (dentro de um caderno), os ícones devem ser recriados.
-    if (isFreshAnswer) {
-        activeContainer.querySelectorAll('.action-icon-container').forEach(icon => icon.innerHTML = '');
-    }
+    // CORREÇÃO: A lógica anterior foi removida. A nova abordagem abaixo lida com a re-renderização de forma mais segura.
 
     activeContainer.querySelectorAll('.option-item').forEach(item => {
         item.classList.add('is-answered');
         item.style.cursor = 'default';
         const option = item.dataset.option;
         
-        // Limpa classes antigas para garantir que o estado seja sempre o correto
+        // Limpa classes antigas e ícones para garantir um estado limpo a cada renderização.
         item.classList.remove('correct-answer', 'incorrect-answer');
+        const iconContainer = item.querySelector('.action-icon-container');
+        if(iconContainer) {
+            iconContainer.innerHTML = '';
+        }
 
+        // Aplica a classe e o ícone de resposta CORRETA.
         if (option === question.correctAnswer) {
             item.classList.add('correct-answer');
-            const iconContainer = item.querySelector('.action-icon-container');
             if(iconContainer) {
                 iconContainer.innerHTML = `<i class="fas fa-check text-green-500 text-xl"></i>`;
             }
         }
+        
+        // Aplica a classe e o ícone de resposta INCORRETA do usuário.
         if (option === userAnswer && !isCorrect) {
             item.classList.add('incorrect-answer');
-            const iconContainer = item.querySelector('.action-icon-container');
             if(iconContainer) {
                 iconContainer.innerHTML = `<i class="fas fa-times text-red-500 text-xl"></i>`;
             }
