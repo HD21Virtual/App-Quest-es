@@ -135,10 +135,12 @@ export function renderAnsweredQuestion(isCorrect, userAnswer, isFreshAnswer = fa
         const option = item.dataset.option;
         
         // Limpa classes antigas e ícones para garantir um estado limpo a cada renderização.
-        item.classList.remove('correct-answer', 'incorrect-answer');
+        item.classList.remove('correct-answer', 'incorrect-answer', 'selected');
         const iconContainer = item.querySelector('.action-icon-container');
         if(iconContainer) {
-            iconContainer.innerHTML = '';
+            // Remove o botão de descarte
+            const discardBtn = iconContainer.querySelector('.discard-btn');
+            if (discardBtn) discardBtn.remove();
         }
 
         // Aplica a classe e o ícone de resposta CORRETA.
@@ -369,4 +371,3 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
-
