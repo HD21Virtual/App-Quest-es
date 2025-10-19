@@ -79,8 +79,20 @@ export function renderMateriasView() {
             listItemsHtml += '</li>';
         });
 
-        const assuntosHtml = `
-            <div class="bg-white p-4 shadow-sm">
+        const searchBarHtml = `
+            <div class="mb-4 flex items-center">
+                <div class="relative flex-grow">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </span>
+                    <input type="text" id="assunto-search-input" placeholder="Digite o nome ou trecho do assunto." class="w-full p-2 pl-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button id="assunto-search-btn" class="bg-blue-600 text-white font-bold py-2 px-4 hover:bg-blue-700 ml-[-1px]">BUSCAR</button>
+            </div>
+        `;
+
+        const cardHtml = `
+            <div id="assuntos-card" class="bg-white p-4 shadow-sm">
                 <div class="flex justify-between items-center p-2 mb-2 border-b">
                     <h3 class="font-bold text-gray-600">Assuntos desta matéria</h3>
                     <div class="w-20 text-center">
@@ -92,7 +104,52 @@ export function renderMateriasView() {
                 </ul>
             </div>
         `;
-        DOM.assuntosListContainer.innerHTML = assuntosHtml;
+
+        DOM.assuntosListContainer.innerHTML = searchBarHtml + cardHtml;
+
+        const searchInput = document.getElementById('assunto-search-input');
+        const searchBtn = document.getElementById('assunto-search-btn');
+
+        const performSearch = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const card = document.getElementById('assuntos-card');
+            const assuntoGroups = card.querySelectorAll('.assunto-group');
+
+            assuntoGroups.forEach(group => {
+                const assuntoText = group.querySelector('[data-action="toggle"] > .font-semibold').textContent.toLowerCase();
+                const subAssuntoItems = group.querySelectorAll('.sub-assunto-item');
+                let hasVisibleSubAssunto = false;
+
+                subAssuntoItems.forEach(item => {
+                    const subAssuntoText = item.querySelector('span').textContent.toLowerCase();
+                    if (subAssuntoText.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                        hasVisibleSubAssunto = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                if (assuntoText.includes(searchTerm) || hasVisibleSubAssunto) {
+                    group.style.display = 'block';
+                    if (searchTerm && hasVisibleSubAssunto) {
+                        group.querySelector('ul')?.classList.remove('hidden');
+                        group.querySelector('i')?.classList.add('rotate-90');
+                    }
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        };
+
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+        searchInput.addEventListener('input', performSearch);
+
 
     } else {
         DOM.materiasViewTitle.textContent = 'Matérias';
