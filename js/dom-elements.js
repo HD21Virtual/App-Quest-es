@@ -94,6 +94,17 @@ export function initDOM() {
     DOM.statsModal = document.getElementById('stats-modal');
     DOM.statsModalTitle = document.getElementById('stats-modal-title');
     DOM.statsModalContent = document.getElementById('stats-modal-content');
+    
+    // Estatisticas View
+    DOM.statsMainContent = document.getElementById('stats-main-content');
+    DOM.statsTabsContainer = document.getElementById('stats-tabs-container');
+
+    // Stats - Desempenho Geral
+    DOM.statsGeralResolvidas = document.getElementById('stats-geral-resolvidas');
+    DOM.statsGeralAcertos = document.getElementById('stats-geral-acertos');
+    DOM.statsGeralErros = document.getElementById('stats-geral-erros');
+    DOM.statsGeralMaterias = document.getElementById('stats-geral-materias');
+    DOM.statsPagePerformanceChartCanvas = document.getElementById('statsPagePerformanceChart');
 }
 
 export default DOM;
