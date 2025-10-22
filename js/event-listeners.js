@@ -206,6 +206,38 @@ export function setupAllEventListeners() {
                 }
             }
         }
+        // --- Stats Tree Table Toggle ---
+        else if (target.closest('.tree-table .toggle-icon:not(.no-children)')) {
+            const row = target.closest('.tree-table-row');
+            if (row) {
+                const rowId = row.dataset.id;
+                const level = parseInt(row.dataset.level);
+                const icon = row.querySelector('.toggle-icon');
+                
+                icon.classList.toggle('rotate-90');
+                const isExpanded = icon.classList.contains('rotate-90');
+
+                // Encontra todos os filhos diretos
+                const childRows = document.querySelectorAll(`.tree-table-row[data-parent-id="${rowId}"]`);
+                
+                childRows.forEach(child => {
+                    child.classList.toggle('hidden-row', !isExpanded);
+                    
+                    // Se estivermos fechando (isExpanded = false), precisamos fechar todos os descendentes também
+                    if (!isExpanded) {
+                        const childLevel = parseInt(child.dataset.level);
+                        if (childLevel === 2) { // Se fechou uma matéria, esconde os sub-assuntos (nível 3)
+                            const childId = child.dataset.id;
+                            const grandChildRows = document.querySelectorAll(`.tree-table-row[data-parent-id="${childId}"]`);
+                            grandChildRows.forEach(gc => gc.classList.add('hidden-row'));
+                            // Reseta o ícone do filho
+                            const childIcon = child.querySelector('.toggle-icon');
+                            if(childIcon) childIcon.classList.remove('rotate-90');
+                        }
+                    }
+                });
+            }
+        }
     });
 
     // Input/Change listeners
