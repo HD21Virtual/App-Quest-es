@@ -57,6 +57,117 @@ const handleCadernoConfirm = async () => {
     closeCadernoModal();
 };
 
+// --- NOVA FUNÇÃO ---
+// Lida com a seleção de checkboxes na tabela de estatísticas
+function handleStatsTableSelection(event) {
+    const target = event.target;
+    if (!target.matches('input[type="checkbox"]')) return;
+
+    const tableContainer = DOM.statsDesempenhoMateriaContainer;
+    if (!tableContainer) return;
+
+    const allCheckboxes = tableContainer.querySelectorAll('.row-checkbox');
+    const selectAllCheckbox = tableContainer.querySelector('#select-all-stats-checkbox');
+
+    // Lógica de Selecionar/Desselecionar Todos
+    if (target.id === 'select-all-stats-checkbox') {
+        const isChecked = target.checked;
+        allCheckboxes.forEach(cb => {
+            cb.checked = isChecked;
+            cb.closest('tr').classList.toggle('selected-row', isChecked);
+            cb.indeterminate = false;
+        });
+    } else if (target.classList.contains('row-checkbox')) {
+        const row = target.closest('tr');
+        const rowId = row.dataset.id;
+        const isChecked = target.checked;
+        row.classList.toggle('selected-row', isChecked);
+
+        // Lógica de hierarquia (selecionar/desselecionar filhos)
+        const childRows = tableContainer.querySelectorAll(`tr[data-parent-id="${rowId}"]`);
+        childRows.forEach(child => {
+            const childCheckbox = child.querySelector('.row-checkbox');
+            childCheckbox.checked = isChecked;
+            child.classList.toggle('selected-row', isChecked);
+            childCheckbox.indeterminate = false; // Garante que filhos não fiquem indeterminados
+
+            // Lógica para netos (nível 3)
+            const grandChildRows = tableContainer.querySelectorAll(`tr[data-parent-id="${child.dataset.id}"]`);
+            grandChildRows.forEach(gc => {
+                const gcCheckbox = gc.querySelector('.row-checkbox');
+                gcCheckbox.checked = isChecked;
+                gc.classList.toggle('selected-row', isChecked);
+            });
+        });
+
+        // Lógica de estado dos pais (indeterminate)
+        let parentId = row.dataset.parentId;
+        while (parentId) {
+            const parentRow = tableContainer.querySelector(`tr[data-id="${parentId}"]`);
+            if (!parentRow) break;
+            const parentCheckbox = parentRow.querySelector('.row-checkbox');
+            const siblingRows = tableContainer.querySelectorAll(`tr[data-parent-id="${parentId}"]`);
+            const siblingCheckboxes = Array.from(siblingRows).map(r => r.querySelector('.row-checkbox'));
+            
+            const checkedSiblings = siblingCheckboxes.filter(cb => cb.checked).length;
+            const indeterminateSiblings = siblingCheckboxes.filter(cb => cb.indeterminate).length;
+
+            if (checkedSiblings === 0 && indeterminateSiblings === 0) {
+                parentCheckbox.checked = false;
+                parentCheckbox.indeterminate = false;
+            } else if (checkedSiblings === siblingCheckboxes.length) {
+                parentCheckbox.checked = true;
+                parentCheckbox.indeterminate = false;
+            } else {
+                parentCheckbox.checked = false;
+                parentCheckbox.indeterminate = true;
+            }
+            // Adiciona/remove a classe de seleção no pai com base no estado
+            parentRow.classList.toggle('selected-row', parentCheckbox.checked || parentCheckbox.indeterminate);
+            
+            parentId = parentRow.dataset.parentId; // Sobe na hierarquia
+        }
+
+        // Atualiza o "Selecionar Todos"
+        const allChecked = tableContainer.querySelectorAll('.row-checkbox:checked').length;
+        const allIndeterminate = tableContainer.querySelectorAll('.row-checkbox:indeterminate').length;
+        if (allChecked === 0 && allIndeterminate === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (allChecked === allCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    // Calcular Totais
+    let totalResolvidas = 0;
+    let totalAcertos = 0;
+    let totalErros = 0;
+
+    const selectedRows = tableContainer.querySelectorAll('tr.selected-row');
+    selectedRows.forEach(row => {
+        // Só soma se a linha não for pai de outras linhas selecionadas
+        // (para evitar contagem dupla)
+        const rowId = row.dataset.id;
+        const isParentOfSelected = tableContainer.querySelector(`tr.selected-row[data-parent-id="${rowId}"]`);
+        
+        if (!isParentOfSelected) {
+            totalResolvidas += parseInt(row.dataset.total || 0, 10);
+            totalAcertos += parseInt(row.dataset.correct || 0, 10);
+            totalErros += parseInt(row.dataset.incorrect || 0, 10);
+        }
+    });
+
+    // Atualizar rodapé
+    if (DOM.statsFooterResolvidas) DOM.statsFooterResolvidas.textContent = totalResolvidas;
+    if (DOM.statsFooterAcertos) DOM.statsFooterAcertos.textContent = totalAcertos;
+    if (DOM.statsFooterErros) DOM.statsFooterErros.textContent = totalErros;
+}
+
 
 export function setupAllEventListeners() {
     // Listener para o botão hamburger do menu mobile
@@ -334,4 +445,14 @@ export function setupAllEventListeners() {
             }
         }
     });
+
+    // --- NOVO LISTENER ---
+    // Adiciona o listener de 'change' para a tabela de estatísticas
+    // Usamos 'document' para garantir que funcione mesmo se a tabela for re-renderizada
+    document.addEventListener('change', (event) => {
+        if (event.target.closest('#stats-desempenho-materia-container')) {
+            handleStatsTableSelection(event);
+        }
+    });
 }
+
