@@ -86,6 +86,9 @@ export function renderEstatisticasView() {
     
     // 4. Renderiza o gráfico de desempenho
     renderStatsPagePerformanceChart(totalCorrect, totalIncorrect);
+
+    // 5. Renderiza a nova tabela de desempenho por matéria
+    renderDesempenhoMateriaTable();
 }
 
 export async function updateStatsPanel(container = null) {
@@ -146,4 +149,170 @@ export async function generateStatsForQuestions(questionIds) {
 
 
     return { totalCorrect, totalIncorrect, statsByMateria };
+}
+
+// --- NOVAS FUNÇÕES PARA A TABELA DE DESEMPENHO ---
+
+// Função Helper para renderizar uma linha da tabela
+function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren = false) {
+    const { total, correct, incorrect } = counts;
+    const accuracy = total > 0 ? (correct / total) * 100 : 0;
+    
+    let rowClass = 'tree-table-row';
+    let indentClass = `indent-${level}`;
+    let iconHtml = '';
+    
+    if (level > 1) rowClass += ' hidden-row';
+    if (level === 1) rowClass += ' materia-row';
+    if (level === 2) rowClass += ' assunto-row';
+    if (level === 3) rowClass += ' sub-assunto-row';
+
+    if (hasChildren) {
+        iconHtml = `<i class="fas fa-chevron-right toggle-icon"></i>`;
+    } else {
+        // Adiciona um ícone "vazio" para manter o alinhamento
+        iconHtml = `<i class="fas fa-chevron-right toggle-icon no-children"></i>`;
+    }
+
+    return `
+        <tr class="${rowClass}" data-id="${id}" data-parent-id="${parentId}" data-level="${level}">
+            <!-- Célula Nome (Matéria/Assunto/Sub-assunto) -->
+            <td class="tree-table-cell text-gray-800 ${indentClass}">
+                <div class="flex items-center">
+                    ${iconHtml}
+                    <span class="font-medium">${name}</span>
+                </div>
+            </td>
+            <!-- Célula Questões Resolvidas -->
+            <td class="tree-table-cell text-gray-500 text-center">${total}</td>
+            <!-- Célula Desempenho -->
+            <td class="tree-table-cell">
+                <div class="flex items-center space-x-2">
+                    <div class="performance-bar-bg">
+                        <div class="performance-bar" style="width: ${accuracy.toFixed(0)}%;"></div>
+                    </div>
+                    <span class="text-sm font-semibold ${accuracy >= 60 ? 'text-green-600' : 'text-red-600'}">${accuracy.toFixed(0)}%</span>
+                    <span class="text-sm text-gray-500">(${correct})</span>
+                    <span class="text-sm text-red-500">(${incorrect})</span>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Função Principal para renderizar a tabela completa
+function renderDesempenhoMateriaTable() {
+    if (!DOM.statsDesempenhoMateriaContainer) return;
+
+    // 1. Criar mapa de ID da questão para detalhes (materia, assunto, subAssunto)
+    const questionIdToDetails = new Map();
+    state.allQuestions.forEach(q => {
+        if(q.materia && q.assunto) { // Só processa questões com dados mínimos
+             questionIdToDetails.set(q.id, { 
+                materia: q.materia, 
+                assunto: q.assunto, 
+                subAssunto: q.subAssunto || 'Questões Gerais' // Agrupa sub-assuntos nulos
+            });
+        }
+    });
+
+    // 2. Construir a hierarquia de estatísticas
+    const hierarchy = new Map();
+    const createCounts = () => ({ total: 0, correct: 0, incorrect: 0 });
+
+    // Usamos o userReviewItemsMap como fonte de dados de desempenho por questão
+    // (Assumindo que é a única fonte de dados por questão disponível no 'state' no momento)
+    state.userReviewItemsMap.forEach(item => {
+        const details = questionIdToDetails.get(item.questionId);
+        if (!details) return;
+
+        const { materia, assunto, subAssunto } = details;
+        const isCorrect = item.repetitions > 0; // No SRS, 0 repetições = último foi erro
+
+        // Get/Create Matéria
+        if (!hierarchy.has(materia)) {
+            hierarchy.set(materia, { counts: createCounts(), assuntos: new Map() });
+        }
+        const materiaNode = hierarchy.get(materia);
+
+        // Get/Create Assunto
+        if (!materiaNode.assuntos.has(assunto)) {
+            materiaNode.assuntos.set(assunto, { counts: createCounts(), subAssuntos: new Map() });
+        }
+        const assuntoNode = materiaNode.assuntos.get(assunto);
+
+        // Get/Create SubAssunto
+        if (!assuntoNode.subAssuntos.has(subAssunto)) {
+            assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts() });
+        }
+        const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
+
+        // Incrementar contagens em todos os níveis
+        [materiaNode.counts, assuntoNode.counts, subAssuntoNode.counts].forEach(nodeCounts => {
+            nodeCounts.total++;
+            if (isCorrect) nodeCounts.correct++; else nodeCounts.incorrect++;
+        });
+    });
+
+    if (hierarchy.size === 0) {
+        DOM.statsDesempenhoMateriaContainer.innerHTML = `
+            <div class="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
+                Nenhum dado de desempenho encontrado. Comece a resolver questões no modo Revisão para ver suas estatísticas detalhadas.
+            </div>
+        `;
+        return;
+    }
+
+    // 3. Renderizar o HTML da tabela
+    let tableHtml = `
+        <div class="tree-table bg-white rounded-lg shadow-md overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr class="header-row">
+                        <th class="tree-table-cell text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria / Assunto</th>
+                        <th class="tree-table-cell text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Questões Resolvidas</th>
+                        <th class="tree-table-cell text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Desempenho</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+    `;
+
+    const sortedMaterias = Array.from(hierarchy.keys()).sort();
+    
+    for (const materiaName of sortedMaterias) {
+        const materiaNode = hierarchy.get(materiaName);
+        const materiaId = `materia-${materiaName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        const hasAssuntos = materiaNode.assuntos.size > 0;
+
+        tableHtml += renderTreeTableRow(1, materiaName, materiaNode.counts, materiaId, '', hasAssuntos);
+
+        if (hasAssuntos) {
+            const sortedAssuntos = Array.from(materiaNode.assuntos.keys()).sort();
+            for (const assuntoName of sortedAssuntos) {
+                const assuntoNode = materiaNode.assuntos.get(assuntoName);
+                const assuntoId = `assunto-${materiaId}-${assuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                const hasSubAssuntos = assuntoNode.subAssuntos.size > 0;
+
+                tableHtml += renderTreeTableRow(2, assuntoName, assuntoNode.counts, assuntoId, materiaId, hasSubAssuntos);
+
+                if (hasSubAssuntos) {
+                    const sortedSubAssuntos = Array.from(assuntoNode.subAssuntos.keys()).sort();
+                    for (const subAssuntoName of sortedSubAssuntos) {
+                        const subAssuntoNode = assuntoNode.subAssuntos.get(subAssuntoName);
+                        const subAssuntoId = `subassunto-${assuntoId}-${subAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        
+                        tableHtml += renderTreeTableRow(3, subAssuntoName, subAssuntoNode.counts, subAssuntoId, assuntoId, false);
+                    }
+                }
+            }
+        }
+    }
+
+    tableHtml += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    DOM.statsDesempenhoMateriaContainer.innerHTML = tableHtml;
 }
