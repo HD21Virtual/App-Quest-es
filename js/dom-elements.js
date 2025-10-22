@@ -106,6 +106,13 @@ export function initDOM() {
     DOM.statsGeralMaterias = document.getElementById('stats-geral-materias');
     DOM.statsPagePerformanceChartCanvas = document.getElementById('statsPagePerformanceChart');
     DOM.statsDesempenhoMateriaContainer = document.getElementById('stats-desempenho-materia-container');
+    
+    // Rodapé de Seleção da Tabela de Stats
+    DOM.statsSelectionFooter = document.getElementById('stats-selection-footer');
+    DOM.statsFooterResolvidas = document.getElementById('stats-footer-resolvidas');
+    DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
+    DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
 
 export default DOM;
+
