@@ -175,7 +175,12 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
     }
 
     return `
-        <tr class="${rowClass}" data-id="${id}" data-parent-id="${parentId}" data-level="${level}">
+        <tr class="${rowClass}" data-id="${id}" data-parent-id="${parentId}" data-level="${level}"
+            data-total="${total}" data-correct="${correct}" data-incorrect="${incorrect}">
+            <!-- Célula Checkbox -->
+            <td class="tree-table-cell checkbox-cell">
+                <input type="checkbox" class="row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-id="${id}">
+            </td>
             <!-- Célula Nome (Matéria/Assunto/Sub-assunto) -->
             <td class="tree-table-cell text-gray-800 ${indentClass}">
                 <div class="flex items-center">
@@ -265,10 +270,13 @@ function renderDesempenhoMateriaTable() {
 
     // 3. Renderizar o HTML da tabela
     let tableHtml = `
-        <div class="tree-table bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="tree-table bg-white rounded-t-lg shadow-md overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-100">
                     <tr class="header-row">
+                        <th class="tree-table-cell checkbox-cell">
+                            <input type="checkbox" id="select-all-stats-checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
                         <th class="tree-table-cell text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria / Assunto</th>
                         <th class="tree-table-cell text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Questões Resolvidas</th>
                         <th class="tree-table-cell text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Desempenho</th>
@@ -314,5 +322,22 @@ function renderDesempenhoMateriaTable() {
         </div>
     `;
     
-    DOM.statsDesempenhoMateriaContainer.innerHTML = tableHtml;
+    // 4. Adicionar o rodapé de seleção
+    const footerHtml = `
+        <div id="stats-selection-footer" class="flex items-center space-x-6 text-sm font-medium text-gray-700">
+            <span>Seleção:</span>
+            <span>Resolvidas: <strong id="stats-footer-resolvidas" class="text-gray-900">0</strong></span>
+            <span>Acertos: <strong id="stats-footer-acertos" class="text-green-600">0</strong></span>
+            <span>Erros: <strong id="stats-footer-erros" class="text-red-600">0</strong></span>
+        </div>
+    `;
+
+    DOM.statsDesempenhoMateriaContainer.innerHTML = tableHtml + footerHtml;
+
+    // 5. Re-inicializar os elementos DOM do rodapé
+    DOM.statsSelectionFooter = document.getElementById('stats-selection-footer');
+    DOM.statsFooterResolvidas = document.getElementById('stats-footer-resolvidas');
+    DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
+    DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
+
