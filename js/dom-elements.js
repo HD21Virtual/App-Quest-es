@@ -105,6 +105,7 @@ export function initDOM() {
     DOM.statsGeralErros = document.getElementById('stats-geral-erros');
     DOM.statsGeralMaterias = document.getElementById('stats-geral-materias');
     DOM.statsPagePerformanceChartCanvas = document.getElementById('statsPagePerformanceChart');
+    DOM.statsDesempenhoMateriaContainer = document.getElementById('stats-desempenho-materia-container');
 }
 
 export default DOM;
