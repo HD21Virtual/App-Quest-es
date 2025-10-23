@@ -159,7 +159,6 @@ export function setupAllListeners(userId) {
         });
     });
     addUnsubscribe(unsubCadernoState);
-}
 
     // ADICIONADO: Listener for questionHistory
     const unsubHistory = onSnapshot(historyQuery, (snapshot) => {
@@ -396,4 +395,5 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
+
 
