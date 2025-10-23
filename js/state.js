@@ -28,6 +28,7 @@ let state = {
     userAnswers: new Map(),
     userCadernoState: new Map(),
     userReviewItemsMap: new Map(),
+    userQuestionHistoryMap: new Map(), // <- ADICIONADO
     filterOptions: {
         materia: [],
         allAssuntos: []
@@ -74,6 +75,7 @@ export function resetStateOnLogout() {
         userAnswers: new Map(),
         userCadernoState: new Map(),
         userReviewItemsMap: new Map(),
+        userQuestionHistoryMap: new Map(), // <- ADICIONADO
         savedFilters: [],
         sessionStats: [],
     };
@@ -85,3 +87,4 @@ export function clearSessionStats() {
 }
 
 export { state };
+
