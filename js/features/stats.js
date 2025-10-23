@@ -199,7 +199,9 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
                     </div>
                     <span class="text-sm font-semibold ${accuracy >= 60 ? 'text-green-600' : 'text-red-600'}">${accuracy.toFixed(0)}%</span>
                     <span class="text-sm text-gray-500">(${correct})</span>
-                    <span class="text-sm text-red-500">(${incorrect})</span>
+                    <!-- MODIFICADO: Adicionado percentual de erro e reordenado -->
+                    <span class="text-sm font-semibold text-red-500 ml-2">${errorAccuracy.toFixed(0)}%</span>
+                    <span class="text-sm text-gray-500">(${incorrect})</span>
                 </div>
             </td>
         </tr>
