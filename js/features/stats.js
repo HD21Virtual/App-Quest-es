@@ -225,14 +225,19 @@ function renderDesempenhoMateriaTable() {
     const hierarchy = new Map();
     const createCounts = () => ({ total: 0, correct: 0, incorrect: 0 });
 
-    // Usamos o userReviewItemsMap como fonte de dados de desempenho por questão
-    // (Assumindo que é a única fonte de dados por questão disponível no 'state' no momento)
-    state.userReviewItemsMap.forEach(item => {
-        const details = questionIdToDetails.get(item.questionId);
+    // --- MODIFICADO: Mudar a fonte de dados ---
+    // Usamos o userQuestionHistoryMap como fonte de dados
+    state.userQuestionHistoryMap.forEach(item => {
+        const details = questionIdToDetails.get(item.id); // 'item.id' é o questionId
         if (!details) return;
 
         const { materia, assunto, subAssunto } = details;
-        const isCorrect = item.repetitions > 0; // No SRS, 0 repetições = último foi erro
+        // Os dados de 'item' são { correct: number, incorrect: number, total: number }
+        const itemCorrect = item.correct || 0;
+        const itemIncorrect = item.incorrect || 0;
+        const itemTotal = item.total || 0;
+
+        if (itemTotal === 0) return; // Não processa se não houver resoluções
 
         // Get/Create Matéria
         if (!hierarchy.has(materia)) {
@@ -254,10 +259,12 @@ function renderDesempenhoMateriaTable() {
 
         // Incrementar contagens em todos os níveis
         [materiaNode.counts, assuntoNode.counts, subAssuntoNode.counts].forEach(nodeCounts => {
-            nodeCounts.total++;
-            if (isCorrect) nodeCounts.correct++; else nodeCounts.incorrect++;
+            nodeCounts.total += itemTotal;
+            nodeCounts.correct += itemCorrect;
+            nodeCounts.incorrect += itemIncorrect;
         });
     });
+    // --- FIM DA MODIFICAÇÃO ---
 
     if (hierarchy.size === 0) {
         DOM.statsDesempenhoMateriaContainer.innerHTML = `
@@ -340,4 +347,5 @@ function renderDesempenhoMateriaTable() {
     DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
     DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
+
 
