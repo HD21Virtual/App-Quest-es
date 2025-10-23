@@ -4,7 +4,8 @@ import { state, setState, addUnsubscribe } from '../state.js';
 import { renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderReviewView } from '../features/srs.js';
 import { displayQuestion } from "../features/question-viewer.js";
-import { updateStatsPageUI } from "../features/stats.js";
+// MODIFICADO: Importar renderEstatisticasView para atualizar a tabela
+import { updateStatsPageUI, renderEstatisticasView } from "../features/stats.js";
 import { updateSavedFiltersList } from "../ui/modal.js";
 import DOM from "../dom-elements.js";
 
@@ -75,6 +76,8 @@ export function setupAllListeners(userId) {
     const reviewQuery = query(collection(db, 'users', userId, 'reviewItems'));
     const answersQuery = query(collection(db, 'users', userId, 'userQuestionState'));
     const stateQuery = query(collection(db, 'users', userId, 'cadernoState'));
+    // ADICIONADO: Query para o histórico total de questões
+    const historyQuery = query(collection(db, 'users', userId, 'questionHistory'));
 
     const unsubCadernos = onSnapshot(cadernosQuery, (snapshot) => {
         const userCadernos = [];
@@ -158,6 +161,24 @@ export function setupAllListeners(userId) {
     addUnsubscribe(unsubCadernoState);
 }
 
+    // ADICIONADO: Listener for questionHistory
+    const unsubHistory = onSnapshot(historyQuery, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" || change.type === "modified") {
+                state.userQuestionHistoryMap.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+            }
+            if (change.type === "removed") {
+                state.userQuestionHistoryMap.delete(change.doc.id);
+            }
+        });
+        
+        // Se a tela de estatísticas estiver visível, re-renderiza ela
+        if (DOM.estatisticasView && !DOM.estatisticasView.classList.contains('hidden')) {
+            renderEstatisticasView();
+        }
+    });
+    addUnsubscribe(unsubHistory);
+}
 
 export async function removeQuestionIdFromCaderno(cadernoId, questionId) {
     if (!state.currentUser) return;
@@ -375,3 +396,4 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
+
