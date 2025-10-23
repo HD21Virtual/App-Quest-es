@@ -157,6 +157,7 @@ export async function generateStatsForQuestions(questionIds) {
 function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren = false) {
     const { total, correct, incorrect } = counts;
     const accuracy = total > 0 ? (correct / total) * 100 : 0;
+    const errorAccuracy = total > 0 ? (incorrect / total) * 100 : 0; // <-- ADICIONADO CÁLCULO
     
     let rowClass = 'tree-table-row';
     let indentClass = `indent-${level}`;
@@ -347,5 +348,6 @@ function renderDesempenhoMateriaTable() {
     DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
     DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
+
 
 
