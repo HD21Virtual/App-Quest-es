@@ -24,12 +24,20 @@ export async function applyFilters() {
     const filtered = state.allQuestions.filter(q => {
         const materiaMatch = selectedMaterias.length === 0 || selectedMaterias.includes(q.materia);
         
+        // --- MODIFICAÇÃO: Lógica de match para 4 níveis ---
         const assuntoMatch = selectedAssuntosAndSub.length === 0 || 
                              selectedAssuntosAndSub.includes(q.assunto) || 
-                             (q.subAssunto && selectedAssuntosAndSub.includes(q.subAssunto));
+                             (q.subAssunto && selectedAssuntosAndSub.includes(q.subAssunto)) ||
+                             (q.subSubAssunto && selectedAssuntosAndSub.includes(q.subSubAssunto));
+        // --- FIM DA MODIFICAÇÃO ---
 
         const tipoMatch = selectedTipo === 'todos' || q.tipo === selectedTipo;
-        const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm) || (q.assunto && q.assunto.toLowerCase().includes(searchTerm)) || (q.subAssunto && q.subAssunto.toLowerCase().includes(searchTerm));
+        // --- MODIFICAÇÃO: Busca inclui subSubAssunto ---
+        const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm) || 
+                            (q.assunto && q.assunto.toLowerCase().includes(searchTerm)) || 
+                            (q.subAssunto && q.subAssunto.toLowerCase().includes(searchTerm)) ||
+                            (q.subSubAssunto && q.subSubAssunto.toLowerCase().includes(searchTerm));
+        // --- FIM DA MODIFICAÇÃO ---
         
         return materiaMatch && assuntoMatch && tipoMatch && searchMatch;
     });
@@ -84,7 +92,8 @@ function setupCustomSelect(container) {
     
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
-        optionsContainer.querySelectorAll('label, .assunto-group > div').forEach(el => {
+        // --- MODIFICAÇÃO: Atualizado seletor para buscar em todos os níveis ---
+        optionsContainer.querySelectorAll('label, .assunto-group > div, .sub-assunto-group > div').forEach(el => {
             const text = el.textContent.toLowerCase();
             el.style.display = text.includes(searchTerm) ? '' : 'none';
         });
@@ -93,57 +102,60 @@ function setupCustomSelect(container) {
     optionsContainer.addEventListener('change', (e) => {
         const changedCheckbox = e.target;
         
+        // --- MODIFICAÇÃO: Lógica de checkbox para 4 níveis ---
         if (container.id === 'assunto-filter' && changedCheckbox.matches('.custom-select-option')) {
             const isChecked = changedCheckbox.checked;
             const type = changedCheckbox.dataset.type;
 
             if (type === 'assunto') {
+                // Seleciona/deseleciona todos os subassuntos e subsubassuntos filhos
                 const parentGroup = changedCheckbox.closest('.assunto-group');
-                const sublist = parentGroup.querySelector('.sub-assunto-list');
-                if (sublist) {
-                    sublist.querySelectorAll('.custom-select-option[data-type="subassunto"]').forEach(childCb => {
-                        childCb.checked = isChecked;
-                    });
-                }
+                parentGroup.querySelectorAll('.custom-select-option[data-type="subassunto"], .custom-select-option[data-type="subsubassunto"]').forEach(childCb => {
+                    childCb.checked = isChecked;
+                    childCb.indeterminate = false;
+                });
             } else if (type === 'subassunto') {
-                const parentGroup = changedCheckbox.closest('.assunto-group');
-                const parentCheckbox = parentGroup.querySelector('.custom-select-option[data-type="assunto"]');
-                if (parentCheckbox) {
-                    const allSiblings = Array.from(parentGroup.querySelectorAll('.custom-select-option[data-type="subassunto"]'));
-                    const checkedSiblings = allSiblings.filter(cb => cb.checked);
-
-                    if (checkedSiblings.length === 0) {
-                        parentCheckbox.checked = false;
-                        parentCheckbox.indeterminate = false;
-                    } else if (checkedSiblings.length === allSiblings.length) {
-                        parentCheckbox.checked = true;
-                        parentCheckbox.indeterminate = false;
-                    } else {
-                        parentCheckbox.checked = false;
-                        parentCheckbox.indeterminate = true;
-                    }
-                }
+                // Seleciona/deseleciona todos os subsubassuntos filhos
+                const parentGroup = changedCheckbox.closest('.sub-assunto-group');
+                parentGroup.querySelectorAll('.custom-select-option[data-type="subsubassunto"]').forEach(childCb => {
+                    childCb.checked = isChecked;
+                    childCb.indeterminate = false;
+                });
+                // Atualiza o pai (assunto)
+                updateParentCheckbox(changedCheckbox.closest('.assunto-group'), '.custom-select-option[data-type="assunto"]', '.custom-select-option[data-type="subassunto"]');
+            } else if (type === 'subsubassunto') {
+                // Atualiza o pai (subassunto)
+                const subAssuntoGroup = changedCheckbox.closest('.sub-assunto-group');
+                updateParentCheckbox(subAssuntoGroup, '.custom-select-option[data-type="subassunto"]', '.custom-select-option[data-type="subsubassunto"]');
+                // Atualiza o avô (assunto)
+                const assuntoGroup = changedCheckbox.closest('.assunto-group');
+                updateParentCheckbox(assuntoGroup, '.custom-select-option[data-type="assunto"]', '.custom-select-option[data-type="subassunto"]');
             }
         }
+        // --- FIM DA MODIFICAÇÃO ---
 
         const selected = [];
         const selectedText = [];
         optionsContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => {
-            selected.push(cb.dataset.value);
-            const label = cb.closest('label');
-            selectedText.push(label && label.querySelector('span') ? label.querySelector('span').textContent : cb.dataset.value);
+            // Só adiciona se não for um pai com estado indeterminado
+            if (!cb.indeterminate) {
+                selected.push(cb.dataset.value);
+                const label = cb.closest('label');
+                selectedText.push(label && label.querySelector('span') ? label.querySelector('span').textContent : cb.dataset.value);
+            }
         });
 
         container.dataset.value = JSON.stringify(selected);
 
-        if (selected.length === 0) {
+        if (selected.length === 0 && optionsContainer.querySelectorAll('.custom-select-option:indeterminate').length === 0) {
             valueSpan.textContent = originalText;
             valueSpan.classList.add('text-gray-500');
-        } else if (selected.length === 1) {
+        } else if (selected.length === 1 && optionsContainer.querySelectorAll('.custom-select-option:indeterminate').length === 0) {
             valueSpan.textContent = selectedText[0];
             valueSpan.classList.remove('text-gray-500');
         } else {
-            valueSpan.textContent = `${selected.length} itens selecionados`;
+            const totalSelected = selected.length + optionsContainer.querySelectorAll('.custom-select-option:indeterminate').length;
+            valueSpan.textContent = `${totalSelected} itens selecionados`;
             valueSpan.classList.remove('text-gray-500');
         }
         
@@ -156,6 +168,37 @@ function setupCustomSelect(container) {
         }
     });
 }
+
+// --- NOVA FUNÇÃO AUXILIAR ---
+/**
+ * Atualiza o estado (checked/indeterminate) de um checkbox pai com base em seus filhos.
+ * @param {HTMLElement} parentGroup - O elemento que contém o pai e os filhos (ex: .assunto-group).
+ * @param {string} parentSelector - Seletor para encontrar o checkbox pai.
+ * @param {string} childSelector - Seletor para encontrar os checkboxes filhos diretos.
+ */
+function updateParentCheckbox(parentGroup, parentSelector, childSelector) {
+    if (!parentGroup) return;
+    const parentCheckbox = parentGroup.querySelector(parentSelector);
+    if (!parentCheckbox) return;
+
+    const childCheckboxes = Array.from(parentGroup.querySelectorAll(childSelector));
+    if (childCheckboxes.length === 0) return;
+
+    const checkedChildren = childCheckboxes.filter(cb => cb.checked).length;
+    const indeterminateChildren = childCheckboxes.filter(cb => cb.indeterminate).length;
+
+    if (checkedChildren === 0 && indeterminateChildren === 0) {
+        parentCheckbox.checked = false;
+        parentCheckbox.indeterminate = false;
+    } else if (checkedChildren === childCheckboxes.length) {
+        parentCheckbox.checked = true;
+        parentCheckbox.indeterminate = false;
+    } else {
+        parentCheckbox.checked = false;
+        parentCheckbox.indeterminate = true;
+    }
+}
+// --- FIM DA NOVA FUNÇÃO ---
 
 export function setupCustomSelects() {
     const materiaOptions = state.filterOptions.materia.map(m => m.name);
@@ -204,6 +247,7 @@ export function removeFilter(type, value) {
             break;
         }
         case 'assunto': {
+            // Este caso agora lida com assunto, sub-assunto e sub-sub-assunto
             container = DOM.assuntoFilter;
             break;
         }
@@ -225,6 +269,7 @@ export function removeFilter(type, value) {
         const checkbox = container.querySelector(`.custom-select-option[data-value="${value}"]`);
         if (checkbox) {
             checkbox.checked = false;
+            // Dispara o evento 'change' no container de opções para recalcular a hierarquia
             container.querySelector('.custom-select-options').dispatchEvent(new Event('change', { bubbles: true }));
         }
     }
