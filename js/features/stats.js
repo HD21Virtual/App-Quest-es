@@ -213,20 +213,20 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
 function renderDesempenhoMateriaTable() {
     if (!DOM.statsDesempenhoMateriaContainer) return;
 
-    // --- MODIFICAÇÃO: Adicionado `subSubAssunto` ao mapa de detalhes ---
+    // --- MODIFICAÇÃO: Mapear 'Questões Gerais' para null ---
     const questionIdToDetails = new Map();
     state.allQuestions.forEach(q => {
         if(q.materia && q.assunto) {
              questionIdToDetails.set(q.id, { 
                 materia: q.materia, 
                 assunto: q.assunto, 
-                subAssunto: q.subAssunto || 'Questões Gerais',
-                subSubAssunto: q.subSubAssunto || 'Questões Gerais' // Agrupa sub-sub-assuntos nulos
+                subAssunto: q.subAssunto || null, // Usar null em vez de 'Questões Gerais'
+                subSubAssunto: q.subSubAssunto || null // Usar null em vez de 'Questões Gerais'
             });
         }
     });
 
-    // --- MODIFICAÇÃO: Construção da hierarquia de 4 níveis ---
+    // --- MODIFICAÇÃO: Construção da hierarquia de 4 níveis sem 'Questões Gerais' ---
     const hierarchy = new Map();
     const createCounts = () => ({ total: 0, correct: 0, incorrect: 0 });
 
@@ -240,37 +240,45 @@ function renderDesempenhoMateriaTable() {
         const itemTotal = item.total || 0;
 
         if (itemTotal === 0) return;
+        
+        // Função auxiliar para incrementar
+        const incrementCounts = (node) => {
+            node.counts.total += itemTotal;
+            node.counts.correct += itemCorrect;
+            node.counts.incorrect += itemIncorrect;
+        };
 
         // Nível 1: Matéria
         if (!hierarchy.has(materia)) {
             hierarchy.set(materia, { counts: createCounts(), assuntos: new Map() });
         }
         const materiaNode = hierarchy.get(materia);
+        incrementCounts(materiaNode);
 
         // Nível 2: Assunto
         if (!materiaNode.assuntos.has(assunto)) {
             materiaNode.assuntos.set(assunto, { counts: createCounts(), subAssuntos: new Map() });
         }
         const assuntoNode = materiaNode.assuntos.get(assunto);
+        incrementCounts(assuntoNode);
 
-        // Nível 3: SubAssunto
-        if (!assuntoNode.subAssuntos.has(subAssunto)) {
-            assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts(), subSubAssuntos: new Map() });
+        // Nível 3: SubAssunto (Só processa se subAssunto não for null)
+        if (subAssunto) {
+            if (!assuntoNode.subAssuntos.has(subAssunto)) {
+                assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts(), subSubAssuntos: new Map() });
+            }
+            const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
+            incrementCounts(subAssuntoNode);
+
+            // Nível 4: SubSubAssunto (Só processa se subSubAssunto não for null)
+            if (subSubAssunto) {
+                if (!subAssuntoNode.subSubAssuntos.has(subSubAssunto)) {
+                    subAssuntoNode.subSubAssuntos.set(subSubAssunto, { counts: createCounts() });
+                }
+                const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssunto);
+                incrementCounts(subSubAssuntoNode);
+            }
         }
-        const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
-
-        // Nível 4: SubSubAssunto
-        if (!subAssuntoNode.subSubAssuntos.has(subSubAssunto)) {
-            subAssuntoNode.subSubAssuntos.set(subSubAssunto, { counts: createCounts() });
-        }
-        const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssunto);
-
-        // Incrementar contagens em todos os níveis
-        [materiaNode.counts, assuntoNode.counts, subAssuntoNode.counts, subSubAssuntoNode.counts].forEach(nodeCounts => {
-            nodeCounts.total += itemTotal;
-            nodeCounts.correct += itemCorrect;
-            nodeCounts.incorrect += itemIncorrect;
-        });
     });
     // --- FIM DA MODIFICAÇÃO ---
 
