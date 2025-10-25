@@ -36,20 +36,25 @@ export async function fetchAllQuestions() {
                 if (!assuntosMap.has(assunto)) {
                     assuntosMap.set(assunto, new Map());
                 }
+                
+                // Se não houver subAssunto, não há mais nada a adicionar na hierarquia.
+                if (!subAssunto) {
+                    return; // <- MUDANÇA: Para de processar
+                }
+
+                // Nível 3: SubAssunto (sabemos que subAssunto existe)
                 const subAssuntosMap = assuntosMap.get(assunto);
-                
-                // --- MODIFICAÇÃO: Lógica para Nível 3 (SubAssunto) e Nível 4 (SubSubAssunto) ---
-                const subAssuntoKey = subAssunto || 'Questões Gerais'; // Agrupa questões sem subAssunto
-                
-                // Nível 3: SubAssunto
-                if (!subAssuntosMap.has(subAssuntoKey)) {
-                    subAssuntosMap.set(subAssuntoKey, new Set());
+                if (!subAssuntosMap.has(subAssunto)) {
+                    subAssuntosMap.set(subAssunto, new Set());
+                }
+
+                // Se não houver subSubAssunto, não há mais nada a adicionar.
+                if (!subSubAssunto) {
+                    return; // <- MUDANÇA: Para de processar
                 }
                 
-                // Nível 4: SubSubAssunto
-                if (subSubAssunto) {
-                    subAssuntosMap.get(subAssuntoKey).add(subSubAssunto);
-                }
+                // Nível 4: SubSubAssunto (sabemos que subSubAssunto existe)
+                subAssuntosMap.get(subAssunto).add(subSubAssunto);
             }
         });
 
