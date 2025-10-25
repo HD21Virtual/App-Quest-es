@@ -157,7 +157,7 @@ export async function generateStatsForQuestions(questionIds) {
 function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren = false) {
     const { total, correct, incorrect } = counts;
     const accuracy = total > 0 ? (correct / total) * 100 : 0;
-    const errorAccuracy = total > 0 ? (incorrect / total) * 100 : 0; // <-- ADICIONADO CÁLCULO
+    const errorAccuracy = total > 0 ? (incorrect / total) * 100 : 0;
     
     let rowClass = 'tree-table-row';
     let indentClass = `indent-${level}`;
@@ -167,6 +167,8 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
     if (level === 1) rowClass += ' materia-row';
     if (level === 2) rowClass += ' assunto-row';
     if (level === 3) rowClass += ' sub-assunto-row';
+    // --- MODIFICAÇÃO: Adicionada classe para nível 4 ---
+    if (level === 4) rowClass += ' sub-sub-assunto-row';
 
     if (hasChildren) {
         iconHtml = `<i class="fas fa-chevron-right toggle-icon"></i>`;
@@ -199,7 +201,6 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
                     </div>
                     <span class="text-sm font-semibold ${accuracy >= 60 ? 'text-green-600' : 'text-red-600'}">${accuracy.toFixed(0)}%</span>
                     <span class="text-sm text-gray-500">(${correct})</span>
-                    <!-- MODIFICADO: Adicionado percentual de erro e reordenado -->
                     <span class="text-sm font-semibold text-red-500 ml-2">${errorAccuracy.toFixed(0)}%</span>
                     <span class="text-sm text-gray-500">(${incorrect})</span>
                 </div>
@@ -212,56 +213,60 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
 function renderDesempenhoMateriaTable() {
     if (!DOM.statsDesempenhoMateriaContainer) return;
 
-    // 1. Criar mapa de ID da questão para detalhes (materia, assunto, subAssunto)
+    // --- MODIFICAÇÃO: Adicionado `subSubAssunto` ao mapa de detalhes ---
     const questionIdToDetails = new Map();
     state.allQuestions.forEach(q => {
-        if(q.materia && q.assunto) { // Só processa questões com dados mínimos
+        if(q.materia && q.assunto) {
              questionIdToDetails.set(q.id, { 
                 materia: q.materia, 
                 assunto: q.assunto, 
-                subAssunto: q.subAssunto || 'Questões Gerais' // Agrupa sub-assuntos nulos
+                subAssunto: q.subAssunto || 'Questões Gerais',
+                subSubAssunto: q.subSubAssunto || 'Questões Gerais' // Agrupa sub-sub-assuntos nulos
             });
         }
     });
 
-    // 2. Construir a hierarquia de estatísticas
+    // --- MODIFICAÇÃO: Construção da hierarquia de 4 níveis ---
     const hierarchy = new Map();
     const createCounts = () => ({ total: 0, correct: 0, incorrect: 0 });
 
-    // --- MODIFICADO: Mudar a fonte de dados ---
-    // Usamos o userQuestionHistoryMap como fonte de dados
     state.userQuestionHistoryMap.forEach(item => {
-        const details = questionIdToDetails.get(item.id); // 'item.id' é o questionId
+        const details = questionIdToDetails.get(item.id);
         if (!details) return;
 
-        const { materia, assunto, subAssunto } = details;
-        // Os dados de 'item' são { correct: number, incorrect: number, total: number }
+        const { materia, assunto, subAssunto, subSubAssunto } = details;
         const itemCorrect = item.correct || 0;
         const itemIncorrect = item.incorrect || 0;
         const itemTotal = item.total || 0;
 
-        if (itemTotal === 0) return; // Não processa se não houver resoluções
+        if (itemTotal === 0) return;
 
-        // Get/Create Matéria
+        // Nível 1: Matéria
         if (!hierarchy.has(materia)) {
             hierarchy.set(materia, { counts: createCounts(), assuntos: new Map() });
         }
         const materiaNode = hierarchy.get(materia);
 
-        // Get/Create Assunto
+        // Nível 2: Assunto
         if (!materiaNode.assuntos.has(assunto)) {
             materiaNode.assuntos.set(assunto, { counts: createCounts(), subAssuntos: new Map() });
         }
         const assuntoNode = materiaNode.assuntos.get(assunto);
 
-        // Get/Create SubAssunto
+        // Nível 3: SubAssunto
         if (!assuntoNode.subAssuntos.has(subAssunto)) {
-            assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts() });
+            assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts(), subSubAssuntos: new Map() });
         }
         const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
 
+        // Nível 4: SubSubAssunto
+        if (!subAssuntoNode.subSubAssuntos.has(subSubAssunto)) {
+            subAssuntoNode.subSubAssuntos.set(subSubAssunto, { counts: createCounts() });
+        }
+        const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssunto);
+
         // Incrementar contagens em todos os níveis
-        [materiaNode.counts, assuntoNode.counts, subAssuntoNode.counts].forEach(nodeCounts => {
+        [materiaNode.counts, assuntoNode.counts, subAssuntoNode.counts, subSubAssuntoNode.counts].forEach(nodeCounts => {
             nodeCounts.total += itemTotal;
             nodeCounts.correct += itemCorrect;
             nodeCounts.incorrect += itemIncorrect;
@@ -280,6 +285,13 @@ function renderDesempenhoMateriaTable() {
 
     // 3. Renderizar o HTML da tabela
     let tableHtml = `
+        <style>
+            /* --- MODIFICAÇÃO: Adicionada indentação para nível 4 --- */
+            .tree-table .indent-1 { padding-left: 1rem; }
+            .tree-table .indent-2 { padding-left: 3rem; }
+            .tree-table .indent-3 { padding-left: 5rem; }
+            .tree-table .indent-4 { padding-left: 7rem; }
+        </style>
         <div class="tree-table bg-white rounded-t-lg shadow-md overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-100">
@@ -295,6 +307,7 @@ function renderDesempenhoMateriaTable() {
                 <tbody class="divide-y divide-gray-200">
     `;
 
+    // --- MODIFICAÇÃO: Loop de renderização de 4 níveis ---
     const sortedMaterias = Array.from(hierarchy.keys()).sort();
     
     for (const materiaName of sortedMaterias) {
@@ -318,13 +331,25 @@ function renderDesempenhoMateriaTable() {
                     for (const subAssuntoName of sortedSubAssuntos) {
                         const subAssuntoNode = assuntoNode.subAssuntos.get(subAssuntoName);
                         const subAssuntoId = `subassunto-${assuntoId}-${subAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        const hasSubSubAssuntos = subAssuntoNode.subSubAssuntos.size > 0;
                         
-                        tableHtml += renderTreeTableRow(3, subAssuntoName, subAssuntoNode.counts, subAssuntoId, assuntoId, false);
+                        tableHtml += renderTreeTableRow(3, subAssuntoName, subAssuntoNode.counts, subAssuntoId, assuntoId, hasSubSubAssuntos);
+
+                        if (hasSubSubAssuntos) {
+                            const sortedSubSubAssuntos = Array.from(subAssuntoNode.subSubAssuntos.keys()).sort();
+                            for (const subSubAssuntoName of sortedSubSubAssuntos) {
+                                const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssuntoName);
+                                const subSubAssuntoId = `subsubassunto-${subAssuntoId}-${subSubAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+
+                                tableHtml += renderTreeTableRow(4, subSubAssuntoName, subSubAssuntoNode.counts, subSubAssuntoId, subAssuntoId, false);
+                            }
+                        }
                     }
                 }
             }
         }
     }
+    // --- FIM DA MODIFICAÇÃO ---
 
     tableHtml += `
                 </tbody>
@@ -350,6 +375,3 @@ function renderDesempenhoMateriaTable() {
     DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
     DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
-
-
-
