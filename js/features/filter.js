@@ -25,6 +25,7 @@ export async function applyFilters() {
         const materiaMatch = selectedMaterias.length === 0 || selectedMaterias.includes(q.materia);
         
         // --- MODIFICAÇÃO: Lógica de match para 4 níveis ---
+        // Agora, q.subAssunto e q.subSubAssunto podem ser null
         const assuntoMatch = selectedAssuntosAndSub.length === 0 || 
                              selectedAssuntosAndSub.includes(q.assunto) || 
                              (q.subAssunto && selectedAssuntosAndSub.includes(q.subAssunto)) ||
@@ -95,7 +96,12 @@ function setupCustomSelect(container) {
         // --- MODIFICAÇÃO: Atualizado seletor para buscar em todos os níveis ---
         optionsContainer.querySelectorAll('label, .assunto-group > div, .sub-assunto-group > div').forEach(el => {
             const text = el.textContent.toLowerCase();
-            el.style.display = text.includes(searchTerm) ? '' : 'none';
+            const parent = el.closest('li, .assunto-group, .sub-assunto-group');
+            if (parent) {
+                parent.style.display = text.includes(searchTerm) ? '' : 'none';
+            } else {
+                 el.style.display = text.includes(searchTerm) ? '' : 'none';
+            }
         });
     });
 
@@ -181,7 +187,12 @@ function updateParentCheckbox(parentGroup, parentSelector, childSelector) {
     const parentCheckbox = parentGroup.querySelector(parentSelector);
     if (!parentCheckbox) return;
 
-    const childCheckboxes = Array.from(parentGroup.querySelectorAll(childSelector));
+    // Seleciona apenas os filhos diretos do grupo (sem contar netos)
+    const childList = parentGroup.querySelector('.sub-assunto-list, .sub-sub-assunto-list');
+    if (!childList) return;
+
+    const childCheckboxes = Array.from(childList.querySelectorAll(`:scope > * > div > label > ${childSelector}, :scope > * > label > ${childSelector}`));
+    
     if (childCheckboxes.length === 0) return;
 
     const checkedChildren = childCheckboxes.filter(cb => cb.checked).length;
@@ -190,7 +201,7 @@ function updateParentCheckbox(parentGroup, parentSelector, childSelector) {
     if (checkedChildren === 0 && indeterminateChildren === 0) {
         parentCheckbox.checked = false;
         parentCheckbox.indeterminate = false;
-    } else if (checkedChildren === childCheckboxes.length) {
+    } else if (checkedChildren === childCheckboxes.length && indeterminateChildren === 0) {
         parentCheckbox.checked = true;
         parentCheckbox.indeterminate = false;
     } else {
