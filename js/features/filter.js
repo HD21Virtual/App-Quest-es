@@ -26,15 +26,10 @@ export async function applyFilters() {
         
         const assuntoMatch = selectedAssuntosAndSub.length === 0 || 
                              selectedAssuntosAndSub.includes(q.assunto) || 
-                             (q.subAssunto && selectedAssuntosAndSub.includes(q.subAssunto)) ||
-                             (q.subSubAssunto && selectedAssuntosAndSub.includes(q.subSubAssunto)); // ADICIONADO
+                             (q.subAssunto && selectedAssuntosAndSub.includes(q.subAssunto));
 
         const tipoMatch = selectedTipo === 'todos' || q.tipo === selectedTipo;
-        const searchMatch = !searchTerm || 
-                            q.text.toLowerCase().includes(searchTerm) || 
-                            (q.assunto && q.assunto.toLowerCase().includes(searchTerm)) || 
-                            (q.subAssunto && q.subAssunto.toLowerCase().includes(searchTerm)) ||
-                            (q.subSubAssunto && q.subSubAssunto.toLowerCase().includes(searchTerm)); // ADICIONADO
+        const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm) || (q.assunto && q.assunto.toLowerCase().includes(searchTerm)) || (q.subAssunto && q.subAssunto.toLowerCase().includes(searchTerm));
         
         return materiaMatch && assuntoMatch && tipoMatch && searchMatch;
     });
@@ -101,71 +96,31 @@ function setupCustomSelect(container) {
         if (container.id === 'assunto-filter' && changedCheckbox.matches('.custom-select-option')) {
             const isChecked = changedCheckbox.checked;
             const type = changedCheckbox.dataset.type;
-            const parentGroup = changedCheckbox.closest('.assunto-group, .sub-assunto-group');
-
-            const setChildren = (parentList, checked) => {
-                if (parentList) {
-                    parentList.querySelectorAll('.custom-select-option').forEach(childCb => {
-                        childCb.checked = checked;
-                        childCb.indeterminate = false; // Garante que filhos não fiquem indeterminados
-                    });
-                }
-            };
-
-            const updateParent = (parentListSelector, childCheckboxSelector) => {
-                const parentGroup = changedCheckbox.closest(parentListSelector);
-                if (!parentGroup) return;
-
-                const parentCheckbox = parentGroup.querySelector(childCheckboxSelector);
-                if (!parentCheckbox) return;
-
-                const allSiblings = Array.from(parentGroup.querySelectorAll(`.custom-select-option[data-type="${type}"]`));
-                const checkedSiblings = allSiblings.filter(cb => cb.checked);
-                const indeterminateSiblings = allSiblings.filter(cb => cb.indeterminate);
-
-                if (checkedSiblings.length === 0 && indeterminateSiblings.length === 0) {
-                    parentCheckbox.checked = false;
-                    parentCheckbox.indeterminate = false;
-                } else if (checkedSiblings.length === allSiblings.length) {
-                    parentCheckbox.checked = true;
-                    parentCheckbox.indeterminate = false;
-                } else {
-                    parentCheckbox.checked = false;
-                    parentCheckbox.indeterminate = true;
-                }
-                return parentCheckbox; // Retorna o pai para atualizações em cadeia
-            };
 
             if (type === 'assunto') {
-                const subList = parentGroup.querySelector('.sub-assunto-list');
-                setChildren(subList, isChecked);
+                const parentGroup = changedCheckbox.closest('.assunto-group');
+                const sublist = parentGroup.querySelector('.sub-assunto-list');
+                if (sublist) {
+                    sublist.querySelectorAll('.custom-select-option[data-type="subassunto"]').forEach(childCb => {
+                        childCb.checked = isChecked;
+                    });
+                }
             } else if (type === 'subassunto') {
-                const subSubList = parentGroup.querySelector('.sub-sub-assunto-list');
-                setChildren(subSubList, isChecked);
-                // Atualiza o pai (assunto)
-                updateParent('.assunto-group', '.custom-select-option[data-type="assunto"]');
-            } else if (type === 'subsubassunto') {
-                // Atualiza o pai (subassunto)
-                const subAssuntoCheckbox = updateParent('.sub-assunto-group', '.custom-select-option[data-type="subassunto"]');
-                // Se o subassunto foi atualizado, propaga a mudança para o avô (assunto)
-                if (subAssuntoCheckbox) {
-                    const assuntoGroup = subAssuntoCheckbox.closest('.assunto-group');
-                    if (assuntoGroup) {
-                        const assuntoCheckbox = assuntoGroup.querySelector('.custom-select-option[data-type="assunto"]');
-                        const allSubAssuntos = Array.from(assuntoGroup.querySelectorAll('.custom-select-option[data-type="subassunto"]'));
-                        const checkedSubAssuntos = allSubAssuntos.filter(cb => cb.checked);
-                        const indeterminateSubAssuntos = allSubAssuntos.filter(cb => cb.indeterminate);
+                const parentGroup = changedCheckbox.closest('.assunto-group');
+                const parentCheckbox = parentGroup.querySelector('.custom-select-option[data-type="assunto"]');
+                if (parentCheckbox) {
+                    const allSiblings = Array.from(parentGroup.querySelectorAll('.custom-select-option[data-type="subassunto"]'));
+                    const checkedSiblings = allSiblings.filter(cb => cb.checked);
 
-                        if (checkedSubAssuntos.length === 0 && indeterminateSubAssuntos.length === 0) {
-                            assuntoCheckbox.checked = false;
-                            assuntoCheckbox.indeterminate = false;
-                        } else if (checkedSubAssuntos.length === allSubAssuntos.length) {
-                            assuntoCheckbox.checked = true;
-                            assuntoCheckbox.indeterminate = false;
-                        } else {
-                            assuntoCheckbox.checked = false;
-                            assuntoCheckbox.indeterminate = true;
-                        }
+                    if (checkedSiblings.length === 0) {
+                        parentCheckbox.checked = false;
+                        parentCheckbox.indeterminate = false;
+                    } else if (checkedSiblings.length === allSiblings.length) {
+                        parentCheckbox.checked = true;
+                        parentCheckbox.indeterminate = false;
+                    } else {
+                        parentCheckbox.checked = false;
+                        parentCheckbox.indeterminate = true;
                     }
                 }
             }
@@ -278,4 +233,3 @@ export function removeFilter(type, value) {
         applyFilters();
     }
 }
-
