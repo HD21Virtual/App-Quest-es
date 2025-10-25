@@ -13,52 +13,79 @@ export async function fetchAllQuestions() {
     try {
         const querySnapshot = await getDocs(collection(db, "questions"));
         const questions = [];
-        // Estrutura: Map<nomeMateria, Map<nomeAssunto, Set<nomeSubAssunto>>>
+        
+        // --- MODIFICAÇÃO: Hierarquia de 4 níveis ---
+        // Estrutura: Map<Materia, Map<Assunto, Map<SubAssunto, Set<SubSubAssunto>>>>
         const hierarchy = new Map();
 
         querySnapshot.forEach((doc) => {
             const question = { id: doc.id, ...doc.data() };
             questions.push(question);
 
-            const { materia, assunto, subAssunto } = question;
+            // --- MODIFICAÇÃO: Adicionado subSubAssunto ---
+            const { materia, assunto, subAssunto, subSubAssunto } = question;
 
             if (materia && assunto) {
+                // Nível 1: Matéria
                 if (!hierarchy.has(materia)) {
                     hierarchy.set(materia, new Map());
                 }
                 const assuntosMap = hierarchy.get(materia);
 
+                // Nível 2: Assunto
                 if (!assuntosMap.has(assunto)) {
-                    assuntosMap.set(assunto, new Set());
+                    assuntosMap.set(assunto, new Map());
+                }
+                const subAssuntosMap = assuntosMap.get(assunto);
+                
+                // --- MODIFICAÇÃO: Lógica para Nível 3 (SubAssunto) e Nível 4 (SubSubAssunto) ---
+                const subAssuntoKey = subAssunto || 'Questões Gerais'; // Agrupa questões sem subAssunto
+                
+                // Nível 3: SubAssunto
+                if (!subAssuntosMap.has(subAssuntoKey)) {
+                    subAssuntosMap.set(subAssuntoKey, new Set());
                 }
                 
-                if (subAssunto) {
-                    assuntosMap.get(assunto).add(subAssunto);
+                // Nível 4: SubSubAssunto
+                if (subSubAssunto) {
+                    subAssuntosMap.get(subAssuntoKey).add(subSubAssunto);
                 }
             }
         });
 
         setState('allQuestions', questions);
 
+        // --- MODIFICAÇÃO: Construir filterOptions com 4 níveis ---
         const newFilterOptions = { materia: [] };
         
         const sortedMaterias = Array.from(hierarchy.keys()).sort();
 
         for (const materiaName of sortedMaterias) {
-            const materiaData = { name: materiaName, assuntos: [] };
+            const materiaData = { name: materiaName, assuntos: [] }; // Nível 1
             const assuntosMap = hierarchy.get(materiaName);
             const sortedAssuntos = Array.from(assuntosMap.keys()).sort();
 
             for (const assuntoName of sortedAssuntos) {
-                const subAssuntosSet = assuntosMap.get(assuntoName);
-                const sortedSubAssuntos = Array.from(subAssuntosSet).sort();
-                materiaData.assuntos.push({
-                    name: assuntoName,
-                    subAssuntos: sortedSubAssuntos
-                });
+                const subAssuntosMap = assuntosMap.get(assuntoName);
+                const sortedSubAssuntos = Array.from(subAssuntosMap.keys()).sort();
+                
+                const assuntoData = { name: assuntoName, subAssuntos: [] }; // Nível 2
+
+                for (const subAssuntoName of sortedSubAssuntos) {
+                    const subSubAssuntosSet = subAssuntosMap.get(subAssuntoName);
+                    const sortedSubSubAssuntos = Array.from(subSubAssuntosSet).sort();
+                    
+                    // Nível 3 (objeto) e Nível 4 (array de strings)
+                    assuntoData.subAssuntos.push({
+                        name: subAssuntoName,
+                        subSubAssuntos: sortedSubSubAssuntos 
+                    });
+                }
+                materiaData.assuntos.push(assuntoData);
             }
             newFilterOptions.materia.push(materiaData);
         }
+        // --- FIM DA MODIFICAÇÃO ---
 
         setState('filterOptions', newFilterOptions);
 
@@ -395,4 +422,3 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
-
