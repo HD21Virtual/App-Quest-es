@@ -13,18 +13,14 @@ export async function fetchAllQuestions() {
     try {
         const querySnapshot = await getDocs(collection(db, "questions"));
         const questions = [];
-        // Estrutura: Map<nomeMateria, Map<nomeAssunto, Map<nomeSubAssunto, Set<nomeSubSubAssunto>>>>
+        // Estrutura: Map<nomeMateria, Map<nomeAssunto, Set<nomeSubAssunto>>>
         const hierarchy = new Map();
 
         querySnapshot.forEach((doc) => {
-            const question = { 
-                id: doc.id, 
-                ...doc.data(),
-                subSubAssunto: doc.data().subSubAssunto || null // ADICIONADO
-            };
+            const question = { id: doc.id, ...doc.data() };
             questions.push(question);
 
-            const { materia, assunto, subAssunto, subSubAssunto } = question; // ADICIONADO subSubAssunto
+            const { materia, assunto, subAssunto } = question;
 
             if (materia && assunto) {
                 if (!hierarchy.has(materia)) {
@@ -33,22 +29,12 @@ export async function fetchAllQuestions() {
                 const assuntosMap = hierarchy.get(materia);
 
                 if (!assuntosMap.has(assunto)) {
-                    assuntosMap.set(assunto, new Map()); // MODIFICADO: new Map()
+                    assuntosMap.set(assunto, new Set());
                 }
-                // ADICIONADO: Início do bloco de SubAssunto
-                const subAssuntosMap = assuntosMap.get(assunto);
                 
                 if (subAssunto) {
-                    if (!subAssuntosMap.has(subAssunto)) {
-                        subAssuntosMap.set(subAssunto, new Set()); // ADICIONADO
-                    }
-                    const subSubAssuntosSet = subAssuntosMap.get(subAssunto); // ADICIONADO
-
-                    if (subSubAssunto) {
-                        subSubAssuntosSet.add(subSubAssunto); // ADICIONADO
-                    }
+                    assuntosMap.get(assunto).add(subAssunto);
                 }
-                // ADICIONADO: Fim do bloco
             }
         });
 
@@ -64,23 +50,22 @@ export async function fetchAllQuestions() {
             const sortedAssuntos = Array.from(assuntosMap.keys()).sort();
 
             for (const assuntoName of sortedAssuntos) {
-                const subAssuntosMap = assuntosMap.get(assuntoName); // MODIFICADO
-                const sortedSubAssuntos = Array.from(subAssuntosMap.keys()).sort(); // MODIFICADO
-                
-                const assuntoData = { name: assuntoName, subAssuntos: [] }; // MODIFICADO
-
-                for (const subAssuntoName of sortedSubAssuntos) { // ADICIONADO: Novo loop
-                    const subSubAssuntosSet = subAssuntosMap.get(subAssuntoName);
-                    const sortedSubSubAssuntos = Array.from(subSubAssuntosSet).sort();
-                    assuntoData.subAssuntos.push({
-                        name: subAssuntoName,
-                        subSubAssuntos: sortedSubSubAssuntos
-                    });
-                }
-                materiaData.assuntos.push(assuntoData); // MODIFICADO
+                const subAssuntosSet = assuntosMap.get(assuntoName);
+                const sortedSubAssuntos = Array.from(subAssuntosSet).sort();
+                materiaData.assuntos.push({
+                    name: assuntoName,
+                    subAssuntos: sortedSubAssuntos
+                });
             }
             newFilterOptions.materia.push(materiaData);
         }
+
+        setState('filterOptions', newFilterOptions);
+
+    } catch (error) {
+        console.error("Erro ao buscar questões: ", error);
+    }
+}
 
 export function setupAllListeners(userId) {
     // Queries must be declared before they are used in onSnapshot
@@ -410,6 +395,4 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
-
-
 
