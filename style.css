@@ -103,6 +103,13 @@ body {
     margin-left: 0.75rem; 
 }
 
+/* --- MODIFICAÇÃO: Adicionada classe para sub-sub-lista --- */
+.sub-sub-assunto-list {
+    border-left: 1px solid #e5e7eb; /* gray-200 */
+    margin-left: 0.75rem; /* ml-3 */
+}
+/* --- FIM DA MODIFICAÇÃO --- */
+
 
 /* Media query for smaller screens */
 @media (max-width: 768px) {
@@ -262,9 +269,9 @@ body {
     transform: rotate(90deg);
 }
 
-.tree-table .indent-1 { padding-left: 1rem; } /* Célula do nome */
-.tree-table .indent-2 { padding-left: 3rem; }
-.tree-table .indent-3 { padding-left: 5rem; }
+/* --- MODIFICAÇÃO: Classes de indentação movidas para stats.js (inline <style>) --- */
+/* Removido daqui para evitar duplicação, já que stats.js injeta o <style> */
+
 .tree-table .checkbox-cell { width: 3rem; padding-left: 1rem; padding-right: 0.5rem;}
 
 
@@ -301,4 +308,3 @@ body {
     margin-top: -1px; /* Para sobrepor a borda inferior da tabela */
     border-radius: 0 0 0.5rem 0.5rem; /* rounded-b-lg */
 }
-
