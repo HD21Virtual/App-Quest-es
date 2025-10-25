@@ -28,15 +28,16 @@ export function updateAssuntoFilter(disciplinas) {
             const materiaObj = state.filterOptions.materia.find(m => m.name === disciplinaName);
             if (materiaObj && materiaObj.assuntos.length > 0) {
                 newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
-                
+
                 // --- MODIFICAÇÃO: Renderização de 4 níveis ---
                 materiaObj.assuntos.forEach(assunto => { // Nível 2: Assunto
                     const hasSubAssuntos = assunto.subAssuntos && assunto.subAssuntos.length > 0;
+                    // AJUSTE: Removido 'rotate-90' para começar recolhido
                     newHtml += `
                         <div class="assunto-group">
                             <div class="flex items-center p-1 rounded-lg hover:bg-gray-100">
-                                ${hasSubAssuntos ? 
-                                    `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle rotate-90"></i>` : 
+                                ${hasSubAssuntos ?
+                                    `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle"></i>` : // Removido rotate-90
                                     `<span class="w-6 mr-2"></span>`
                                 }
                                 <label class="flex-grow flex items-center space-x-2 cursor-pointer">
@@ -45,16 +46,18 @@ export function updateAssuntoFilter(disciplinas) {
                                 </label>
                             </div>
                     `;
-                    
+
                     if (hasSubAssuntos) {
-                        newHtml += `<div class="sub-assunto-list pl-6 mt-1 space-y-1">`;
+                        // AJUSTE: Adicionado 'hidden' para começar recolhido
+                        newHtml += `<div class="sub-assunto-list pl-6 mt-1 space-y-1 hidden">`; // Adicionado hidden
                         assunto.subAssuntos.forEach(subAssunto => { // Nível 3: SubAssunto
                             const hasSubSubAssuntos = subAssunto.subSubAssuntos && subAssunto.subSubAssuntos.length > 0;
+                            // AJUSTE: Removido 'rotate-90' para começar recolhido
                             newHtml += `
                                 <div class="sub-assunto-group">
                                     <div class="flex items-center p-1 rounded-lg hover:bg-gray-100">
                                         ${hasSubSubAssuntos ?
-                                            `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle rotate-90"></i>` :
+                                            `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle"></i>` : // Removido rotate-90
                                             `<span class="w-6 mr-2"></span>`
                                         }
                                         <label class="flex-grow flex items-center space-x-2 cursor-pointer">
@@ -65,7 +68,8 @@ export function updateAssuntoFilter(disciplinas) {
                             `;
 
                             if (hasSubSubAssuntos) {
-                                newHtml += `<div class="sub-sub-assunto-list pl-6 mt-1 space-y-1">`;
+                                // AJUSTE: Adicionado 'hidden' para começar recolhido
+                                newHtml += `<div class="sub-sub-assunto-list pl-6 mt-1 space-y-1 hidden">`; // Adicionado hidden
                                 subAssunto.subSubAssuntos.forEach(subSubAssunto => { // Nível 4: SubSubAssunto
                                     newHtml += `
                                         <label class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 cursor-pointer">
@@ -85,7 +89,7 @@ export function updateAssuntoFilter(disciplinas) {
                 // --- FIM DA MODIFICAÇÃO ---
             }
         });
-        
+
         optionsContainer.innerHTML = newHtml;
 
         // Adiciona listeners para os botões de toggle (agora aninhados)
@@ -166,3 +170,4 @@ export function updateUserUI(user) {
         mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
+
