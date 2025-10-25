@@ -29,7 +29,8 @@ export function updateAssuntoFilter(disciplinas) {
             if (materiaObj && materiaObj.assuntos.length > 0) {
                 newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
                 
-                materiaObj.assuntos.forEach(assunto => {
+                // --- MODIFICAÇÃO: Renderização de 4 níveis ---
+                materiaObj.assuntos.forEach(assunto => { // Nível 2: Assunto
                     const hasSubAssuntos = assunto.subAssuntos && assunto.subAssuntos.length > 0;
                     newHtml += `
                         <div class="assunto-group">
@@ -47,29 +48,56 @@ export function updateAssuntoFilter(disciplinas) {
                     
                     if (hasSubAssuntos) {
                         newHtml += `<div class="sub-assunto-list pl-6 mt-1 space-y-1">`;
-                        assunto.subAssuntos.forEach(subAssunto => {
+                        assunto.subAssuntos.forEach(subAssunto => { // Nível 3: SubAssunto
+                            const hasSubSubAssuntos = subAssunto.subSubAssuntos && subAssunto.subSubAssuntos.length > 0;
                             newHtml += `
-                                <label class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 cursor-pointer">
-                                    <input type="checkbox" data-value="${subAssunto}" data-parent-assunto="${assunto.name}" data-type="subassunto" class="custom-select-option rounded">
-                                    <span>${subAssunto}</span>
-                                </label>
+                                <div class="sub-assunto-group">
+                                    <div class="flex items-center p-1 rounded-lg hover:bg-gray-100">
+                                        ${hasSubSubAssuntos ?
+                                            `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle rotate-90"></i>` :
+                                            `<span class="w-6 mr-2"></span>`
+                                        }
+                                        <label class="flex-grow flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" data-value="${subAssunto.name}" data-parent-assunto="${assunto.name}" data-type="subassunto" class="custom-select-option rounded">
+                                            <span>${subAssunto.name}</span>
+                                        </label>
+                                    </div>
                             `;
+
+                            if (hasSubSubAssuntos) {
+                                newHtml += `<div class="sub-sub-assunto-list pl-6 mt-1 space-y-1">`;
+                                subAssunto.subSubAssuntos.forEach(subSubAssunto => { // Nível 4: SubSubAssunto
+                                    newHtml += `
+                                        <label class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 cursor-pointer">
+                                            <input type="checkbox" data-value="${subSubAssunto}" data-parent-assunto="${assunto.name}" data-parent-subassunto="${subAssunto.name}" data-type="subsubassunto" class="custom-select-option rounded">
+                                            <span>${subSubAssunto}</span>
+                                        </label>
+                                    `;
+                                });
+                                newHtml += `</div>`;
+                            }
+                            newHtml += `</div>`; // Fim .sub-assunto-group
                         });
-                        newHtml += `</div>`;
+                        newHtml += `</div>`; // Fim .sub-assunto-list
                     }
-                    newHtml += `</div>`;
+                    newHtml += `</div>`; // Fim .assunto-group
                 });
+                // --- FIM DA MODIFICAÇÃO ---
             }
         });
         
         optionsContainer.innerHTML = newHtml;
 
+        // Adiciona listeners para os botões de toggle (agora aninhados)
         optionsContainer.querySelectorAll('.assunto-toggle').forEach(toggle => {
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const parent = e.target.closest('.assunto-group');
-                parent.querySelector('.sub-assunto-list').classList.toggle('hidden');
-                e.target.classList.toggle('rotate-90');
+                // Encontra o 'irmão' que é a lista (seja sub-assunto-list or sub-sub-assunto-list)
+                const list = e.target.closest('.assunto-group, .sub-assunto-group').querySelector('.sub-assunto-list, .sub-sub-assunto-list');
+                if (list) {
+                    list.classList.toggle('hidden');
+                    e.target.classList.toggle('rotate-90');
+                }
             });
         });
     }
@@ -96,8 +124,12 @@ export function updateSelectedFiltersDisplay() {
     const selectedMaterias = JSON.parse(DOM.materiaFilter.dataset.value || '[]');
     selectedMaterias.forEach(m => createFilterTag('materia', m, 'Disciplina'));
 
+    // --- MODIFICAÇÃO: A label agora pode ser Assunto, Sub-assunto, etc. ---
+    // A lógica de `removeFilter` no `filter.js` ainda trata todos como 'assunto',
+    // o que funciona, pois apenas desmarca o checkbox correspondente.
     const selectedAssuntos = JSON.parse(DOM.assuntoFilter.dataset.value || '[]');
     selectedAssuntos.forEach(a => createFilterTag('assunto', a, 'Assunto'));
+    // --- FIM DA MODIFICAÇÃO ---
     
     const activeTipoBtn = DOM.tipoFilterGroup.querySelector('.active-filter');
     if (activeTipoBtn && activeTipoBtn.dataset.value !== 'todos') {
@@ -134,4 +166,3 @@ export function updateUserUI(user) {
         mobileContainer.innerHTML = loggedOutHTMLMobile;
     }
 }
-
