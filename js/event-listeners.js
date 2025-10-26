@@ -5,9 +5,11 @@ import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, 
 // CORREÇÃO: Salvar o progresso ao sair da página
 // --- MODIFICAÇÃO: Importar resetAllUserData e updateStatsAssuntoFilter ---
 import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats, resetAllUserData } from './services/firestore.js';
-// --- CORREÇÃO APLICADA ---
+// CORREÇÃO APLICADA ---
 // O caminho foi alterado de "../features/stats.js" para "./features/stats.js"
-import { updateStatsPageUI, renderEstatisticasView, updateStatsAssuntoFilter } from "./features/stats.js";
+// ===== INÍCIO DA MODIFICAÇÃO =====
+import { updateStatsPageUI, renderEstatisticasView, updateStatsAssuntoFilter, handleStatsFilter } from "./features/stats.js";
+// ===== FIM DA MODIFICAÇÃO =====
 // CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
@@ -677,9 +679,8 @@ export function setupAllEventListeners() {
         }
         // ===== INÍCIO DA MODIFICAÇÃO =====
         else if (target.id === 'stats-filter-btn') {
-            // A lógica de filtragem real ainda precisa ser implementada em stats.js
-            // e chamada aqui. Por enquanto, apenas registramos.
-            console.log("Filtrar estatísticas clicado.");
+            // Chama a função de filtragem
+            handleStatsFilter();
         }
         // ===== FIM DA MODIFICAÇÃO =====
     });
