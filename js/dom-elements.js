@@ -106,6 +106,9 @@ export function initDOM() {
     DOM.statsGeralMaterias = document.getElementById('stats-geral-materias');
     DOM.statsPagePerformanceChartCanvas = document.getElementById('statsPagePerformanceChart');
     DOM.statsDesempenhoMateriaContainer = document.getElementById('stats-desempenho-materia-container');
+    // ===== INÍCIO DA MODIFICAÇÃO =====
+    DOM.evolutionChartCanvas = document.getElementById('evolutionChartCanvas');
+    // ===== FIM DA MODIFICAÇÃO =====
     
     // --- NOVO: Filtro de Período de Estatísticas ---
     DOM.statsPeriodoButton = document.getElementById('stats-periodo-button');
