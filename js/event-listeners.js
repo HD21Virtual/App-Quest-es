@@ -286,6 +286,13 @@ export function setupAllEventListeners() {
             });
         }
         
+        // --- NOVO: Fecha o seletor de período ---
+        if (DOM.statsPeriodoPanel && !target.closest('#stats-periodo-button') && !target.closest('#stats-periodo-panel')) {
+            DOM.statsPeriodoPanel.classList.add('hidden');
+            if (DOM.statsPeriodoCustomRange) DOM.statsPeriodoCustomRange.classList.add('hidden');
+        }
+        // --- FIM NOVO ---
+        
         // --- Cadeia Principal de Ações (IF-ELSE IF) ---
         
         // --- Lidar com o menu dropdown do caderno (MAIS ESPEFÍFICO) ---
@@ -437,6 +444,61 @@ export function setupAllEventListeners() {
             event.preventDefault();
             navigateToView(target.closest('.nav-link').dataset.view);
         }
+
+        // --- NOVO: Filtro de Período de Estatísticas ---
+        else if (target.closest('#stats-periodo-button')) {
+            event.preventDefault();
+            DOM.statsPeriodoPanel.classList.toggle('hidden');
+        }
+        else if (target.closest('.period-option-item')) {
+            const selectedOption = target.closest('.period-option-item');
+            const value = selectedOption.dataset.value;
+            const text = selectedOption.textContent;
+
+            // Remove a classe ativa de todos
+            DOM.statsPeriodoOptions.querySelectorAll('.period-option-item').forEach(opt => opt.classList.remove('active'));
+            
+            if (value === 'personalizado') {
+                // Mostra o range customizado, mas não fecha o painel ainda
+                DOM.statsPeriodoCustomRange.classList.remove('hidden');
+                selectedOption.classList.add('active'); // Mantém "Personalizado" ativo
+            } else {
+                // Opção normal: atualiza o valor e fecha
+                DOM.statsPeriodoValue.textContent = text;
+                DOM.statsPeriodoButton.dataset.value = value;
+                selectedOption.classList.add('active');
+                DOM.statsPeriodoPanel.classList.add('hidden');
+                DOM.statsPeriodoCustomRange.classList.add('hidden');
+                // TODO: Chamar a função de filtrar estatísticas
+                // handleStatsFilter(); 
+            }
+        }
+        else if (target.closest('#stats-periodo-custom-apply')) {
+            event.preventDefault();
+            const start = DOM.statsPeriodoStart.value;
+            const end = DOM.statsPeriodoEnd.value;
+            if (start && end) {
+                // Formata a data para dd/mm/aaaa
+                const formattedStart = start.split('-').reverse().join('/');
+                const formattedEnd = end.split('-').reverse().join('/');
+                const text = `${formattedStart} - ${formattedEnd}`;
+                
+                DOM.statsPeriodoValue.textContent = text;
+                DOM.statsPeriodoButton.dataset.value = 'personalizado';
+                DOM.statsPeriodoButton.dataset.startDate = start;
+                DOM.statsPeriodoButton.dataset.endDate = end;
+                
+                DOM.statsPeriodoPanel.classList.add('hidden');
+                DOM.statsPeriodoCustomRange.classList.add('hidden');
+                // TODO: Chamar a função de filtrar estatísticas
+                // handleStatsFilter();
+            } else {
+                // Idealmente, mostraria um erro, mas por agora, apenas não fecha
+                console.warn("Selecione data de início e fim.");
+            }
+        }
+        // --- FIM NOVO ---
+        
         // --- Stats Tabs ---
         else if (target.closest('#stats-tabs-container .tab-button')) {
             const tabButton = target.closest('#stats-tabs-container .tab-button');
