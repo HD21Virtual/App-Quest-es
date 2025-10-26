@@ -1,5 +1,6 @@
 import DOM from './dom-elements.js';
-import { state } from './state.js';
+// --- CORREÇÃO: Importar setState ---
+import { state, setState } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 // CORREÇÃO: Importar saveSessionStats para salvar o progresso ao sair da página
 // --- MODIFICAÇÃO: Importar resetAllUserData ---
