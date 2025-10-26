@@ -6,7 +6,9 @@ import { setState, state } from '../state.js';
 import { updateStatsPageUI, renderEstatisticasView } from '../features/stats.js';
 import { renderReviewView } from '../features/srs.js';
 
-export function navigateToView(viewId, isUserClick = true) {
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora é async =====
+export async function navigateToView(viewId, isUserClick = true) {
+// ===== FIM DA MODIFICAÇÃO =====
     // Correction: Initialize the views array inside the function
     // This ensures that the DOM elements are available when the function is called.
     const allViews = [
@@ -76,7 +78,9 @@ export function navigateToView(viewId, isUserClick = true) {
     } else if (viewId === 'revisao-view') {
         renderReviewView();
     } else if (viewId === 'estatisticas-view') {
-        renderEstatisticasView();
+        // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+        await renderEstatisticasView();
+        // ===== FIM DA MODIFICAÇÃO =====
     }
 
 
