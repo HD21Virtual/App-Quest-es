@@ -400,99 +400,266 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
 
 
 // ===== INÍCIO DA MODIFICAÇÃO =====
-export function renderEvolutionChart() {
+/**
+ * Processa o log de desempenho bruto em dados agrupados para o gráfico de evolução.
+ * @param {Array} performanceLog - O log de desempenho filtrado (pode ser grande).
+ * @param {Date} startDate - A data de início do filtro.
+ * @param {Date} endDate - A data de fim do filtro.
+ * @param {string} metric - 'resolucoes' ou 'desempenho'.
+ * @param {number} periods - O número de períodos para dividir (ex: 10).
+ * @returns {object} - { labels: Array, datasets: Array }
+ */
+function processEvolutionData(performanceLog, startDate, endDate, metric = 'resolucoes', periods = 10) {
+    // 1. Se não houver log, retorna vazio
+    if (performanceLog.length === 0) {
+        return { labels: [], datasets: [] };
+    }
+
+    // 2. Define o intervalo de tempo
+    // Se 'Tudo' (startDate nulo), define um padrão (ex: últimos 6 meses)
+    let start = startDate;
+    let end = endDate;
+    
+    if (!start) {
+        start = new Date(end);
+        start.setMonth(start.getMonth() - 6);
+        start.setHours(0, 0, 0, 0);
+    }
+
+    const totalMilliseconds = end.getTime() - start.getTime();
+    // Garante que o intervalo seja de pelo menos 1ms para evitar divisão por zero
+    const periodDuration = Math.max(1, totalMilliseconds / periods); 
+
+    // 3. Inicializa os períodos
+    const periodData = [];
+    const labels = [];
+    const formatDate = (date) => {
+        const d = date.getDate().toString().padStart(2, '0');
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        return `${d}/${m}`;
+    };
+
+    for (let i = 0; i < periods; i++) {
+        const periodStart = new Date(start.getTime() + (i * periodDuration));
+        // O último período deve ir exatamente até a data final
+        const periodEnd = (i === periods - 1) 
+            ? new Date(end.getTime()) 
+            : new Date(start.getTime() + ((i + 1) * periodDuration) - 1); // -1ms para não sobrepor
+
+        periodData.push({
+            start: periodStart,
+            end: periodEnd,
+            correct: 0,
+            incorrect: 0,
+            total: 0
+        });
+        
+        // Cria rótulos amigáveis
+        if (periods <= 15) { // Se for período curto (ex: 7 dias), mostra data a data
+             labels.push(formatDate(periodStart));
+        } else { // Se for longo, mostra intervalos
+            labels.push(`${formatDate(periodStart)} a ${formatDate(periodEnd)}`);
+        }
+    }
+
+    // 4. Agrupa os dados do log nos períodos
+    performanceLog.forEach(entry => {
+        if (!entry.createdAt) return;
+        const entryDate = entry.createdAt.toDate();
+        
+        // Encontra o período ao qual esta entrada pertence
+        // Garante que a entrada esteja dentro dos limites de start/end
+        if (entryDate.getTime() < start.getTime() || entryDate.getTime() > end.getTime()) {
+            return;
+        }
+
+        const periodIndex = Math.min(
+            periods - 1, // Garante que não estoure o índice
+            Math.max(0, Math.floor((entryDate.getTime() - start.getTime()) / periodDuration))
+        );
+
+        if (periodIndex >= 0 && periodIndex < periods) {
+            const period = periodData[periodIndex];
+            period.total++;
+            if (entry.isCorrect) {
+                period.correct++;
+            } else {
+                period.incorrect++;
+            }
+        }
+    });
+
+    // 5. Formata os datasets para o Chart.js
+    let datasets;
+    if (metric === 'desempenho') {
+        const performanceData = periodData.map(p => p.total > 0 ? (p.correct / p.total) * 100 : 0);
+        datasets = [
+            {
+                label: 'Desempenho (%)',
+                data: performanceData,
+                borderColor: '#3b82f6', // blue-500
+                backgroundColor: 'rgba(59, 130, 246, 0.1)', // blue-500 com 10% opacidade
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3b82f6',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }
+        ];
+    } else { // Padrão: 'resolucoes'
+        const acertosData = periodData.map(p => p.correct);
+        const errosData = periodData.map(p => p.incorrect);
+        datasets = [
+            {
+                label: 'Acertos',
+                data: acertosData,
+                borderColor: '#22c55e', // green-500
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#22c55e',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            },
+            {
+                label: 'Erros',
+                data: errosData,
+                borderColor: '#ef4444', // red-500
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ef4444',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }
+        ];
+    }
+
+    return { labels, datasets };
+}
+
+/**
+ * Renderiza o gráfico de evolução com base nos dados filtrados.
+ * @param {Array} performanceLog - O log de desempenho JÁ FILTRADO por matéria/assunto.
+ * @param {Date} startDate - A data de início do filtro de período.
+ * @param {Date} endDate - A data de fim do filtro de período.
+ */
+export function renderEvolutionChart(performanceLog, startDate, endDate) {
     const canvas = DOM.evolutionChartCanvas;
     if (!canvas) return;
 
+    const ctx = canvas.getContext('2d');
+    
     if (evolutionChart) {
         evolutionChart.destroy();
     }
-
-    const ctx = canvas.getContext('2d');
     
-    // Dados de exemplo baseados na imagem
-    const labels = [
-        '01/04 a 20/04', '21/04 a 11/05', '12/05 a 01/06', '02/06 a 22/06', 
-        '23/06 a 13/07', '14/07 a 02/08', '03/08 a 23/08', '24/08 a 13/09', 
-        '14/09 a 04/10', '05/10 a 26/10'
-    ];
-    
-    const acertosData = [0, 0, 300, 850, 700, 4200, 400, 750, 800, 550];
-    const errosData = [0, 0, 50, 200, 250, 500, 50, 150, 100, 120];
+    // 1. Determina a métrica (Resoluções vs. Desempenho)
+    const metricRadio = document.querySelector('input[name="evolucao-filter"]:checked');
+    const metric = metricRadio ? metricRadio.value : 'resolucoes';
 
+    // 2. Determina o número de períodos
+    // Se for menos de 15 dias, agrupa por dia
+    let periods = 10; // Padrão
+    let start = startDate;
+    let end = endDate;
+
+    // Se 'Tudo' (startDate nulo), usa o padrão de 6 meses
+    if (!start) {
+        start = new Date(end);
+        start.setMonth(start.getMonth() - 6);
+        start.setHours(0, 0, 0, 0);
+    }
+    
+    const timeDiff = end.getTime() - start.getTime();
+    const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    if (dayDiff <= 15) {
+        periods = dayDiff; // Agrupa por dia
+    }
+    
+    // 3. Processa os dados
+    const { labels, datasets } = processEvolutionData(performanceLog, start, end, metric, periods);
+
+    // 4. Verifica se há dados para exibir
+    const hasData = datasets.length > 0 && datasets.some(ds => ds.data.some(d => d > 0));
+
+    if (labels.length === 0 || !hasData) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "16px 'Inter', sans-serif";
+        ctx.fillStyle = "#9ca3af";
+        ctx.fillText("Nenhum dado de evolução encontrado para os filtros aplicados.", canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+        return;
+    }
+    
+    // 5. Configurações do gráfico
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                align: 'center',
+                labels: {
+                    usePointStyle: true,
+                    boxWidth: 8
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {}
+            },
+            datalabels: {
+                display: false // Desabilitado para um visual mais limpo
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { color: '#6b7280' } // gray-500
+            },
+            y: {
+                beginAtZero: true,
+                grid: { color: '#e5e7eb' }, // gray-200
+                ticks: { color: '#6b7280' } // gray-500
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index',
+        }
+    };
+    
+    // 6. Adiciona formatação de '%' se a métrica for 'desempenho'
+    if (metric === 'desempenho') {
+        chartOptions.scales.y.ticks.callback = function (value) {
+            return value + '%';
+        };
+        chartOptions.plugins.tooltip.callbacks.label = function (context) {
+            let label = context.dataset.label || '';
+            if (label) {
+                label += ': ';
+            }
+            if (context.parsed.y !== null) {
+                label += context.parsed.y.toFixed(0) + '%';
+            }
+            return label;
+        };
+    }
+
+    // 7. Renderiza o gráfico
     evolutionChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [
-                {
-                    label: 'Acertos',
-                    data: acertosData,
-                    borderColor: '#22c55e', // green-500
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)', // green-500 com 10% opacidade
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#22c55e',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                },
-                {
-                    label: 'Erros',
-                    data: errosData,
-                    borderColor: '#ef4444', // red-500
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)', // red-500 com 10% opacidade
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#ef4444',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }
-            ]
+            datasets: datasets
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    align: 'center',
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 8
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                datalabels: {
-                    display: false // Desabilitado para um visual mais limpo, como na imagem
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#6b7280' // gray-500
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#e5e7eb' // gray-200
-                    },
-                    ticks: {
-                        color: '#6b7280' // gray-500
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            }
-        }
+        options: chartOptions
     });
 }
 // ===== FIM DA MODIFICAÇÃO =====
