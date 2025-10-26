@@ -3,6 +3,16 @@ import { state, setState } from '../state.js';
 import { navigateToView } from '../ui/navigation.js';
 import { clearAllFilters, applyFilters } from './filter.js';
 
+/**
+ * Ordena strings alfanumericamente (ex: "2.10" vem depois de "2.9").
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function naturalSort(a, b) {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 // --- MODIFICAÇÃO: Contagem para 4 níveis ---
 function countQuestions(materia, assunto = null, subAssunto = null, subSubAssunto = null) {
     return state.allQuestions.filter(q => {
@@ -71,11 +81,11 @@ export function renderMateriasView() {
         let listItemsHtml = '';
 
         // --- MODIFICAÇÃO: Renderização da lista de 4 níveis ---
-        const sortedAssuntos = Array.from(hierarchy.keys()).sort();
+        const sortedAssuntos = Array.from(hierarchy.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
         
         sortedAssuntos.forEach(assunto => {
             const subAssuntosMap = hierarchy.get(assunto);
-            const sortedSubAssuntos = Array.from(subAssuntosMap.keys()).sort();
+            const sortedSubAssuntos = Array.from(subAssuntosMap.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
             const totalQuestoesAssunto = countQuestions(state.selectedMateria.name, assunto);
             const hasSubAssuntos = sortedSubAssuntos.length > 0; // Simplificado
 
@@ -96,7 +106,7 @@ export function renderMateriasView() {
                 listItemsHtml += '<ul class="pl-8 mt-1 space-y-1">';
                 sortedSubAssuntos.forEach(subAssunto => {
                     const subSubAssuntosSet = subAssuntosMap.get(subAssunto);
-                    const sortedSubSubAssuntos = Array.from(subSubAssuntosSet).sort();
+                    const sortedSubSubAssuntos = Array.from(subSubAssuntosSet).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                     const totalQuestoesSubAssunto = countQuestions(state.selectedMateria.name, assunto, subAssunto);
                     const hasSubSubAssuntos = sortedSubSubAssuntos.length > 0;
 
@@ -358,3 +368,4 @@ export function handleBackToMaterias() {
     setState('selectedMateria', null);
     renderMateriasView();
 }
+
