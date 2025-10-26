@@ -168,6 +168,82 @@ function handleStatsTableSelection(event) {
     if (DOM.statsFooterErros) DOM.statsFooterErros.textContent = totalErros;
 }
 
+// --- MODIFICAÇÃO: Nova função para seleção da tabela de revisão ---
+/**
+ * Lida com a seleção de checkboxes (hierárquica) na tabela de revisão.
+ * @param {HTMLInputElement} checkbox - O checkbox que foi clicado.
+ */
+function handleReviewTableSelection(checkbox) {
+    const row = checkbox.closest('tr');
+    const rowId = row.dataset.id;
+    const isChecked = checkbox.checked;
+
+    // 1. Atualiza todos os filhos (recursivamente)
+    const updateChildren = (parentId, checked) => {
+        const children = document.querySelectorAll(`tr[data-parent-id="${parentId}"]`);
+        children.forEach(child => {
+            const cb = child.querySelector('.review-checkbox:not(:disabled)');
+            if (cb) {
+                cb.checked = checked;
+                cb.indeterminate = false;
+            }
+            updateChildren(child.dataset.id, checked); // Chama recursivamente
+        });
+    };
+    updateChildren(rowId, isChecked);
+
+
+    // 2. Atualiza todos os pais (iterativamente)
+    let parentId = row.dataset.parentId;
+    while (parentId) {
+        const parentRow = document.querySelector(`tr[data-id="${parentId}"]`);
+        if (!parentRow) break;
+        
+        const parentCheckbox = parentRow.querySelector('.review-checkbox');
+        if (!parentCheckbox) break;
+
+        const siblingCheckboxes = Array.from(document.querySelectorAll(`tr[data-parent-id="${parentId}"] .review-checkbox:not(:disabled)`));
+        
+        if (siblingCheckboxes.length > 0) {
+            const checkedSiblings = siblingCheckboxes.filter(cb => cb.checked).length;
+            const indeterminateSiblings = siblingCheckboxes.filter(cb => cb.indeterminate).length;
+
+            if (checkedSiblings === 0 && indeterminateSiblings === 0) {
+                parentCheckbox.checked = false;
+                parentCheckbox.indeterminate = false;
+            } else if (checkedSiblings === siblingCheckboxes.length) {
+                parentCheckbox.checked = true;
+                parentCheckbox.indeterminate = false;
+            } else {
+                parentCheckbox.checked = false;
+                parentCheckbox.indeterminate = true;
+            }
+        }
+        parentId = parentRow.dataset.parentId;
+    }
+
+    // 3. Atualiza o "Selecionar Todos" (#select-all-review-materias)
+    const selectAllCheckbox = DOM.reviewTableContainer.querySelector('#select-all-review-materias');
+    const allTopLevelCheckboxes = Array.from(document.querySelectorAll(`tr[data-level="1"] .review-checkbox:not(:disabled)`));
+    
+    if (allTopLevelCheckboxes.length > 0) {
+        const checkedTopLevel = allTopLevelCheckboxes.filter(cb => cb.checked).length;
+        const indeterminateTopLevel = allTopLevelCheckboxes.filter(cb => cb.indeterminate).length;
+
+        if (checkedTopLevel === 0 && indeterminateTopLevel === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedTopLevel === allTopLevelCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+}
+// --- FIM DA MODIFICAÇÃO ---
+
 
 export function setupAllEventListeners() {
     // Listener para o botão hamburger do menu mobile
@@ -262,6 +338,36 @@ export function setupAllEventListeners() {
         
         // --- Revisão ---
         else if (target.closest('#start-selected-review-btn')) await handleStartReview();
+        // --- MODIFICAÇÃO: Listener para expandir/recolher na tabela de revisão ---
+        else if (target.closest('.toggle-review-row')) {
+            const row = target.closest('tr');
+            const rowId = row.dataset.id;
+            const isExpanded = target.classList.toggle('rotate-90');
+            
+            document.querySelectorAll(`tr[data-parent-id="${rowId}"]`).forEach(childRow => {
+                childRow.classList.toggle('hidden', !isExpanded);
+                
+                // Se estamos recolhendo (isExpanded = false), recolhe todos os descendentes também
+                if (!isExpanded) {
+                    const childIcon = childRow.querySelector('.toggle-review-row');
+                    if (childIcon && childIcon.classList.contains('rotate-90')) {
+                        childIcon.classList.remove('rotate-90');
+                        const grandChildRows = document.querySelectorAll(`tr[data-parent-id="${childRow.dataset.id}"]`);
+                        grandChildRows.forEach(gc => {
+                            gc.classList.add('hidden');
+                            // Continua recolhendo recursivamente
+                             const gcIcon = gc.querySelector('.toggle-review-row');
+                             if (gcIcon && gcIcon.classList.contains('rotate-90')) {
+                                gcIcon.classList.remove('rotate-90');
+                                const ggcRows = document.querySelectorAll(`tr[data-parent-id="${gc.dataset.id}"]`);
+                                ggcRows.forEach(ggc => ggc.classList.add('hidden'));
+                             }
+                        });
+                    }
+                }
+            });
+        }
+        // --- FIM DA MODIFICAÇÃO ---
 
         // --- Filters ---
         else if (target.closest('#filter-btn')) {
@@ -336,14 +442,20 @@ export function setupAllEventListeners() {
                     
                     // Se estivermos fechando (isExpanded = false), precisamos fechar todos os descendentes também
                     if (!isExpanded) {
-                        const childLevel = parseInt(child.dataset.level);
-                        if (childLevel === 2) { // Se fechou uma matéria, esconde os sub-assuntos (nível 3)
-                            const childId = child.dataset.id;
-                            const grandChildRows = document.querySelectorAll(`.tree-table-row[data-parent-id="${childId}"]`);
-                            grandChildRows.forEach(gc => gc.classList.add('hidden-row'));
-                            // Reseta o ícone do filho
-                            const childIcon = child.querySelector('.toggle-icon');
-                            if(childIcon) childIcon.classList.remove('rotate-90');
+                        const childIcon = child.querySelector('.toggle-icon');
+                        if(childIcon && childIcon.classList.contains('rotate-90')) {
+                             childIcon.classList.remove('rotate-90');
+                             const grandChildRows = document.querySelectorAll(`.tree-table-row[data-parent-id="${child.dataset.id}"]`);
+                             grandChildRows.forEach(gc => {
+                                gc.classList.add('hidden-row');
+                                // Continua recursivamente
+                                const gcIcon = gc.querySelector('.toggle-icon');
+                                if(gcIcon && gcIcon.classList.contains('rotate-90')) {
+                                    gcIcon.classList.remove('rotate-90');
+                                    const ggcRows = document.querySelectorAll(`.tree-table-row[data-parent-id="${gc.dataset.id}"]`);
+                                    ggcRows.forEach(ggc => ggc.classList.add('hidden-row'));
+                                }
+                             });
                         }
                     }
                 });
@@ -356,86 +468,8 @@ export function setupAllEventListeners() {
         DOM.searchSavedFiltersInput.addEventListener('input', updateSavedFiltersList);
     }
     
-    if (DOM.reviewTableContainer) {
-        DOM.reviewTableContainer.addEventListener('click', (event) => {
-            const materiaRow = event.target.closest('.materia-row');
-            if (materiaRow && !event.target.matches('input[type="checkbox"]')) {
-                const materia = materiaRow.dataset.materia;
-                const icon = materiaRow.querySelector('i.fa-chevron-right');
-                if (icon) {
-                    icon.classList.toggle('rotate-90');
-                }
-                document.querySelectorAll(`.assunto-row[data-parent-materia="${materia}"]`).forEach(row => {
-                    row.classList.toggle('hidden');
-                });
-            }
-        });
-
-        DOM.reviewTableContainer.addEventListener('change', (event) => {
-            const target = event.target;
-            
-            const updateButtonState = () => {
-                const anyChecked = DOM.reviewTableContainer.querySelector('.assunto-review-checkbox:checked, .materia-review-checkbox:checked');
-                DOM.startSelectedReviewBtn.disabled = !anyChecked;
-            };
-
-            if (target.matches('#select-all-review-materias')) {
-                const isChecked = target.checked;
-                DOM.reviewTableContainer.querySelectorAll('.materia-review-checkbox:not(:disabled)').forEach(cb => {
-                    cb.checked = isChecked;
-                    cb.indeterminate = false;
-                });
-                DOM.reviewTableContainer.querySelectorAll('.assunto-review-checkbox:not(:disabled)').forEach(cb => {
-                    cb.checked = isChecked;
-                });
-            } else if (target.matches('.materia-review-checkbox')) {
-                const isChecked = target.checked;
-                const materia = target.dataset.materia;
-                target.indeterminate = false;
-                document.querySelectorAll(`.assunto-review-checkbox[data-materia="${materia}"]:not(:disabled)`).forEach(cb => {
-                    cb.checked = isChecked;
-                });
-            } else if (target.matches('.assunto-review-checkbox')) {
-                const materia = target.dataset.materia;
-                const allAssuntos = document.querySelectorAll(`.assunto-review-checkbox[data-materia="${materia}"]:not(:disabled)`);
-                const checkedAssuntos = document.querySelectorAll(`.assunto-review-checkbox[data-materia="${materia}"]:checked`);
-                const materiaCheckbox = document.querySelector(`.materia-review-checkbox[data-materia="${materia}"]`);
-
-                if (materiaCheckbox) {
-                    if (checkedAssuntos.length === 0) {
-                        materiaCheckbox.checked = false;
-                        materiaCheckbox.indeterminate = false;
-                    } else if (checkedAssuntos.length === allAssuntos.length) {
-                        materiaCheckbox.checked = true;
-                        materiaCheckbox.indeterminate = false;
-                    } else {
-                        materiaCheckbox.checked = false;
-                        materiaCheckbox.indeterminate = true;
-                    }
-                }
-            }
-            
-            const allMaterias = document.querySelectorAll('.materia-review-checkbox:not(:disabled)');
-            const checkedMaterias = document.querySelectorAll('.materia-review-checkbox:checked');
-            const indeterminateMaterias = document.querySelectorAll('.materia-review-checkbox:indeterminate');
-            const selectAllCheckbox = DOM.reviewTableContainer.querySelector('#select-all-review-materias');
-            
-            if (selectAllCheckbox) {
-                if (checkedMaterias.length === 0 && indeterminateMaterias.length === 0) {
-                    selectAllCheckbox.checked = false;
-                    selectAllCheckbox.indeterminate = false;
-                } else if (checkedMaterias.length === allMaterias.length) {
-                    selectAllCheckbox.checked = true;
-                    selectAllCheckbox.indeterminate = false;
-                } else {
-                    selectAllCheckbox.checked = false;
-                    selectAllCheckbox.indeterminate = true;
-                }
-            }
-            
-            updateButtonState();
-        });
-    }
+    // --- MODIFICAÇÃO: Removido listener antigo da tabela de revisão ---
+    // A nova lógica será adicionada abaixo
 
     // CORREÇÃO: Salva a sessão se o usuário fechar ou mudar de aba
     document.addEventListener('visibilitychange', () => {
@@ -450,9 +484,31 @@ export function setupAllEventListeners() {
     // Adiciona o listener de 'change' para a tabela de estatísticas
     // Usamos 'document' para garantir que funcione mesmo se a tabela for re-renderizada
     document.addEventListener('change', (event) => {
-        if (event.target.closest('#stats-desempenho-materia-container')) {
+        const target = event.target;
+        if (target.closest('#stats-desempenho-materia-container')) {
             handleStatsTableSelection(event);
         }
+        
+        // --- MODIFICAÇÃO: Nova lógica para seleção na tabela de revisão ---
+        else if (target.closest('#review-table-container')) {
+            if (target.matches('.review-checkbox')) {
+                handleReviewTableSelection(target);
+            } else if (target.matches('#select-all-review-materias')) {
+                const isChecked = target.checked;
+                DOM.reviewTableContainer.querySelectorAll('.review-checkbox:not(:disabled)').forEach(cb => {
+                    cb.checked = isChecked;
+                    cb.indeterminate = false;
+                });
+                // Garante que o estado 'indeterminate' seja limpo
+                if (isChecked) {
+                    selectAllCheckbox.indeterminate = false;
+                }
+            }
+            
+            // Atualiza o botão de iniciar revisão
+            const anyChecked = DOM.reviewTableContainer.querySelector('.review-checkbox:checked');
+            DOM.startSelectedReviewBtn.disabled = !anyChecked;
+        }
+        // --- FIM DA MODIFICAÇÃO ---
     });
 }
-
