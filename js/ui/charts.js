@@ -491,21 +491,35 @@ function processEvolutionData(performanceLog, startDate, endDate, metric = 'reso
 
     // 5. Formata os datasets para o Chart.js
     let datasets;
+    // --- MODIFICAÇÃO: Lógica para 'desempenho' gerar duas linhas ---
     if (metric === 'desempenho') {
-        const performanceData = periodData.map(p => p.total > 0 ? (p.correct / p.total) * 100 : 0);
+        const correctPercentageData = periodData.map(p => p.total > 0 ? (p.correct / p.total) * 100 : 0);
+        const incorrectPercentageData = periodData.map(p => p.total > 0 ? (p.incorrect / p.total) * 100 : 0);
         datasets = [
             {
-                label: 'Desempenho (%)',
-                data: performanceData,
-                borderColor: '#3b82f6', // blue-500
-                backgroundColor: 'rgba(59, 130, 246, 0.1)', // blue-500 com 10% opacidade
+                label: 'Acertos (%)',
+                data: correctPercentageData,
+                borderColor: '#22c55e', // green-500
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
                 fill: true,
                 tension: 0.4,
-                pointBackgroundColor: '#3b82f6',
+                pointBackgroundColor: '#22c55e',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            },
+             {
+                label: 'Erros (%)',
+                data: incorrectPercentageData,
+                borderColor: '#ef4444', // red-500
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ef4444',
                 pointRadius: 4,
                 pointHoverRadius: 6
             }
         ];
+    // --- FIM DA MODIFICAÇÃO ---
     } else { // Padrão: 'resolucoes'
         const acertosData = periodData.map(p => p.correct);
         const errosData = periodData.map(p => p.incorrect);
@@ -638,15 +652,16 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
     // 6. Adiciona formatação de '%' se a métrica for 'desempenho'
     if (metric === 'desempenho') {
         chartOptions.scales.y.ticks.callback = function (value) {
-            return value + '%';
+            return value.toFixed(0) + '%'; // Ajustado para não mostrar decimais
         };
+         chartOptions.scales.y.max = 100; // Define o máximo do eixo Y para 100%
         chartOptions.plugins.tooltip.callbacks.label = function (context) {
             let label = context.dataset.label || '';
             if (label) {
                 label += ': ';
             }
             if (context.parsed.y !== null) {
-                label += context.parsed.y.toFixed(0) + '%';
+                label += context.parsed.y.toFixed(0) + '%'; // Ajustado para não mostrar decimais
             }
             return label;
         };
@@ -663,3 +678,4 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
     });
 }
 // ===== FIM DA MODIFICAÇÃO =====
+
