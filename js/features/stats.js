@@ -59,11 +59,83 @@ export function updateStatsPageUI() {
     renderWeeklyChart();
 }
 
+// ===== INÍCIO DA MODIFICAÇÃO: Nova função para popular os filtros =====
+/**
+ * Popula os filtros de Matéria e Assunto na aba de Estatísticas.
+ */
+function populateStatsFilters() {
+    if (!DOM.statsMateriaFilter || !DOM.statsAssuntoFilter) return;
+
+    // 1. Limpa filtros antigos (exceto a opção "Todos")
+    DOM.statsMateriaFilter.innerHTML = '<option value="">Todas</option>';
+    DOM.statsAssuntoFilter.innerHTML = '<option value="">Todos</option>';
+    DOM.statsAssuntoFilter.disabled = true; // Desabilita assuntos por padrão
+
+    // 2. Popula Matérias
+    const materias = state.filterOptions.materia.map(m => m.name).sort(naturalSort);
+    materias.forEach(materiaName => {
+        const option = document.createElement('option');
+        option.value = materiaName;
+        option.textContent = materiaName;
+        DOM.statsMateriaFilter.appendChild(option);
+    });
+}
+
+/**
+ * Atualiza o filtro de Assunto com base na Matéria selecionada.
+ * @param {string} selectedMateria - O nome da matéria selecionada.
+ */
+export function updateStatsAssuntoFilter(selectedMateria) {
+    if (!DOM.statsAssuntoFilter) return;
+
+    DOM.statsAssuntoFilter.innerHTML = '<option value="">Todos</option>';
+    
+    if (!selectedMateria) {
+        DOM.statsAssuntoFilter.disabled = true;
+        return;
+    }
+
+    const materiaObj = state.filterOptions.materia.find(m => m.name === selectedMateria);
+    if (materiaObj && materiaObj.assuntos) {
+        // Coleta todos os assuntos, sub-assuntos e sub-sub-assuntos para um Set
+        const allAssuntos = new Set();
+        materiaObj.assuntos.forEach(assunto => {
+            allAssuntos.add(assunto.name);
+            if (assunto.subAssuntos) {
+                assunto.subAssuntos.forEach(sub => {
+                    allAssuntos.add(sub.name);
+                    if (sub.subSubAssuntos) {
+                        sub.subSubAssuntos.forEach(subSub => allAssuntos.add(subSub));
+                    }
+                });
+            }
+        });
+
+        // Ordena e popula o dropdown
+        const sortedAssuntos = Array.from(allAssuntos).sort(naturalSort);
+        sortedAssuntos.forEach(assuntoName => {
+            const option = document.createElement('option');
+            option.value = assuntoName;
+            option.textContent = assuntoName;
+            DOM.statsAssuntoFilter.appendChild(option);
+        });
+        
+        DOM.statsAssuntoFilter.disabled = false;
+    } else {
+        DOM.statsAssuntoFilter.disabled = true;
+    }
+}
+// ===== FIM DA MODIFICAÇÃO =====
+
 export function renderEstatisticasView() {
     if (!state.currentUser) {
         DOM.statsMainContent.innerHTML = '<p class="text-center text-gray-500 p-8">Por favor, faça login para ver suas estatísticas.</p>';
         return;
     }
+
+    // ===== INÍCIO DA MODIFICAÇÃO: Popular filtros =====
+    populateStatsFilters(); // Popula as matérias
+    // ===== FIM DA MODIFICAÇÃO =====
 
     let totalQuestions = 0;
     let totalCorrect = 0;
@@ -363,7 +435,7 @@ function renderDesempenhoMateriaTable() {
                         if (hasSubSubAssuntos) {
                             const sortedSubSubAssuntos = Array.from(subAssuntoNode.subSubAssuntos.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                             for (const subSubAssuntoName of sortedSubSubAssuntos) {
-                                const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssuntoName);
+                                const subSubAssuntoNode = subSubAssuntoNode.subSubAssuntos.get(subSubAssuntoName);
                                 const subSubAssuntoId = `subsubassunto-${subAssuntoId}-${subSubAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
                                 tableHtml += renderTreeTableRow(4, subSubAssuntoName, subSubAssuntoNode.counts, subSubAssuntoId, subAssuntoId, false);
