@@ -141,16 +141,33 @@ export async function handleStatsFilter() {
     const materiaSelect = DOM.statsMateriaFilter;
     const assuntoSelect = DOM.statsAssuntoFilter;
 
+    // ===== INÍCIO DA MODIFICAÇÃO: Normaliza datas =====
+    // Garante que 'Tudo' (null) não quebre a lógica de data
+    let startDate = periodButton.dataset.startDate ? new Date(periodButton.dataset.startDate + 'T00:00:00') : null;
+    let endDate = periodButton.dataset.endDate ? new Date(periodButton.dataset.endDate + 'T23:59:59') : new Date(); // Se 'Tudo', endDate é hoje
+
+    // Se 'Tudo' (startDate nulo), define um padrão (ex: 6 meses atrás) para o gráfico de evolução
+    // mas os cards/tabela ainda considerarão 'Tudo'
+    let evolutionStartDate = startDate;
+    if (!evolutionStartDate) {
+        evolutionStartDate = new Date(endDate);
+        evolutionStartDate.setMonth(evolutionStartDate.getMonth() - 6);
+        evolutionStartDate.setHours(0, 0, 0, 0);
+    }
+    
     const filters = {
-        startDate: periodButton.dataset.startDate ? new Date(periodButton.dataset.startDate + 'T00:00:00') : null, // Adiciona T00:00:00 para evitar fuso
-        endDate: periodButton.dataset.endDate ? new Date(periodButton.dataset.endDate + 'T23:59:59') : null, // Adiciona T23:59:59 para pegar o dia todo
+        startDate: startDate, 
+        endDate: endDate, 
+        // Datas específicas para o gráfico de evolução (para lidar com o 'Tudo')
+        evolutionStartDate: evolutionStartDate, 
+        evolutionEndDate: endDate,
+        
         materia: materiaSelect.value || null,
         assunto: assuntoSelect.value || null,
     };
+    // ===== FIM DA MODIFICAÇÃO =====
 
     // 2. Re-renderiza as seções com os filtros aplicados
-    // Nota: A função renderEstatisticasView (cards/gráfico) será modificada para aceitar filtros
-    // A função renderDesempenhoMateriaTable (tabela) também será modificada
     await renderEstatisticasView(filters);
 }
 // ===== FIM DA MODIFICAÇÃO =====
@@ -164,9 +181,28 @@ export async function renderEstatisticasView(filters = null) {
         return;
     }
 
-    // ===== INÍCIO DA MODIFICAÇÃO: Popular filtros (apenas se não for uma chamada de filtro) =====
-    if (!filters) {
-        populateStatsFilters(); // Popula as matérias
+    // ===== INÍCIO DA MODIFICAÇÃO: Lógica de Filtro Padrão =====
+    let appliedFilters = filters;
+    if (!appliedFilters) {
+        // Popula os filtros da UI se for a carga inicial
+        populateStatsFilters(); 
+        
+        // Define filtros padrão para a carga inicial (Tudo / 6 meses para evolução)
+        const endDate = new Date(); // Hoje
+        endDate.setHours(23, 59, 59, 999); // Garante que pegue o dia todo de hoje
+        
+        const startDate = new Date(endDate);
+        startDate.setMonth(startDate.getMonth() - 6);
+        startDate.setHours(0, 0, 0, 0);
+
+        appliedFilters = {
+            startDate: null, // null = 'Tudo' para cards e tabela
+            endDate: new Date(), // Hoje (para os cards e tabela)
+            evolutionStartDate: startDate, // 6 meses atrás (para gráfico de evolução)
+            evolutionEndDate: new Date(), // Hoje (para gráfico de evolução)
+            materia: null,
+            assunto: null
+        };
     }
     // ===== FIM DA MODIFICAÇÃO =====
 
@@ -187,15 +223,15 @@ export async function renderEstatisticasView(filters = null) {
 
     // Helper para checar matéria/assunto de uma sessão
     const sessionMatchesFilter = (session) => {
-        if (!filters || (!filters.materia && !filters.assunto)) return true; // Passa se não houver filtro de
+        if (!appliedFilters || (!appliedFilters.materia && !appliedFilters.assunto)) return true; // Passa se não houver filtro de
         
         for (const materia in session.details) {
-            if (filters.materia && materia !== filters.materia) {
+            if (appliedFilters.materia && materia !== appliedFilters.materia) {
                 continue; // Matéria não bate, pula
             }
             
             // Matéria bateu (ou não há filtro de matéria). Checa assunto.
-            if (!filters.assunto) {
+            if (!appliedFilters.assunto) {
                 return true; // Matéria bateu e não há filtro de assunto
             }
 
@@ -203,32 +239,32 @@ export async function renderEstatisticasView(filters = null) {
             // A granularidade do filtro de assunto só pode ser aplicada na tabela.
             // Para os cards e gráfico, SÓ PODEMOS FILTRAR POR MATÉRIA.
             // O filtro de assunto só se aplicará à tabela.
-            if(filters.materia) return true;
+            if(appliedFilters.materia) return true;
         }
         return false;
     };
 
     // Helper para checar matéria/assunto de um stat da sessão ATUAL
      const statMatchesFilter = (stat) => {
-        if (!filters) return true;
+        if (!appliedFilters) return true;
         
-        const materiaMatch = !filters.materia || stat.materia === filters.materia;
+        const materiaMatch = !appliedFilters.materia || stat.materia === appliedFilters.materia;
         if (!materiaMatch) return false;
 
         // Se filtrou por matéria e não por assunto, ok
-        if (filters.materia && !filters.assunto) return true;
+        if (appliedFilters.materia && !appliedFilters.assunto) return true;
         
         // Se não filtrou por matéria nem assunto, ok
-        if (!filters.materia && !filters.assunto) return true;
+        if (!appliedFilters.materia && !appliedFilters.assunto) return true;
 
         // Se filtrou por assunto, precisamos checar
-        if (filters.assunto) {
+        if (appliedFilters.assunto) {
              const details = questionIdToDetails.get(stat.questionId);
              if (details) {
                 // Checa se o assunto bate em qualquer nível da hierarquia da questão
-                return details.assunto === filters.assunto || 
-                       details.subAssunto === filters.assunto || 
-                       details.subSubAssunto === filters.assunto;
+                return details.assunto === appliedFilters.assunto || 
+                       details.subAssunto === appliedFilters.assunto || 
+                       details.subSubAssunto === appliedFilters.assunto;
              }
         }
         
@@ -239,16 +275,16 @@ export async function renderEstatisticasView(filters = null) {
     state.historicalSessions.forEach(session => {
         const sessionDate = session.createdAt ? session.createdAt.toDate() : null;
         
-        // --- FILTRAGEM POR DATA ---
-        if (filters && filters.startDate && sessionDate && sessionDate < filters.startDate) {
+        // --- FILTRAGEM POR DATA (usando startDate, não evolutionStartDate) ---
+        if (appliedFilters && appliedFilters.startDate && sessionDate && sessionDate < appliedFilters.startDate) {
             return;
         }
-        if (filters && filters.endDate && sessionDate && sessionDate > filters.endDate) {
+        if (appliedFilters && appliedFilters.endDate && sessionDate && sessionDate > appliedFilters.endDate) {
             return;
         }
         // --- FILTRAGEM POR MATÉRIA ---
         // (O filtro de assunto não pode ser aplicado aqui de forma granular)
-        if (filters && filters.materia && !sessionMatchesFilter(session)) {
+        if (appliedFilters && appliedFilters.materia && !sessionMatchesFilter(session)) {
              return;
         }
         
@@ -256,9 +292,9 @@ export async function renderEstatisticasView(filters = null) {
         let sessionTotal = 0;
         let sessionCorrect = 0;
 
-        if (filters && filters.materia) {
+        if (appliedFilters && appliedFilters.materia) {
             // Se há filtro de matéria, soma apenas dessa matéria
-            const detail = session.details[filters.materia];
+            const detail = session.details[appliedFilters.materia];
             if(detail) {
                 sessionTotal = detail.total || 0;
                 sessionCorrect = detail.correct || 0;
@@ -273,7 +309,7 @@ export async function renderEstatisticasView(filters = null) {
         totalCorrect += sessionCorrect;
         
         for (const materia in session.details) {
-            if (!filters || !filters.materia || materia === filters.materia) {
+            if (!appliedFilters || !appliedFilters.materia || materia === appliedFilters.materia) {
                 materiasSet.add(materia);
             }
         }
@@ -282,7 +318,7 @@ export async function renderEstatisticasView(filters = null) {
     // 2. Adiciona as estatísticas da sessão atual (não salva)
     state.sessionStats.forEach(stat => {
         // A sessão atual não tem filtro de data, mas tem de matéria/assunto
-        if (filters && !statMatchesFilter(stat)) {
+        if (appliedFilters && !statMatchesFilter(stat)) {
             return;
         }
 
@@ -308,14 +344,36 @@ export async function renderEstatisticasView(filters = null) {
 
     // 5. Renderiza a nova tabela de desempenho por matéria
     // ===== INÍCIO DA MODIFICAÇÃO =====
-    await renderDesempenhoMateriaTable(filters);
+    await renderDesempenhoMateriaTable(appliedFilters);
     // ===== FIM DA MODIFICAÇÃO =====
 
     // ===== INÍCIO DA MODIFICAÇÃO =====
-    // 6. Renderiza o gráfico de evolução (só renderiza na carga inicial, não na filtragem)
-    if (!filters) {
-        renderEvolutionChart();
-    }
+    // 6. Busca dados para o gráfico de evolução
+    // O fetchPerformanceLog usa as datas de EVOLUÇÃO
+    // Garante que as datas de evolução sejam válidas
+    const evoStartDate = appliedFilters.evolutionStartDate || new Date(new Date().setMonth(new Date().getMonth() - 6));
+    const evoEndDate = appliedFilters.evolutionEndDate || new Date();
+    
+    const performanceLog = await fetchPerformanceLog(evoStartDate, evoEndDate);
+
+    // 7. Filtra o log por matéria/assunto (o fetch só filtra por data)
+    const filteredLog = performanceLog.filter(entry => {
+        if (appliedFilters.materia && entry.materia !== appliedFilters.materia) {
+            return false;
+        }
+        if (appliedFilters.assunto) {
+            const assuntoMatch = entry.assunto === appliedFilters.assunto ||
+                                 entry.subAssunto === appliedFilters.assunto ||
+                                 entry.subSubAssunto === appliedFilters.assunto;
+            if (!assuntoMatch) {
+                return false;
+            }
+        }
+        return true;
+    });
+    
+    // 8. Renderiza o gráfico de evolução com os dados filtrados
+    renderEvolutionChart(filteredLog, appliedFilters.evolutionStartDate, appliedFilters.evolutionEndDate);
     // ===== FIM DA MODIFICAÇÃO =====
 }
 
