@@ -308,3 +308,15 @@ body {
     margin-top: -1px; /* Para sobrepor a borda inferior da tabela */
     border-radius: 0 0 0.5rem 0.5rem; /* rounded-b-lg */
 }
+
+/* --- NOVO: Z-index para o dropdown do caderno --- */
+.caderno-menu-dropdown {
+    z-index: 20; 
+}
+
+/* --- NOVO: Estilos para truncar texto (caso o Tailwind não esteja processando) --- */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
