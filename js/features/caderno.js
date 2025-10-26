@@ -83,7 +83,7 @@ function renderFolderContentView() {
              const isLast = index === cadernosInFolder.length - 1;
              // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista (removida a borda) ---
              html += `
-                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
+                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
                     <!-- Left: Icon + Name (clickable to open) -->
                     <div class="flex items-center flex-grow cursor-pointer" data-action="open" style="min-width: 0;"> <!-- min-width: 0 para truncamento -->
                         <i class="far fa-file-alt text-blue-500 text-lg w-6 text-center mr-3 sm:mr-4"></i>
@@ -178,7 +178,7 @@ function renderRootCadernosView() {
             const isLast = index === unfiledCadernos.length - 1;
             // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista (removida a borda) ---
             html += `
-                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
+                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
                     <!-- Left: Icon + Name (clickable to open) -->
                     <div class="flex items-center flex-grow cursor-pointer" data-action="open" style="min-width: 0;"> <!-- min-width: 0 para truncamento -->
                         <i class="far fa-file-alt text-blue-500 text-lg w-6 text-center mr-3 sm:mr-4"></i>
@@ -387,3 +387,4 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
+
