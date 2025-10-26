@@ -59,7 +59,7 @@ function renderFolderContentView() {
     const cadernosInFolder = state.userCadernos.filter(c => c.folderId === state.currentFolderId);
     if (cadernosInFolder.length > 0) {
          // --- MODIFICAÇÃO: Wrapper para o layout de lista ---
-         let html = '<div class="bg-white rounded-lg shadow-sm overflow-hidden">';
+         let html = '<div class="bg-white rounded-lg shadow-sm">';
          cadernosInFolder.forEach((caderno, index) => {
              const isLast = index === cadernosInFolder.length - 1;
              // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista (removida a borda) ---
@@ -145,7 +145,7 @@ function renderRootCadernosView() {
         }
         
         // --- MODIFICAÇÃO: Wrapper para o layout de lista ---
-        html += '<div class="bg-white rounded-lg shadow-sm overflow-hidden">';
+        html += '<div class="bg-white rounded-lg shadow-sm">';
 
         unfiledCadernos.forEach((caderno, index) => {
             const isLast = index === unfiledCadernos.length - 1;
@@ -360,3 +360,4 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
+
