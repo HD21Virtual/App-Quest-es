@@ -1,4 +1,4 @@
-import { collection, getDocs, query, orderBy, onSnapshot, getDoc, doc, updateDoc, arrayRemove, setDoc, addDoc, serverTimestamp, where, writeBatch, deleteDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, onSnapshot, getDoc, doc, updateDoc, arrayRemove, setDoc, addDoc, serverTimestamp, where, writeBatch, deleteDoc, arrayUnion, increment, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from '../firebase-config.js';
 import { state, setState, addUnsubscribe } from '../state.js';
 import { renderFoldersAndCadernos } from '../features/caderno.js';
@@ -214,8 +214,12 @@ export function setupAllListeners(userId) {
         });
         
         // Se a tela de estatísticas estiver visível, re-renderiza ela
+        // (apenas se não houver filtro de data)
         if (DOM.estatisticasView && !DOM.estatisticasView.classList.contains('hidden')) {
-            renderEstatisticasView();
+             const periodButton = DOM.statsPeriodoButton;
+             if (!periodButton || periodButton.dataset.value === 'tudo') {
+                renderEstatisticasView();
+             }
         }
     });
     addUnsubscribe(unsubHistory);
@@ -239,6 +243,11 @@ export async function saveUserAnswer(questionId, userAnswer, isCorrect) {
     }
 }
 
+/**
+ * Atualiza o histórico vitalício de uma questão.
+ * @param {string} questionId 
+ * @param {boolean} isCorrect 
+ */
 export async function updateQuestionHistory(questionId, isCorrect) {
     if (!state.currentUser) return;
     const historyRef = doc(db, 'users', state.currentUser.uid, 'questionHistory', questionId);
@@ -253,6 +262,35 @@ export async function updateQuestionHistory(questionId, isCorrect) {
         console.error("Error updating question history:", error);
     }
 }
+
+// ===== INÍCIO DA NOVA FUNÇÃO =====
+/**
+ * Registra uma entrada de desempenho individual no log diário.
+ * @param {object} question - O objeto completo da questão.
+ * @param {boolean} isCorrect - Se a resposta foi correta.
+ */
+export async function logPerformanceEntry(question, isCorrect) {
+    if (!state.currentUser || !question) return;
+
+    const logEntry = {
+        createdAt: serverTimestamp(),
+        questionId: question.id,
+        isCorrect: isCorrect,
+        materia: question.materia || null,
+        assunto: question.assunto || null,
+        subAssunto: question.subAssunto || null,
+        subSubAssunto: question.subSubAssunto || null
+    };
+
+    try {
+        const logCollection = collection(db, 'users', state.currentUser.uid, 'performanceLog');
+        await addDoc(logCollection, logEntry);
+    } catch (error) {
+        console.error("Error logging performance entry:", error);
+    }
+}
+// ===== FIM DA NOVA FUNÇÃO =====
+
 
 export async function setSrsReviewItem(questionId, reviewData) {
     if (!state.currentUser) return;
@@ -385,6 +423,42 @@ export async function getHistoricalCountsForQuestions(questionIds) {
     return { correct: totalCorrect, incorrect: totalIncorrect, resolved: questionsWithHistory };
 }
 
+// ===== INÍCIO DA NOVA FUNÇÃO =====
+/**
+ * Busca entradas do log de desempenho dentro de um intervalo de datas.
+ * @param {Date} startDate - Data de início.
+ * @param {Date} endDate - Data de fim.
+ * @returns {Array} - Um array com os documentos do log.
+ */
+export async function fetchPerformanceLog(startDate, endDate) {
+    if (!state.currentUser || !startDate || !endDate) return [];
+
+    const logCollection = collection(db, 'users', state.currentUser.uid, 'performanceLog');
+    
+    // Converte as datas para Timestamps do Firestore para a consulta
+    const startTimestamp = Timestamp.fromDate(startDate);
+    const endTimestamp = Timestamp.fromDate(endDate);
+
+    const q = query(logCollection, 
+        where("createdAt", ">=", startTimestamp),
+        where("createdAt", "<=", endTimestamp)
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        const logEntries = [];
+        querySnapshot.forEach(doc => {
+            logEntries.push({ id: doc.id, ...doc.data() });
+        });
+        return logEntries;
+    } catch (error) {
+        console.error("Erro ao buscar log de desempenho:", error);
+        return [];
+    }
+}
+// ===== FIM DA NOVA FUNÇÃO =====
+
+
 export async function deleteFilter(filterId) {
     if (!state.currentUser) return;
     await deleteDoc(doc(db, 'users', state.currentUser.uid, 'filtros', filterId));
@@ -478,7 +552,8 @@ export async function resetAllUserData() {
         'cadernoState',
         'filtros',
         'cadernos',
-        'folders'
+        'folders',
+        'performanceLog' // ===== ADICIONADO =====
     ];
 
     // Cria um array de promessas para deletar todas as coleções em paralelo
@@ -507,4 +582,3 @@ export async function resetAllUserData() {
     }
 }
 // --- FIM DA NOVA FUNÇÃO ---
-
