@@ -121,6 +121,12 @@ export function initDOM() {
     DOM.statsPeriodoCustomApply = document.getElementById('stats-periodo-custom-apply');
     // --- FIM NOVO ---
 
+    // ===== INÍCIO DA MODIFICAÇÃO: Filtros da aba Estatísticas =====
+    DOM.statsMateriaFilter = document.getElementById('stats-materia-filter');
+    DOM.statsAssuntoFilter = document.getElementById('stats-pasta-filter'); // O ID no HTML é 'stats-pasta-filter'
+    DOM.statsFilterBtn = document.getElementById('stats-filter-btn');
+    // ===== FIM DA MODIFICAÇÃO =====
+
     // Rodapé de Seleção da Tabela de Stats
     DOM.statsSelectionFooter = document.getElementById('stats-selection-footer');
     DOM.statsFooterResolvidas = document.getElementById('stats-footer-resolvidas');
