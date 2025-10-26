@@ -17,6 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Link para o arquivo CSS externo -->
+    <!-- O caminho 'style.css' está correto porque ele está na
+         mesma pasta que o index.html -->
     <link rel="stylesheet" href="style.css"> 
 
 </head>
@@ -644,9 +646,22 @@
     </div>
 
     <!-- 
-      CORREÇÃO: Alterei o 'src' de 'App-Questoes/js/app.js' para 'js/app.js' 
-      O seu arquivo index.html está na mesma pasta que a pasta 'js', 
-      portanto, o caminho correto é 'js/app.js'.
+      EXPLICAÇÃO DA CORREÇÃO:
+      O comentário original no seu código indicava que o 'src' estava
+      errado ('App-Questoes/js/app.js').
+      
+      O caminho CORRETO é 'js/app.js', pois o 'index.html' está na
+      raiz do projeto (ex: 'App-Questoes/') e a pasta 'js'
+      está dentro dessa raiz.
+      
+      O 'index.html' só precisa carregar UM arquivo: o 'app.js'.
+      O 'app.js' (sendo um "module") é responsável por importar
+      todos os outros arquivos que ele precisa (como 'firestore.js', 'state.js', etc.).
+      
+      Os erros 404 que você vê (ex: 'App-Questoes/services/firestore.js')
+      estão com o caminho errado, faltando a pasta 'js/'. Isso acontecia
+      porque a versão *antiga* do seu 'index.html' provavelmente estava
+      tentando carregar esses arquivos diretamente e com o caminho errado.
     -->
     <script type="module" src="js/app.js"></script>
 </body>
