@@ -277,7 +277,9 @@ export function handleMateriaListClick(event) {
     }
 }
 
-export function handleAssuntoListClick(event) {
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora é async =====
+export async function handleAssuntoListClick(event) {
+// ===== FIM DA MODIFICAÇÃO =====
     // --- MODIFICAÇÃO: Lógica de clique e toggle refatorada ---
     const toggleAssunto = event.target.closest('[data-action="toggle-assunto"]');
     const toggleSubAssunto = event.target.closest('[data-action="toggle-subassunto"]');
@@ -325,7 +327,9 @@ export function handleAssuntoListClick(event) {
     if (dataset) {
         const { materiaName, assuntoName, subassuntoName, subsubassuntoName } = dataset;
 
-        navigateToView('vade-mecum-view', false);
+        // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+        await navigateToView('vade-mecum-view', false);
+        // ===== FIM DA MODIFICAÇÃO =====
 
         setTimeout(() => {
             clearAllFilters();
@@ -368,4 +372,3 @@ export function handleBackToMaterias() {
     setState('selectedMateria', null);
     renderMateriasView();
 }
-
