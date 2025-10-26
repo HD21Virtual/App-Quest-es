@@ -3,12 +3,15 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-/* Efeito hover para o círculo e a letra (APENAS se não respondida E não selecionada) */
-.option-item:not(.is-answered):not(.selected):hover .option-circle {
-    border-color: #3b82f6; /* Azul */
-}
-.option-item:not(.is-answered):not(.selected):hover .option-circle .option-letter {
-    color: #3b82f6; /* Azul */
+/* MODIFICAÇÃO: Efeito hover agora só aplica em dispositivos com mouse (@media (hover: hover)) */
+@media (hover: hover) {
+    /* Efeito hover para o círculo e a letra (APENAS se não respondida E não selecionada) */
+    .option-item:not(.is-answered):not(.selected):hover .option-circle {
+        border-color: #3b82f6; /* Azul */
+    }
+    .option-item:not(.is-answered):not(.selected):hover .option-circle .option-letter {
+        color: #3b82f6; /* Azul */
+    }
 }
 
 /* Estilos para o círculo de seleção */
@@ -320,4 +323,3 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
