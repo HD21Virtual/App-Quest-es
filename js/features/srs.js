@@ -235,10 +235,14 @@ export function renderReviewView() {
 
             // Nível 4: SubSubAssunto (só adiciona se existir)
             if (subSubAssunto) {
-                if (!subSubAssuntoNode.children.has(subSubAssunto)) {
-                    subSubAssuntoNode.children.set(subSubAssunto, createStatsNode());
+                // --- CORREÇÃO ---
+                // O erro estava aqui. Deveria checar/criar no `subAssuntoNode.children`
+                if (!subAssuntoNode.children.has(subSubAssunto)) {
+                    subAssuntoNode.children.set(subSubAssunto, createStatsNode());
                 }
-                const subSubAssuntoNode = subSubAssuntoNode.children.get(subSubAssunto);
+                // E aqui, deveria pegar o nó recém-criado/existente a partir do `subAssuntoNode`
+                const subSubAssuntoNode = subAssuntoNode.children.get(subSubAssunto);
+                // --- FIM DA CORREÇÃO ---
                 incrementStats(subSubAssuntoNode, item);
             }
         }
@@ -417,3 +421,4 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
+
