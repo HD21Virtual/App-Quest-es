@@ -98,7 +98,7 @@ export async function handleConfirmation() {
     if (!state.currentUser || !state.deletingType) return;
 
     if (state.deletingType === 'all-progress') {
-        // await resetAllUserData();
+        // Correção: Removida linha duplicada/comentada.
         await resetAllUserData();
     } else {
         await deleteItem(state.deletingType, state.deletingId);
@@ -197,6 +197,3 @@ export async function showItemStatsModal(itemId, itemType, itemName) {
 function showInfoModal(title, message) {
     // Logic to show an info-only confirmation modal
 }
-
-
-
