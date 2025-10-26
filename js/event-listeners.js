@@ -1,10 +1,12 @@
-import DOM from './dom-elements.js';
+import DOM from '../dom-elements.js';
 // --- CORREÇÃO: Importar setState ---
-import { state, setState } from './state.js';
+import { state, setState } from '../state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 // CORREÇÃO: Salvar o progresso ao sair da página
 // --- MODIFICAÇÃO: Importar resetAllUserData e updateStatsAssuntoFilter ---
-import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats, resetAllUserData } from './services/firestore.js';
+// ===== INÍCIO DA MODIFICAÇÃO =====
+import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from '../services/firestore.js';
+// ===== FIM DA MODIFICAÇÃO =====
 // CORREÇÃO APLICADA ---
 // O caminho foi alterado de "../features/stats.js" para "./features/stats.js"
 // ===== INÍCIO DA MODIFICAÇÃO =====
@@ -104,6 +106,15 @@ function handleStatsTableSelection(event) {
                 const gcCheckbox = gc.querySelector('.row-checkbox');
                 gcCheckbox.checked = isChecked;
                 gc.classList.toggle('selected-row', isChecked);
+                
+                // ===== INÍCIO DA MODIFICAÇÃO: Lógica para bisnetos (nível 4) =====
+                const greatGrandChildRows = tableContainer.querySelectorAll(`tr[data-parent-id="${gc.dataset.id}"]`);
+                greatGrandChildRows.forEach(ggc => {
+                    const ggcCheckbox = ggc.querySelector('.row-checkbox');
+                    ggcCheckbox.checked = isChecked;
+                    ggc.classList.toggle('selected-row', isChecked);
+                });
+                // ===== FIM DA MODIFICAÇÃO =====
             });
         });
 
@@ -371,13 +382,13 @@ export function setupAllEventListeners() {
             handleFolderItemClick(event);
         }
         else if (target.closest('#back-to-folders-btn')) handleBackToFolders();
-        else if (target.closest('#add-questions-to-caderno-btn')) handleAddQuestionsToCaderno();
-        else if (target.closest('#cancel-add-questions-btn')) cancelAddQuestions();
+        else if (target.closest('#add-questions-to-caderno-btn')) await handleAddQuestionsToCaderno();
+        else if (target.closest('#cancel-add-questions-btn')) await cancelAddQuestions();
 
 
         // --- Materias / Assuntos ---
         else if (target.closest('#materias-list-container')) handleMateriaListClick(event);
-        else if (target.closest('#assuntos-list-container')) handleAssuntoListClick(event);
+        else if (target.closest('#assuntos-list-container')) await handleAssuntoListClick(event);
         else if (target.closest('#back-to-materias-btn')) handleBackToMaterias();
         
         // --- Revisão ---
@@ -447,7 +458,9 @@ export function setupAllEventListeners() {
         // --- Navigation ---
         else if (target.closest('.nav-link')) {
             event.preventDefault();
-            navigateToView(target.closest('.nav-link').dataset.view);
+            // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+            await navigateToView(target.closest('.nav-link').dataset.view);
+            // ===== FIM DA MODIFICAÇÃO =====
         }
 
         // --- MODIFICAÇÃO: Filtro de Período de Estatísticas ---
@@ -571,8 +584,9 @@ export function setupAllEventListeners() {
                 DOM.statsPeriodoPanel.classList.add('hidden');
                 DOM.statsPeriodoCustomRange.classList.add('hidden');
                 
-                // TODO: Chamar a função de filtrar estatísticas
-                // handleStatsFilter(startDate, endDate); 
+                // ===== INÍCIO DA MODIFICAÇÃO: Chama o filtro de estatísticas =====
+                await handleStatsFilter(); 
+                // ===== FIM DA MODIFICAÇÃO =====
             }
         }
         else if (target.closest('#stats-periodo-custom-apply')) {
@@ -604,8 +618,9 @@ export function setupAllEventListeners() {
                 DOM.statsPeriodoPanel.classList.add('hidden');
                 DOM.statsPeriodoCustomRange.classList.add('hidden');
                 
-                // TODO: Chamar a função de filtrar estatísticas
-                // handleStatsFilter(startDate, endDate);
+                // ===== INÍCIO DA MODIFICAÇÃO: Chama o filtro de estatísticas =====
+                await handleStatsFilter();
+                // ===== FIM DA MODIFICAÇÃO =====
             } else {
                 console.warn("Selecione data de início e fim.");
             }
@@ -680,7 +695,7 @@ export function setupAllEventListeners() {
         // ===== INÍCIO DA MODIFICAÇÃO =====
         else if (target.id === 'stats-filter-btn') {
             // Chama a função de filtragem
-            handleStatsFilter();
+            await handleStatsFilter();
         }
         // ===== FIM DA MODIFICAÇÃO =====
     });
@@ -731,7 +746,8 @@ export function setupAllEventListeners() {
                     cb.indeterminate = false;
                 });
                 // Garante que o estado 'indeterminate' seja limpo
-                if (isChecked) {
+                const selectAllCheckbox = DOM.reviewTableContainer.querySelector('#select-all-review-materias');
+                if (selectAllCheckbox && isChecked) {
                     selectAllCheckbox.indeterminate = false;
                 }
             }
