@@ -5,7 +5,9 @@ import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, 
 // CORREÇÃO: Salvar o progresso ao sair da página
 // --- MODIFICAÇÃO: Importar resetAllUserData e updateStatsAssuntoFilter ---
 import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats, resetAllUserData } from './services/firestore.js';
-import { updateStatsPageUI, renderEstatisticasView, updateStatsAssuntoFilter } from "../features/stats.js";
+// --- CORREÇÃO APLICADA ---
+// O caminho foi alterado de "../features/stats.js" para "./features/stats.js"
+import { updateStatsPageUI, renderEstatisticasView, updateStatsAssuntoFilter } from "./features/stats.js";
 // CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
@@ -642,7 +644,7 @@ export function setupAllEventListeners() {
                 
                 childRows.forEach(child => {
                     child.classList.toggle('hidden-row', !isExpanded);
-                    
+
                     // Se estivermos fechando (isExpanded = false), precisamos fechar todos os descendentes também
                     if (!isExpanded) {
                         const childIcon = child.querySelector('.toggle-icon');
