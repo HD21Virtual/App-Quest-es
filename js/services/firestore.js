@@ -437,3 +437,74 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
+
+// --- NOVA FUNÇÃO PARA RESETAR O PROGRESSO ---
+/**
+ * Apaga todas as subcoleções de dados de um usuário.
+ * @param {string} userId - O ID do usuário.
+ */
+async function deleteUserCollection(userId, collectionName) {
+    if (!userId) return;
+    try {
+        const collectionRef = collection(db, 'users', userId, collectionName);
+        const q = query(collectionRef);
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) return; // Coleção já está vazia
+
+        const batch = writeBatch(db);
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+        console.log(`Coleção ${collectionName} resetada.`);
+    } catch (error) {
+        console.error(`Erro ao resetar a coleção ${collectionName}:`, error);
+    }
+}
+
+/**
+ * Reseta todos os dados do usuário logado.
+ */
+export async function resetAllUserData() {
+    if (!state.currentUser) return;
+    const userId = state.currentUser.uid;
+
+    const collectionsToDelete = [
+        'sessions',
+        'reviewItems',
+        'userQuestionState',
+        'questionHistory',
+        'cadernoState',
+        'filtros',
+        'cadernos',
+        'folders'
+    ];
+
+    // Cria um array de promessas para deletar todas as coleções em paralelo
+    const deletePromises = collectionsToDelete.map(collectionName => 
+        deleteUserCollection(userId, collectionName)
+    );
+
+    try {
+        await Promise.all(deletePromises);
+        console.log("Progresso do usuário resetado com sucesso.");
+        // O listener onAuthStateChanged em auth.js vai recarregar o estado vazio
+        // (pois as coleções estarão vazias), então não precisamos forçar um reset aqui.
+        // Apenas para garantir, podemos limpar os mapas locais.
+        setState('userFolders', []);
+        setState('userCadernos', []);
+        setState('userReviewItems', []);
+        setState('historicalSessions', []);
+        setState('userAnswers', new Map());
+        setState('userCadernoState', new Map());
+        setState('userReviewItemsMap', new Map());
+        setState('userQuestionHistoryMap', new Map());
+        setState('savedFilters', []);
+        setState('sessionStats', []);
+    } catch (error) {
+        console.error("Erro geral ao resetar o progresso do usuário:", error);
+    }
+}
+// --- FIM DA NOVA FUNÇÃO ---
+
