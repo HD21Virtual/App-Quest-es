@@ -2,9 +2,10 @@ import DOM from './dom-elements.js';
 // --- CORREÇÃO: Importar setState ---
 import { state, setState } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
-// CORREÇÃO: Importar saveSessionStats para salvar o progresso ao sair da página
-// --- MODIFICAÇÃO: Importar resetAllUserData ---
+// CORREÇÃO: Salvar o progresso ao sair da página
+// --- MODIFICAÇÃO: Importar resetAllUserData e updateStatsAssuntoFilter ---
 import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats, resetAllUserData } from './services/firestore.js';
+import { updateStatsPageUI, renderEstatisticasView, updateStatsAssuntoFilter } from "../features/stats.js";
 // CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
@@ -672,6 +673,13 @@ export function setupAllEventListeners() {
             if (DOM.confirmationModalText) DOM.confirmationModalText.innerHTML = `Tem certeza que deseja apagar <strong>TODO</strong> o seu progresso? Isso inclui todas as estatísticas, filtros, pastas, cadernos e agendamentos de revisão. <br><br><span class="font-bold text-red-600">Esta ação não pode ser desfeita.</span>`;
             if (DOM.confirmationModal) DOM.confirmationModal.classList.remove('hidden');
         }
+        // ===== INÍCIO DA MODIFICAÇÃO =====
+        else if (target.id === 'stats-filter-btn') {
+            // A lógica de filtragem real ainda precisa ser implementada em stats.js
+            // e chamada aqui. Por enquanto, apenas registramos.
+            console.log("Filtrar estatísticas clicado.");
+        }
+        // ===== FIM DA MODIFICAÇÃO =====
     });
 
     // Input/Change listeners
@@ -696,7 +704,16 @@ export function setupAllEventListeners() {
     // Usamos 'document' para garantir que funcione mesmo se a tabela for re-renderizada
     document.addEventListener('change', (event) => {
         const target = event.target;
-        if (target.closest('#stats-desempenho-materia-container')) {
+
+        // ===== INÍCIO DA MODIFICAÇÃO =====
+        // Filtro de Matéria da aba Estatísticas
+        if (target.id === 'stats-materia-filter') {
+            updateStatsAssuntoFilter(target.value);
+        }
+        // ===== FIM DA MODIFICAÇÃO =====
+
+        // Tabela de Estatísticas
+        else if (target.closest('#stats-desempenho-materia-container')) {
             handleStatsTableSelection(event);
         }
         
