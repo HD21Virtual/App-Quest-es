@@ -369,8 +369,20 @@
                                         <span id="stats-periodo-value" class="text-gray-900">Tudo</span>
                                         <i class="fas fa-calendar-alt text-gray-400"></i>
                                     </button>
-                                    <div id="stats-periodo-panel" class="period-dropdown-panel hidden absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <ul id="stats-periodo-options" class="py-1">
+                                    <!-- MODIFICADO: Alterado para flex e w-auto, e ordem dos filhos trocada -->
+                                    <div id="stats-periodo-panel" class="period-dropdown-panel hidden absolute z-20 mt-1 w-auto bg-white border border-gray-300 rounded-lg shadow-lg flex">
+                                        
+                                        <!-- Range Personalizado (AGORA À ESQUERDA) -->
+                                        <div id="stats-periodo-custom-range" class="hidden p-2 space-y-2 w-64 border-r border-gray-200"> <!-- MODIFICADO: movido para cima, classes alteradas -->
+                                            <label class="text-xs text-gray-500">Início:</label>
+                                            <input type="date" id="stats-periodo-start" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
+                                            <label class="text-xs text-gray-500">Fim:</label>
+                                            <input type="date" id="stats-periodo-end" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
+                                            <button id="stats-periodo-custom-apply" class="w-full bg-blue-600 text-white text-sm py-1.5 rounded-lg hover:bg-blue-700">Aplicar</button>
+                                        </div>
+
+                                        <!-- Lista de Opções (AGORA À DIREITA) -->
+                                        <ul id="stats-periodo-options" class="py-1 w-48 max-h-[280px] overflow-y-auto"> <!-- MODIFICADO: classes de layout adicionadas -->
                                             <li class="period-option-item" data-value="hoje">Hoje</li>
                                             <li class="period-option-item" data-value="ontem">Ontem</li>
                                             <li class="period-option-item" data-value="ultimos-7-dias">Últimos 7 dias</li>
@@ -382,14 +394,7 @@
                                             <li class="period-option-item active" data-value="tudo">Tudo</li>
                                             <li class="period-option-item" data-value="personalizado">Personalizado</li>
                                         </ul>
-                                        <!-- Placeholder for custom date range -->
-                                        <div id="stats-periodo-custom-range" class="hidden p-2 border-t border-gray-200 space-y-2">
-                                            <label class="text-xs text-gray-500">Início:</label>
-                                            <input type="date" id="stats-periodo-start" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
-                                            <label class="text-xs text-gray-500">Fim:</label>
-                                            <input type="date" id="stats-periodo-end" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
-                                            <button id="stats-periodo-custom-apply" class="w-full bg-blue-600 text-white text-sm py-1.5 rounded-lg hover:bg-blue-700">Aplicar</button>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                                 <!-- Fim Período -->
