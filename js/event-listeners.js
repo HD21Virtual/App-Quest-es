@@ -757,5 +757,13 @@ export function setupAllEventListeners() {
             DOM.startSelectedReviewBtn.disabled = !anyChecked;
         }
         // --- FIM DA MODIFICAÇÃO ---
+        
+        // ===== INÍCIO DA MODIFICAÇÃO =====
+        // Botões de rádio da aba Evolução
+        else if (target.matches('input[name="evolucao-filter"]')) {
+            // Chama a função de filtragem principal, que vai ler o valor deste rádio
+            handleStatsFilter();
+        }
+        // ===== FIM DA MODIFICAÇÃO =====
     });
 }
