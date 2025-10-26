@@ -1,11 +1,11 @@
-import DOM from '../dom-elements.js';
+import DOM from './dom-elements.js';
 // --- CORREÇÃO: Importar setState ---
-import { state, setState } from '../state.js';
+import { state, setState } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 // CORREÇÃO: Salvar o progresso ao sair da página
 // --- MODIFICAÇÃO: Importar resetAllUserData e updateStatsAssuntoFilter ---
-// ===== INÍCIO DA MODIFICAÇÃO =====
-import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from '../services/firestore.js';
+// ===== INÍCIO DA MODIFICAÇÃO: Caminho corrigido de '../services/firestore.js' para './services/firestore.js' =====
+import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from './services/firestore.js';
 // ===== FIM DA MODIFICAÇÃO =====
 // CORREÇÃO APLICADA ---
 // O caminho foi alterado de "../features/stats.js" para "./features/stats.js"
