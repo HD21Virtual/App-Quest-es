@@ -8,6 +8,20 @@ import { showItemStatsModal, openNameModal } from '../ui/modal.js';
 import { applyFilters } from './filter.js';
 import { removeQuestionIdFromCaderno as removeQuestionIdFromFirestore, addQuestionIdsToCaderno as addQuestionIdsToFirestore } from '../services/firestore.js';
 
+/**
+ * Ordena strings alfanumericamente (ex: "2.10" vem depois de "2.9").
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function naturalSort(a, b) {
+    // Adiciona uma verificação para garantir que a e b são strings
+    const strA = String(a || '');
+    const strB = String(b || '');
+    return strA.localeCompare(strB, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+
 // Renders the view when inside a specific notebook, showing the question solver UI.
 async function renderCadernoContentView() {
     const caderno = state.userCadernos.find(c => c.id === state.currentCadernoId);
@@ -56,7 +70,12 @@ function renderFolderContentView() {
     DOM.createFolderBtn.classList.add('hidden');
     DOM.addQuestionsToCadernoBtn.classList.add('hidden');
 
-    const cadernosInFolder = state.userCadernos.filter(c => c.folderId === state.currentFolderId);
+    // --- MUDANÇA: Ordenação natural dos cadernos ---
+    const cadernosInFolder = state.userCadernos
+        .filter(c => c.folderId === state.currentFolderId)
+        .sort((a, b) => naturalSort(a.name, b.name));
+    // --- FIM DA MUDANÇA ---
+
     if (cadernosInFolder.length > 0) {
          // --- MODIFICAÇÃO: Wrapper para o layout de lista ---
          let html = '<div class="bg-white rounded-lg shadow-sm">';
@@ -64,7 +83,7 @@ function renderFolderContentView() {
              const isLast = index === cadernosInFolder.length - 1;
              // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista (removida a borda) ---
              html += `
-                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? '' : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
+                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? 'border-b border-gray-100' : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
                     <!-- Left: Icon + Name (clickable to open) -->
                     <div class="flex items-center flex-grow cursor-pointer" data-action="open" style="min-width: 0;"> <!-- min-width: 0 para truncamento -->
                         <i class="far fa-file-alt text-blue-500 text-lg w-6 text-center mr-3 sm:mr-4"></i>
@@ -106,17 +125,25 @@ function renderRootCadernosView() {
     DOM.createFolderBtn.classList.remove('hidden');
     DOM.addQuestionsToCadernoBtn.classList.add('hidden');
 
-    const unfiledCadernos = state.userCadernos.filter(c => !c.folderId);
+    // --- MUDANÇA: Ordenação natural dos cadernos sem pasta ---
+    const unfiledCadernos = state.userCadernos
+        .filter(c => !c.folderId)
+        .sort((a, b) => naturalSort(a.name, b.name));
+    // --- FIM DA MUDANÇA ---
 
-    if (state.userFolders.length === 0 && unfiledCadernos.length === 0) {
+    // --- MUDANÇA: Ordenação alfabética padrão para as pastas ---
+    const sortedFolders = state.userFolders.sort((a, b) => a.name.localeCompare(b.name));
+    // --- FIM DA MUDANÇA ---
+
+    if (sortedFolders.length === 0 && unfiledCadernos.length === 0) {
         DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 bg-white p-6 rounded-lg shadow-sm">Nenhum caderno ou pasta criada ainda.</p>';
         return;
     }
     
     let html = '';
 
-    // Render folders
-    state.userFolders.forEach(folder => {
+    // Render folders (mantendo ordenação alfabética)
+    sortedFolders.forEach(folder => {
         const folderCadernosCount = state.userCadernos.filter(c => c.folderId === folder.id).length;
         html += `
             <div class="bg-white rounded-lg shadow-sm p-4 hover:bg-gray-50 transition folder-item mb-2" data-folder-id="${folder.id}">
@@ -138,9 +165,9 @@ function renderRootCadernosView() {
             </div>`;
     });
 
-    // Render unfiled cadernos
+    // Render unfiled cadernos (com ordenação natural)
     if (unfiledCadernos.length > 0) {
-        if (state.userFolders.length > 0) { 
+        if (sortedFolders.length > 0) { 
             html += '<h3 class="mt-6 mb-2 text-md font-semibold text-gray-600">Cadernos sem Pasta</h3>'; 
         }
         
@@ -151,7 +178,7 @@ function renderRootCadernosView() {
             const isLast = index === unfiledCadernos.length - 1;
             // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista (removida a borda) ---
             html += `
-                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? '' : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
+                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? 'border-b border-gray-100' : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
                     <!-- Left: Icon + Name (clickable to open) -->
                     <div class="flex items-center flex-grow cursor-pointer" data-action="open" style="min-width: 0;"> <!-- min-width: 0 para truncamento -->
                         <i class="far fa-file-alt text-blue-500 text-lg w-6 text-center mr-3 sm:mr-4"></i>
@@ -360,4 +387,3 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
-
