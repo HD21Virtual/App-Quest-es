@@ -127,37 +127,170 @@ export function updateStatsAssuntoFilter(selectedMateria) {
 }
 // ===== FIM DA MODIFICAÇÃO =====
 
-export function renderEstatisticasView() {
+// ===== INÍCIO DA MODIFICAÇÃO: Nova função de filtragem =====
+/**
+ * Coleta os filtros da UI de Estatísticas e reaplica na view.
+ */
+export function handleStatsFilter() {
+    if (!state.currentUser) return;
+
+    // 1. Coleta os valores dos filtros
+    const periodButton = DOM.statsPeriodoButton;
+    const materiaSelect = DOM.statsMateriaFilter;
+    const assuntoSelect = DOM.statsAssuntoFilter;
+
+    const filters = {
+        startDate: periodButton.dataset.startDate ? new Date(periodButton.dataset.startDate + 'T00:00:00') : null, // Adiciona T00:00:00 para evitar fuso
+        endDate: periodButton.dataset.endDate ? new Date(periodButton.dataset.endDate + 'T23:59:59') : null, // Adiciona T23:59:59 para pegar o dia todo
+        materia: materiaSelect.value || null,
+        assunto: assuntoSelect.value || null,
+    };
+
+    // 2. Re-renderiza as seções com os filtros aplicados
+    // Nota: A função renderEstatisticasView (cards/gráfico) será modificada para aceitar filtros
+    // A função renderDesempenhoMateriaTable (tabela) também será modificada
+    renderEstatisticasView(filters);
+}
+// ===== FIM DA MODIFICAÇÃO =====
+
+
+// ===== INÍCIO DA MODIFICAÇÃO: Atualiza renderEstatisticasView para aceitar filtros =====
+export function renderEstatisticasView(filters = null) {
+// ===== FIM DA MODIFICAÇÃO =====
     if (!state.currentUser) {
         DOM.statsMainContent.innerHTML = '<p class="text-center text-gray-500 p-8">Por favor, faça login para ver suas estatísticas.</p>';
         return;
     }
 
-    // ===== INÍCIO DA MODIFICAÇÃO: Popular filtros =====
-    populateStatsFilters(); // Popula as matérias
+    // ===== INÍCIO DA MODIFICAÇÃO: Popular filtros (apenas se não for uma chamada de filtro) =====
+    if (!filters) {
+        populateStatsFilters(); // Popula as matérias
+    }
     // ===== FIM DA MODIFICAÇÃO =====
 
     let totalQuestions = 0;
     let totalCorrect = 0;
     const materiasSet = new Set();
+    
+    // --- Lógica de filtragem de sessão ---
+    const questionIdToDetails = new Map();
+    state.allQuestions.forEach(q => {
+        questionIdToDetails.set(q.id, { 
+            materia: q.materia, 
+            assunto: q.assunto,
+            subAssunto: q.subAssunto,
+            subSubAssunto: q.subSubAssunto
+        });
+    });
+
+    // Helper para checar matéria/assunto de uma sessão
+    const sessionMatchesFilter = (session) => {
+        if (!filters || (!filters.materia && !filters.assunto)) return true; // Passa se não houver filtro de
+        
+        for (const materia in session.details) {
+            if (filters.materia && materia !== filters.materia) {
+                continue; // Matéria não bate, pula
+            }
+            
+            // Matéria bateu (ou não há filtro de matéria). Checa assunto.
+            if (!filters.assunto) {
+                return true; // Matéria bateu e não há filtro de assunto
+            }
+
+            // Precisa checar o assunto. Isso é difícil, pois a sessão só tem 'materia'.
+            // A granularidade do filtro de assunto só pode ser aplicada na tabela.
+            // Para os cards e gráfico, SÓ PODEMOS FILTRAR POR MATÉRIA.
+            // O filtro de assunto só se aplicará à tabela.
+            if(filters.materia) return true;
+        }
+        return false;
+    };
+
+    // Helper para checar matéria/assunto de um stat da sessão ATUAL
+     const statMatchesFilter = (stat) => {
+        if (!filters) return true;
+        
+        const materiaMatch = !filters.materia || stat.materia === filters.materia;
+        if (!materiaMatch) return false;
+
+        // Se filtrou por matéria e não por assunto, ok
+        if (filters.materia && !filters.assunto) return true;
+        
+        // Se não filtrou por matéria nem assunto, ok
+        if (!filters.materia && !filters.assunto) return true;
+
+        // Se filtrou por assunto, precisamos checar
+        if (filters.assunto) {
+             const details = questionIdToDetails.get(stat.questionId);
+             if (details) {
+                // Checa se o assunto bate em qualquer nível da hierarquia da questão
+                return details.assunto === filters.assunto || 
+                       details.subAssunto === filters.assunto || 
+                       details.subSubAssunto === filters.assunto;
+             }
+        }
+        
+        return false; // Assunto não bateu
+    };
 
     // 1. Processa as sessões históricas do Firestore
     state.historicalSessions.forEach(session => {
-        totalQuestions += session.totalQuestions || 0;
-        totalCorrect += session.correctCount || 0;
+        const sessionDate = session.createdAt ? session.createdAt.toDate() : null;
+        
+        // --- FILTRAGEM POR DATA ---
+        if (filters && filters.startDate && sessionDate && sessionDate < filters.startDate) {
+            return;
+        }
+        if (filters && filters.endDate && sessionDate && sessionDate > filters.endDate) {
+            return;
+        }
+        // --- FILTRAGEM POR MATÉRIA ---
+        // (O filtro de assunto não pode ser aplicado aqui de forma granular)
+        if (filters && filters.materia && !sessionMatchesFilter(session)) {
+             return;
+        }
+        
+        // Se passou pelos filtros, processa
+        let sessionTotal = 0;
+        let sessionCorrect = 0;
+
+        if (filters && filters.materia) {
+            // Se há filtro de matéria, soma apenas dessa matéria
+            const detail = session.details[filters.materia];
+            if(detail) {
+                sessionTotal = detail.total || 0;
+                sessionCorrect = detail.correct || 0;
+            }
+        } else {
+            // Sem filtro, soma tudo
+            sessionTotal = session.totalQuestions || 0;
+            sessionCorrect = session.correctCount || 0;
+        }
+
+        totalQuestions += sessionTotal;
+        totalCorrect += sessionCorrect;
+        
         for (const materia in session.details) {
-            materiasSet.add(materia);
+            if (!filters || !filters.materia || materia === filters.materia) {
+                materiasSet.add(materia);
+            }
         }
     });
 
     // 2. Adiciona as estatísticas da sessão atual (não salva)
     state.sessionStats.forEach(stat => {
+        // A sessão atual não tem filtro de data, mas tem de matéria/assunto
+        if (filters && !statMatchesFilter(stat)) {
+            return;
+        }
+
         totalQuestions += 1;
         if (stat.isCorrect) {
             totalCorrect += 1;
         }
         materiasSet.add(stat.materia);
     });
+    // --- Fim da lógica de filtragem ---
     
     const totalIncorrect = totalQuestions - totalCorrect;
     const totalMaterias = materiasSet.size;
@@ -172,11 +305,15 @@ export function renderEstatisticasView() {
     renderStatsPagePerformanceChart(totalCorrect, totalIncorrect);
 
     // 5. Renderiza a nova tabela de desempenho por matéria
-    renderDesempenhoMateriaTable();
+    // ===== INÍCIO DA MODIFICAÇÃO =====
+    renderDesempenhoMateriaTable(filters);
+    // ===== FIM DA MODIFICAÇÃO =====
 
     // ===== INÍCIO DA MODIFICAÇÃO =====
-    // 6. Renderiza o gráfico de evolução
-    renderEvolutionChart();
+    // 6. Renderiza o gráfico de evolução (só renderiza na carga inicial, não na filtragem)
+    if (!filters) {
+        renderEvolutionChart();
+    }
     // ===== FIM DA MODIFICAÇÃO =====
 }
 
@@ -299,7 +436,9 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
 }
 
 // Função Principal para renderizar a tabela completa
-function renderDesempenhoMateriaTable() {
+// ===== INÍCIO DA MODIFICAÇÃO: Atualiza renderDesempenhoMateriaTable para aceitar filtros =====
+function renderDesempenhoMateriaTable(filters = null) {
+// ===== FIM DA MODIFICAÇÃO =====
     if (!DOM.statsDesempenhoMateriaContainer) return;
 
     // --- MODIFICAÇÃO: Mapear 'Questões Gerais' para null ---
@@ -322,6 +461,26 @@ function renderDesempenhoMateriaTable() {
     state.userQuestionHistoryMap.forEach(item => {
         const details = questionIdToDetails.get(item.id);
         if (!details) return;
+
+        // ===== INÍCIO DA LÓGICA DE FILTRAGEM DA TABELA =====
+        // NOTA: O filtro de data NÃO pode ser aplicado aqui pois
+        // userQuestionHistoryMap não armazena datas de resolução.
+        // Apenas filtros de matéria e assunto são aplicados.
+        if (filters) {
+            if (filters.materia && details.materia !== filters.materia) {
+                return; // Pula item, matéria não bate
+            }
+            if (filters.assunto) {
+                // Checa se o filtro de assunto bate em qualquer nível
+                const assuntoMatch = details.assunto === filters.assunto ||
+                                     details.subAssunto === filters.assunto ||
+                                     details.subSubAssunto === filters.assunto;
+                if (!assuntoMatch) {
+                    return; // Pula item, assunto não bate
+                }
+            }
+        }
+        // ===== FIM DA LÓGICA DE FILTRAGEM DA TABELA =====
 
         const { materia, assunto, subAssunto, subSubAssunto } = details;
         const itemCorrect = item.correct || 0;
@@ -372,11 +531,20 @@ function renderDesempenhoMateriaTable() {
     // --- FIM DA MODIFICAÇÃO ---
 
     if (hierarchy.size === 0) {
+        // ===== INÍCIO DA MODIFICAÇÃO: Mensagem de "Nenhum dado" melhorada =====
+        let emptyMessage = "Nenhum dado de desempenho encontrado.";
+        if (filters && (filters.materia || filters.assunto || filters.startDate)) {
+             emptyMessage = "Nenhum dado de desempenho encontrado para os filtros aplicados.";
+        } else {
+             emptyMessage += " Comece a resolver questões no modo Revisão para ver suas estatísticas detalhadas.";
+        }
+        
         DOM.statsDesempenhoMateriaContainer.innerHTML = `
             <div class="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-                Nenhum dado de desempenho encontrado. Comece a resolver questões no modo Revisão para ver suas estatísticas detalhadas.
+                ${emptyMessage}
             </div>
         `;
+        // ===== FIM DA MODIFICAÇÃO =====
         return;
     }
 
