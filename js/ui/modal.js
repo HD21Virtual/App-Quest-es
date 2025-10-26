@@ -4,9 +4,6 @@ import { state, setState } from '../state.js';
 import { deleteItem, deleteFilter, getHistoricalCountsForQuestions, resetAllUserData } from '../services/firestore.js';
 import { renderItemPerformanceChart } from './charts.js';
 
-import { deleteItem, deleteFilter, getHistoricalCountsForQuestions } from '../services/firestore.js';
-import { renderItemPerformanceChart } from './charts.js';
-
 export function openAuthModal() {
     if(DOM.authModal) DOM.authModal.classList.remove('hidden');
 }
@@ -200,5 +197,6 @@ export async function showItemStatsModal(itemId, itemType, itemName) {
 function showInfoModal(title, message) {
     // Logic to show an info-only confirmation modal
 }
+
 
 
