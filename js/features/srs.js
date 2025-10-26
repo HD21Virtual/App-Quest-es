@@ -2,7 +2,8 @@ import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-fi
 import { state, setState, getActiveContainer } from '../state.js';
 import DOM from '../dom-elements.js';
 import { navigateToView } from '../ui/navigation.js';
-import { renderAnsweredQuestion } from './question-viewer.js';
+// --- CORREÇÃO: Importar a função displayQuestion ---
+import { renderAnsweredQuestion, displayQuestion } from './question-viewer.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
 
