@@ -92,7 +92,8 @@ function renderUnansweredQuestion() {
         return `
             <div data-option="${option}" class="option-item group flex items-center p-2 rounded-lg cursor-pointer transition duration-200">
                <div class="action-icon-container w-8 h-8 flex-shrink-0 flex items-center justify-center mr-1">
-                    <div class="discard-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-100 rounded-full p-1.5">
+                    <!-- MODIFICAÇÃO: Ícone da tesoura visível no mobile (opacity-100) e hover no desktop (lg:opacity-0 lg:group-hover:opacity-100) -->
+                    <div class="discard-btn opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-100 rounded-full p-1.5">
                         ${scissorIconSVG}
                     </div>
                 </div>
