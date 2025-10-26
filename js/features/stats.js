@@ -1,5 +1,7 @@
 import { state, getActiveContainer } from '../state.js';
-import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart, renderStatsPagePerformanceChart } from '../ui/charts.js';
+// ===== INÍCIO DA MODIFICAÇÃO =====
+import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart, renderStatsPagePerformanceChart, renderEvolutionChart } from '../ui/charts.js';
+// ===== FIM DA MODIFICAÇÃO =====
 import { getHistoricalCountsForQuestions } from '../services/firestore.js';
 import DOM from '../dom-elements.js';
 
@@ -99,6 +101,11 @@ export function renderEstatisticasView() {
 
     // 5. Renderiza a nova tabela de desempenho por matéria
     renderDesempenhoMateriaTable();
+
+    // ===== INÍCIO DA MODIFICAÇÃO =====
+    // 6. Renderiza o gráfico de evolução
+    renderEvolutionChart();
+    // ===== FIM DA MODIFICAÇÃO =====
 }
 
 export async function updateStatsPanel(container = null) {
@@ -393,4 +400,3 @@ function renderDesempenhoMateriaTable() {
     DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
     DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
-
