@@ -261,7 +261,7 @@ export function setupAllEventListeners() {
     document.addEventListener('click', async (event) => {
         const target = event.target;
         const targetId = target.id;
-
+        
         // --- NOVO: Lidar com o menu dropdown do caderno ---
         if (target.closest('.caderno-menu-btn')) {
             event.stopPropagation(); // Impede que o 'open' do caderno-item dispare
@@ -287,7 +287,7 @@ export function setupAllEventListeners() {
             });
         }
         // --- FIM DO NOVO ---
-        
+
         // Esconde o menu mobile se o clique for fora dele
         if (!target.closest('#mobile-menu') && !target.closest('#hamburger-btn')) {
             if (DOM.mobileMenu && !DOM.mobileMenu.classList.contains('hidden')) {
@@ -350,7 +350,6 @@ export function setupAllEventListeners() {
         else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
 
         // --- Cadernos / Folders ---
-        // Este listener agora pega [data-action="open"] e os cliques nos itens do menu dropdown
         else if (target.closest('#saved-cadernos-list-container')) {
             handleCadernoItemClick(event);
             handleFolderItemClick(event);
@@ -384,7 +383,7 @@ export function setupAllEventListeners() {
                         const grandChildRows = document.querySelectorAll(`tr[data-parent-id="${childRow.dataset.id}"]`);
                         grandChildRows.forEach(gc => {
                             gc.classList.add('hidden');
-                            // Continua recolhendo recursivamente
+                            // Continua recursivamente
                              const gcIcon = gc.querySelector('.toggle-review-row');
                              if (gcIcon && gcIcon.classList.contains('rotate-90')) {
                                 gcIcon.classList.remove('rotate-90');
@@ -550,3 +549,4 @@ export function setupAllEventListeners() {
         // --- FIM DA MODIFICAÇÃO ---
     });
 }
+
