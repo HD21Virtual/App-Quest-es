@@ -329,14 +329,18 @@ export function handleBackToFolders() {
 }
 
 // Initiates the mode to add questions to the currently opened notebook.
-export function handleAddQuestionsToCaderno() {
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora é async =====
+export async function handleAddQuestionsToCaderno() {
+// ===== FIM DA MODIFICAÇÃO =====
     const caderno = state.userCadernos.find(c => c.id === state.currentCadernoId);
     if (!caderno) return;
 
     setState('isAddingQuestionsMode', { active: true, cadernoId: state.currentCadernoId });
     DOM.addQuestionsBanner.classList.remove('hidden');
     DOM.addQuestionsBannerText.textContent = `Selecione questões para adicionar ao caderno "${caderno.name}".`;
-    navigateToView('vade-mecum-view', false);
+    // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+    await navigateToView('vade-mecum-view', false);
+    // ===== FIM DA MODIFICAÇÃO =====
 }
 
 // Exits the "add questions" mode.
@@ -353,9 +357,13 @@ export function exitAddMode() {
 }
 
 // Cancels the "add questions" process and returns to the notebooks view.
-export function cancelAddQuestions() {
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora é async =====
+export async function cancelAddQuestions() {
+// ===== FIM DA MODIFICAÇÃO =====
     exitAddMode();
-    navigateToView('cadernos-view');
+    // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+    await navigateToView('cadernos-view');
+    // ===== FIM DA MODIFICAÇÃO =====
 }
 
 // Adds filtered questions to the current notebook.
@@ -379,7 +387,9 @@ export async function addFilteredQuestionsToCaderno() {
     exitAddMode();
     setState('isNavigatingBackFromAddMode', true); // Flag to prevent view reset
     setState('currentCadernoId', cadernoId);
-    navigateToView('cadernos-view');
+    // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+    await navigateToView('cadernos-view');
+    // ===== FIM DA MODIFICAÇÃO =====
 }
 
 // Removes a specific question from the currently opened notebook.
@@ -387,5 +397,3 @@ export async function removeQuestionFromCaderno(questionId) {
     if (!state.currentCadernoId || !state.currentUser) return;
     await removeQuestionIdFromFirestore(state.currentCadernoId, questionId);
 }
-
-
