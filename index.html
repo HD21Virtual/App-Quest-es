@@ -345,6 +345,72 @@
                     Resetar Progresso
                 </button>
             </div>
+
+            <!-- MODIFICAÇÃO: Filtro movido para cá -->
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                    
+                    <!-- Período (MODIFICADO) -->
+                    <div class="relative">
+                        <label for="stats-periodo-button" class="text-sm font-medium text-gray-700 mb-1 block">Período</label>
+                        <button type="button" id="stats-periodo-button" data-value="tudo" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span id="stats-periodo-value" class="text-gray-900">Tudo</span>
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </button>
+                        <!-- MODIFICADO: Alterado para flex e w-auto, e ordem dos filhos trocada -->
+                        <div id="stats-periodo-panel" class="period-dropdown-panel hidden absolute z-20 mt-1 w-auto bg-white border border-gray-300 rounded-lg shadow-lg flex">
+                            
+                            <!-- Lista de Opções (AGORA À ESQUERDA) -->
+                            <ul id="stats-periodo-options" class="py-1 w-48 max-h-[280px] overflow-y-auto"> <!-- MODIFICADO: classes de layout adicionadas -->
+                                <li class="period-option-item" data-value="hoje">Hoje</li>
+                                <li class="period-option-item" data-value="ontem">Ontem</li>
+                                <li class="period-option-item" data-value="ultimos-7-dias">Últimos 7 dias</li>
+                                <li class="period-option-item" data-value="ultimos-15-dias">Últimos 15 dias</li>
+                                <li class="period-option-item" data-value="este-mes">Este mês</li>
+                                <li class="period-option-item" data-value="mes-passado">Mês passado</li>
+                                <li class="period-option-item" data-value="ultimos-6-mesES">Últimos 6 meses</li>
+                                <li class="period-option-item" data-value="ultimo-ano">Último ano</li>
+                                <li class="period-option-item active" data-value="tudo">Tudo</li>
+                                <li class="period-option-item" data-value="personalizado">Personalizado</li>
+                            </ul>
+
+                            <!-- Range Personalizado (AGORA À DIREITA) -->
+                            <div id="stats-periodo-custom-range" class="hidden p-2 space-y-2 w-64 border-l border-gray-200"> <!-- MODIFICADO: movido para baixo, classes alteradas -->
+                                <label class="text-xs text-gray-500">Início:</label>
+                                <input type="date" id="stats-periodo-start" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
+                                <label class="text-xs text-gray-500">Fim:</label>
+                                <input type="date" id="stats-periodo-end" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
+                                <button id="stats-periodo-custom-apply" class="w-full bg-blue-600 text-white text-sm py-1.5 rounded-lg hover:bg-blue-700">Aplicar</button>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!-- Fim Período -->
+
+                    <!-- Matéria -->
+                    <div>
+                        <label for="stats-materia-filter" class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
+                        <select id="stats-materia-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todas</option>
+                            <!-- Opções de matéria aqui -->
+                        </select>
+                    </div>
+                    <!-- MODIFICAÇÃO: Label alterada de "Pasta" para "Assunto" -->
+                    <div>
+                        <label for="stats-pasta-filter" class="text-sm font-medium text-gray-700 mb-1 block">Assunto</label>
+                        <select id="stats-pasta-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <!-- Opções de pasta/assunto aqui -->
+                        </select>
+                    </div>
+                    <!-- Botão Filtrar -->
+                    <div>
+                        <button id="stats-filter-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 w-full">Filtrar</button>
+                    </div>
+                </div>
+            </div>
+            <!-- FIM DA MODIFICAÇÃO -->
+
             <div id="stats-main-content">
                 <!-- Abas de Navegação -->
                 <div class="mb-4">
@@ -358,69 +424,7 @@
                 <div id="stats-tabs-content-container" class="bg-gray-50 rounded-b-xl rounded-tr-xl shadow-md -mt-4 p-6">
                     <!-- Aba de Desempenho Geral -->
                     <div id="desempenho-geral-tab" class="stats-tab-content">
-                        <!-- Filtro de Desempenho -->
-                        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                                
-                                <!-- Período (MODIFICADO) -->
-                                <div class="relative">
-                                    <label for="stats-periodo-button" class="text-sm font-medium text-gray-700 mb-1 block">Período</label>
-                                    <button type="button" id="stats-periodo-button" data-value="tudo" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <span id="stats-periodo-value" class="text-gray-900">Tudo</span>
-                                        <i class="fas fa-calendar-alt text-gray-400"></i>
-                                    </button>
-                                    <!-- MODIFICADO: Alterado para flex e w-auto, e ordem dos filhos trocada -->
-                                    <div id="stats-periodo-panel" class="period-dropdown-panel hidden absolute z-20 mt-1 w-auto bg-white border border-gray-300 rounded-lg shadow-lg flex">
-                                        
-                                        <!-- Lista de Opções (AGORA À ESQUERDA) -->
-                                        <ul id="stats-periodo-options" class="py-1 w-48 max-h-[280px] overflow-y-auto"> <!-- MODIFICADO: classes de layout adicionadas -->
-                                            <li class="period-option-item" data-value="hoje">Hoje</li>
-                                            <li class="period-option-item" data-value="ontem">Ontem</li>
-                                            <li class="period-option-item" data-value="ultimos-7-dias">Últimos 7 dias</li>
-                                            <li class="period-option-item" data-value="ultimos-15-dias">Últimos 15 dias</li>
-                                            <li class="period-option-item" data-value="este-mes">Este mês</li>
-                                            <li class="period-option-item" data-value="mes-passado">Mês passado</li>
-                                            <li class="period-option-item" data-value="ultimos-6-meses">Últimos 6 meses</li>
-                                            <li class="period-option-item" data-value="ultimo-ano">Último ano</li>
-                                            <li class="period-option-item active" data-value="tudo">Tudo</li>
-                                            <li class="period-option-item" data-value="personalizado">Personalizado</li>
-                                        </ul>
-
-                                        <!-- Range Personalizado (AGORA À DIREITA) -->
-                                        <div id="stats-periodo-custom-range" class="hidden p-2 space-y-2 w-64 border-l border-gray-200"> <!-- MODIFICADO: movido para baixo, classes alteradas -->
-                                            <label class="text-xs text-gray-500">Início:</label>
-                                            <input type="date" id="stats-periodo-start" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
-                                            <label class="text-xs text-gray-500">Fim:</label>
-                                            <input type="date" id="stats-periodo-end" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
-                                            <button id="stats-periodo-custom-apply" class="w-full bg-blue-600 text-white text-sm py-1.5 rounded-lg hover:bg-blue-700">Aplicar</button>
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                                <!-- Fim Período -->
-
-                                <!-- Matéria -->
-                                <div>
-                                    <label for="stats-materia-filter" class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
-                                    <select id="stats-materia-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="">Todas</option>
-                                        <!-- Opções de matéria aqui -->
-                                    </select>
-                                </div>
-                                <!-- Pasta -->
-                                <div>
-                                    <label for="stats-pasta-filter" class="text-sm font-medium text-gray-700 mb-1 block">Pasta</label>
-                                    <select id="stats-pasta-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="">Todas</option>
-                                        <!-- Opções de pasta aqui -->
-                                    </select>
-                                </div>
-                                <!-- Botão Filtrar -->
-                                <div>
-                                    <button id="stats-filter-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 w-full">Filtrar</button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- MODIFICAÇÃO: Filtro removido daqui -->
 
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <!-- Coluna dos Cards -->
@@ -619,4 +623,3 @@
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
-
