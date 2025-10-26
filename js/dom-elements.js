@@ -107,6 +107,17 @@ export function initDOM() {
     DOM.statsPagePerformanceChartCanvas = document.getElementById('statsPagePerformanceChart');
     DOM.statsDesempenhoMateriaContainer = document.getElementById('stats-desempenho-materia-container');
     
+    // --- NOVO: Filtro de Período de Estatísticas ---
+    DOM.statsPeriodoButton = document.getElementById('stats-periodo-button');
+    DOM.statsPeriodoValue = document.getElementById('stats-periodo-value');
+    DOM.statsPeriodoPanel = document.getElementById('stats-periodo-panel');
+    DOM.statsPeriodoOptions = document.getElementById('stats-periodo-options');
+    DOM.statsPeriodoCustomRange = document.getElementById('stats-periodo-custom-range');
+    DOM.statsPeriodoStart = document.getElementById('stats-periodo-start');
+    DOM.statsPeriodoEnd = document.getElementById('stats-periodo-end');
+    DOM.statsPeriodoCustomApply = document.getElementById('stats-periodo-custom-apply');
+    // --- FIM NOVO ---
+
     // Rodapé de Seleção da Tabela de Stats
     DOM.statsSelectionFooter = document.getElementById('stats-selection-footer');
     DOM.statsFooterResolvidas = document.getElementById('stats-footer-resolvidas');
@@ -115,4 +126,3 @@ export function initDOM() {
 }
 
 export default DOM;
-
