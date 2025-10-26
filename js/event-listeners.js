@@ -445,7 +445,7 @@ export function setupAllEventListeners() {
             navigateToView(target.closest('.nav-link').dataset.view);
         }
 
-        // --- NOVO: Filtro de Período de Estatísticas ---
+        // --- MODIFICAÇÃO: Filtro de Período de Estatísticas ---
         else if (target.closest('#stats-periodo-button')) {
             event.preventDefault();
             DOM.statsPeriodoPanel.classList.toggle('hidden');
@@ -453,7 +453,91 @@ export function setupAllEventListeners() {
         else if (target.closest('.period-option-item')) {
             const selectedOption = target.closest('.period-option-item');
             const value = selectedOption.dataset.value;
-            const text = selectedOption.textContent;
+            let text = selectedOption.textContent; // Texto padrão
+            let startDate, endDate; // Para armazenar as datas
+
+            // --- LÓGICA DE CÁLCULO DE DATA ---
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normaliza para o início do dia
+
+            // Formata uma data para DD/MM/YYYY
+            const formatDate = (date) => {
+                const d = date.getDate().toString().padStart(2, '0');
+                const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            };
+
+            // Formata uma data para YYYY-MM-DD (para os inputs 'date')
+            const formatDateForInput = (date) => {
+                const d = date.getDate().toString().padStart(2, '0');
+                const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                const y = date.getFullYear();
+                return `${y}-${m}-${d}`;
+            }
+
+            switch (value) {
+                case 'hoje':
+                    startDate = new Date(today);
+                    endDate = new Date(today);
+                    text = formatDate(today);
+                    break;
+                case 'ontem':
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
+                    startDate = new Date(yesterday);
+                    endDate = new Date(yesterday);
+                    text = formatDate(yesterday);
+                    break;
+                case 'ultimos-7-dias':
+                    const sevenDaysAgo = new Date(today);
+                    sevenDaysAgo.setDate(today.getDate() - 6); // -6 para incluir hoje (total 7 dias)
+                    startDate = new Date(sevenDaysAgo);
+                    endDate = new Date(today);
+                    text = `${formatDate(sevenDaysAgo)} - ${formatDate(today)}`;
+                    break;
+                case 'ultimos-15-dias':
+                    const fifteenDaysAgo = new Date(today);
+                    fifteenDaysAgo.setDate(today.getDate() - 14);
+                    startDate = new Date(fifteenDaysAgo);
+                    endDate = new Date(today);
+                    text = `${formatDate(fifteenDaysAgo)} - ${formatDate(today)}`;
+                    break;
+                case 'este-mes':
+                    const firstDayMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    startDate = new Date(firstDayMonth);
+                    endDate = new Date(today); // Até o dia de hoje
+                    text = `${formatDate(firstDayMonth)} - ${formatDate(today)}`;
+                    break;
+                case 'mes-passado':
+                    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const firstDayLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+                    const lastDayLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0); // Dia 0 do mês atual é o último do mês passado
+                    startDate = new Date(firstDayLastMonth);
+                    endDate = new Date(lastDayLastMonth);
+                    text = `${formatDate(firstDayLastMonth)} - ${formatDate(lastDayLastMonth)}`;
+                    break;
+                case 'ultimos-6-meses':
+                    const sixMonthsAgo = new Date(today);
+                    sixMonthsAgo.setMonth(today.getMonth() - 6);
+                    startDate = new Date(sixMonthsAgo);
+                    endDate = new Date(today);
+                    text = `${formatDate(sixMonthsAgo)} - ${formatDate(today)}`;
+                    break;
+                case 'ultimo-ano':
+                     const oneYearAgo = new Date(today);
+                     oneYearAgo.setFullYear(today.getFullYear() - 1);
+                     startDate = new Date(oneYearAgo);
+                     endDate = new Date(today);
+                     text = `${formatDate(oneYearAgo)} - ${formatDate(today)}`;
+                    break;
+                case 'tudo':
+                    text = 'Tudo'; // Mantém o texto original
+                    startDate = null;
+                    endDate = null;
+                    break;
+            }
+            // --- FIM DA LÓGICA DE DATA ---
 
             // Remove a classe ativa de todos
             DOM.statsPeriodoOptions.querySelectorAll('.period-option-item').forEach(opt => opt.classList.remove('active'));
@@ -462,22 +546,46 @@ export function setupAllEventListeners() {
                 // Mostra o range customizado, mas não fecha o painel ainda
                 DOM.statsPeriodoCustomRange.classList.remove('hidden');
                 selectedOption.classList.add('active'); // Mantém "Personalizado" ativo
+
+                // Pré-preenche o date picker com o último range válido ou com hoje
+                const lastStart = DOM.statsPeriodoButton.dataset.startDate;
+                const lastEnd = DOM.statsPeriodoButton.dataset.endDate;
+                DOM.statsPeriodoStart.value = lastStart || formatDateForInput(today);
+                DOM.statsPeriodoEnd.value = lastEnd || formatDateForInput(today);
+
             } else {
                 // Opção normal: atualiza o valor e fecha
                 DOM.statsPeriodoValue.textContent = text;
                 DOM.statsPeriodoButton.dataset.value = value;
+                
+                // Armazena as datas no botão para o filtro usar (formato YYYY-MM-DD)
+                DOM.statsPeriodoButton.dataset.startDate = startDate ? formatDateForInput(startDate) : '';
+                DOM.statsPeriodoButton.dataset.endDate = endDate ? formatDateForInput(endDate) : '';
+
                 selectedOption.classList.add('active');
                 DOM.statsPeriodoPanel.classList.add('hidden');
                 DOM.statsPeriodoCustomRange.classList.add('hidden');
+                
                 // TODO: Chamar a função de filtrar estatísticas
-                // handleStatsFilter(); 
+                // handleStatsFilter(startDate, endDate); 
             }
         }
         else if (target.closest('#stats-periodo-custom-apply')) {
             event.preventDefault();
-            const start = DOM.statsPeriodoStart.value;
-            const end = DOM.statsPeriodoEnd.value;
+            const start = DOM.statsPeriodoStart.value; // Formato YYYY-MM-DD
+            const end = DOM.statsPeriodoEnd.value; // Formato YYYY-MM-DD
+            
             if (start && end) {
+                // Validação simples de data
+                const startDate = new Date(start + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso
+                const endDate = new Date(end + 'T00:00:00');
+
+                if (startDate > endDate) {
+                    console.warn("A data de início não pode ser maior que a data de fim.");
+                    // Poderia mostrar um erro para o usuário aqui
+                    return; 
+                }
+
                 // Formata a data para dd/mm/aaaa
                 const formattedStart = start.split('-').reverse().join('/');
                 const formattedEnd = end.split('-').reverse().join('/');
@@ -485,19 +593,19 @@ export function setupAllEventListeners() {
                 
                 DOM.statsPeriodoValue.textContent = text;
                 DOM.statsPeriodoButton.dataset.value = 'personalizado';
-                DOM.statsPeriodoButton.dataset.startDate = start;
-                DOM.statsPeriodoButton.dataset.endDate = end;
+                DOM.statsPeriodoButton.dataset.startDate = start; // Salva como YYYY-MM-DD
+                DOM.statsPeriodoButton.dataset.endDate = end; // Salva como YYYY-MM-DD
                 
                 DOM.statsPeriodoPanel.classList.add('hidden');
                 DOM.statsPeriodoCustomRange.classList.add('hidden');
+                
                 // TODO: Chamar a função de filtrar estatísticas
-                // handleStatsFilter();
+                // handleStatsFilter(startDate, endDate);
             } else {
-                // Idealmente, mostraria um erro, mas por agora, apenas não fecha
                 console.warn("Selecione data de início e fim.");
             }
         }
-        // --- FIM NOVO ---
+        // --- FIM DA MODIFICAÇÃO ---
         
         // --- Stats Tabs ---
         else if (target.closest('#stats-tabs-container .tab-button')) {
