@@ -2,7 +2,8 @@ import DOM from './dom-elements.js';
 import { state } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 // CORREÇÃO: Importar saveSessionStats para salvar o progresso ao sair da página
-import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from './services/firestore.js';
+// --- MODIFICAÇÃO: Importar resetAllUserData ---
+import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats, resetAllUserData } from './services/firestore.js';
 // CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
 import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemClick, handleBackToFolders, cancelAddQuestions, removeQuestionFromCaderno, addFilteredQuestionsToCaderno } from './features/caderno.js';
@@ -461,6 +462,15 @@ export function setupAllEventListeners() {
                 });
             }
         }
+        // --- NOVO LISTENER PARA RESETAR PROGRESSO ---
+        else if (target.closest('#reset-all-progress-btn')) {
+            if (!state.currentUser) return; // Proteção
+            setState('deletingId', null);
+            setState('deletingType', 'all-progress');
+            if (DOM.confirmationModalTitle) DOM.confirmationModalTitle.textContent = 'Resetar Todo o Progresso';
+            if (DOM.confirmationModalText) DOM.confirmationModalText.innerHTML = `Tem certeza que deseja apagar <strong>TODO</strong> o seu progresso? Isso inclui todas as estatísticas, filtros, pastas, cadernos e agendamentos de revisão. <br><br><span class="font-bold text-red-600">Esta ação não pode ser desfeita.</span>`;
+            if (DOM.confirmationModal) DOM.confirmationModal.classList.remove('hidden');
+        }
     });
 
     // Input/Change listeners
@@ -512,3 +522,4 @@ export function setupAllEventListeners() {
         // --- FIM DA MODIFICAÇÃO ---
     });
 }
+
