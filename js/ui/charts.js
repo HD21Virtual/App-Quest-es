@@ -13,6 +13,9 @@ let performanceChart = null;
 let homePerformanceChart = null;
 let weeklyChartInstance = null;
 let statsPagePerformanceChart = null;
+// ===== INÍCIO DA MODIFICAÇÃO =====
+let evolutionChart = null;
+// ===== FIM DA MODIFICAÇÃO =====
 
 // Função auxiliar para obter os rótulos dos últimos 7 dias
 function getLast7DaysLabels() {
@@ -396,4 +399,100 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
 }
 
 
+// ===== INÍCIO DA MODIFICAÇÃO =====
+export function renderEvolutionChart() {
+    const canvas = DOM.evolutionChartCanvas;
+    if (!canvas) return;
 
+    if (evolutionChart) {
+        evolutionChart.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    
+    // Dados de exemplo baseados na imagem
+    const labels = [
+        '01/04 a 20/04', '21/04 a 11/05', '12/05 a 01/06', '02/06 a 22/06', 
+        '23/06 a 13/07', '14/07 a 02/08', '03/08 a 23/08', '24/08 a 13/09', 
+        '14/09 a 04/10', '05/10 a 26/10'
+    ];
+    
+    const acertosData = [0, 0, 300, 850, 700, 4200, 400, 750, 800, 550];
+    const errosData = [0, 0, 50, 200, 250, 500, 50, 150, 100, 120];
+
+    evolutionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Acertos',
+                    data: acertosData,
+                    borderColor: '#22c55e', // green-500
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)', // green-500 com 10% opacidade
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#22c55e',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'Erros',
+                    data: errosData,
+                    borderColor: '#ef4444', // red-500
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)', // red-500 com 10% opacidade
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#ef4444',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'center',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                datalabels: {
+                    display: false // Desabilitado para um visual mais limpo, como na imagem
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280' // gray-500
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e5e7eb' // gray-200
+                    },
+                    ticks: {
+                        color: '#6b7280' // gray-500
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            }
+        }
+    });
+}
+// ===== FIM DA MODIFICAÇÃO =====
