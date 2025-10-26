@@ -416,7 +416,9 @@
                 <div class="mb-4">
                     <nav id="stats-tabs-container" class="flex space-x-1">
                         <button data-tab="desempenho-geral" class="tab-button active">Desempenho Geral</button>
-                        <!-- Outras abas podem ser adicionadas aqui no futuro -->
+                        <!-- ===== INÍCIO DA MODIFICAÇÃO ===== -->
+                        <button data-tab="evolucao" class="tab-button">Evolução</button>
+                        <!-- ===== FIM DA MODIFICAÇÃO ===== -->
                     </nav>
                 </div>
 
@@ -460,7 +462,29 @@
                             <!-- Rodapé de Seleção será renderizado aqui pelo stats.js -->
                         </div>
                     </div>
-                    <!-- Outras abas de conteúdo aqui -->
+                    
+                    <!-- ===== INÍCIO DA MODIFICAÇÃO ===== -->
+                    <!-- Nova Aba de Evolução -->
+                    <div id="evolucao-tab" class="stats-tab-content hidden">
+                        <!-- Filtro de Exibição -->
+                        <div class="flex items-center space-x-4 mb-6">
+                            <span class="text-sm font-medium text-gray-700">Exibir:</span>
+                            <label for="radio-resolucoes" class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" id="radio-resolucoes" name="evolucao-filter" value="resolucoes" class="text-blue-600 focus:ring-blue-500" checked>
+                                <span class="text-sm text-gray-700">Número de resoluções</span>
+                            </label>
+                            <label for="radio-desempenho" class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" id="radio-desempenho" name="evolucao-filter" value="desempenho" class="text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">Desempenho (%)</span>
+                            </label>
+                        </div>
+
+                        <!-- Gráfico de Evolução -->
+                        <div class="relative w-full h-96">
+                            <canvas id="evolutionChartCanvas"></canvas>
+                        </div>
+                    </div>
+                    <!-- ===== FIM DA MODIFICAÇÃO ===== -->
                 </div>
             </div>
         </div>
