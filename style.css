@@ -327,7 +327,7 @@ body {
 /* --- NOVO: Estilos para Dropdown de Período --- */
 .period-dropdown-panel {
     max-height: 300px;
-    overflow-y: auto;
+    /* overflow-y: auto; MODIFICADO: Removido para permitir flexbox */
 }
 
 .period-option-item {
