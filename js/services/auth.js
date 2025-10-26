@@ -16,7 +16,9 @@ import DOM from '../dom-elements.js';
 import { navigateToView } from "../ui/navigation.js";
 
 export function initAuth() {
-    onAuthStateChanged(auth, (user) => {
+    // ===== INÍCIO DA MODIFICAÇÃO: Callback agora é async =====
+    onAuthStateChanged(auth, async (user) => {
+    // ===== FIM DA MODIFICAÇÃO =====
         clearUnsubscribes();
         setState('currentUser', user);
 
@@ -24,11 +26,15 @@ export function initAuth() {
             updateUserUI(user);
             closeAuthModal();
             setupAllListeners(user.uid);
-            navigateToView('inicio-view');
+            // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+            await navigateToView('inicio-view');
+            // ===== FIM DA MODIFICAÇÃO =====
         } else {
             resetStateOnLogout();
             updateUserUI(null);
-            navigateToView('inicio-view');
+            // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
+            await navigateToView('inicio-view');
+            // ===== FIM DA MODIFICAÇÃO =====
         }
     });
 }
@@ -59,5 +65,3 @@ export async function handleGoogleAuth() {
         DOM.authError.classList.remove('hidden');
     }
 }
-
-
