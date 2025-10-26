@@ -3,6 +3,16 @@ import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart, 
 import { getHistoricalCountsForQuestions } from '../services/firestore.js';
 import DOM from '../dom-elements.js';
 
+/**
+ * Ordena strings alfanumericamente (ex: "2.10" vem depois de "2.9").
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function naturalSort(a, b) {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 export function updateStatsPageUI() {
     let totalQuestions = 0;
     let totalCorrect = 0;
@@ -316,7 +326,7 @@ function renderDesempenhoMateriaTable() {
     `;
 
     // --- MODIFICAÇÃO: Loop de renderização de 4 níveis ---
-    const sortedMaterias = Array.from(hierarchy.keys()).sort();
+    const sortedMaterias = Array.from(hierarchy.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
     
     for (const materiaName of sortedMaterias) {
         const materiaNode = hierarchy.get(materiaName);
@@ -326,7 +336,7 @@ function renderDesempenhoMateriaTable() {
         tableHtml += renderTreeTableRow(1, materiaName, materiaNode.counts, materiaId, '', hasAssuntos);
 
         if (hasAssuntos) {
-            const sortedAssuntos = Array.from(materiaNode.assuntos.keys()).sort();
+            const sortedAssuntos = Array.from(materiaNode.assuntos.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
             for (const assuntoName of sortedAssuntos) {
                 const assuntoNode = materiaNode.assuntos.get(assuntoName);
                 const assuntoId = `assunto-${materiaId}-${assuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
@@ -335,7 +345,7 @@ function renderDesempenhoMateriaTable() {
                 tableHtml += renderTreeTableRow(2, assuntoName, assuntoNode.counts, assuntoId, materiaId, hasSubAssuntos);
 
                 if (hasSubAssuntos) {
-                    const sortedSubAssuntos = Array.from(assuntoNode.subAssuntos.keys()).sort();
+                    const sortedSubAssuntos = Array.from(assuntoNode.subAssuntos.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                     for (const subAssuntoName of sortedSubAssuntos) {
                         const subAssuntoNode = assuntoNode.subAssuntos.get(subAssuntoName);
                         const subAssuntoId = `subassunto-${assuntoId}-${subAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
@@ -344,7 +354,7 @@ function renderDesempenhoMateriaTable() {
                         tableHtml += renderTreeTableRow(3, subAssuntoName, subAssuntoNode.counts, subAssuntoId, assuntoId, hasSubSubAssuntos);
 
                         if (hasSubSubAssuntos) {
-                            const sortedSubSubAssuntos = Array.from(subAssuntoNode.subSubAssuntos.keys()).sort();
+                            const sortedSubSubAssuntos = Array.from(subAssuntoNode.subSubAssuntos.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                             for (const subSubAssuntoName of sortedSubSubAssuntos) {
                                 const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssuntoName);
                                 const subSubAssuntoId = `subsubassunto-${subAssuntoId}-${subSubAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
@@ -383,3 +393,4 @@ function renderDesempenhoMateriaTable() {
     DOM.statsFooterAcertos = document.getElementById('stats-footer-acertos');
     DOM.statsFooterErros = document.getElementById('stats-footer-erros');
 }
+
