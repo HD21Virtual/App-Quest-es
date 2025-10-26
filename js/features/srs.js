@@ -5,7 +5,9 @@ import { navigateToView } from '../ui/navigation.js';
 // --- CORREÇÃO: Importar a função displayQuestion ---
 import { renderAnsweredQuestion, displayQuestion } from './question-viewer.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
-import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory } from '../services/firestore.js';
+// ===== INÍCIO DA MODIFICAÇÃO =====
+import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory, logPerformanceEntry } from '../services/firestore.js';
+// ===== FIM DA MODIFICAÇÃO =====
 
 // --- IMPLEMENTAÇÃO DO ALGORITMO SM-2 (AJUSTADO) ---
 
@@ -129,7 +131,12 @@ export async function handleSrsFeedback(feedback) {
         state.userReviewItemsMap.set(question.id, reviewDataToSave);
 
         await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
+        
+        // ===== INÍCIO DA MODIFICAÇÃO =====
+        // Atualiza tanto o histórico vitalício QUANTO o log diário
         await updateQuestionHistory(question.id, isCorrect);
+        await logPerformanceEntry(question, isCorrect);
+        // ===== FIM DA MODIFICAÇÃO =====
     }
 
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
@@ -411,7 +418,7 @@ export async function handleStartReview() {
         setState('sessionStats', []);
         setState('currentQuestionIndex', 0);
 
-        navigateToView('vade-mecum-view', false);
+        await navigateToView('vade-mecum-view', false);
 
         DOM.vadeMecumTitle.textContent = "Sessão de Revisão";
         DOM.toggleFiltersBtn.classList.add('hidden');
@@ -422,4 +429,3 @@ export async function handleStartReview() {
         updateStatsPanel();
     }
 }
-
