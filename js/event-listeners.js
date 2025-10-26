@@ -262,31 +262,14 @@ export function setupAllEventListeners() {
         const target = event.target;
         const targetId = target.id;
         
-        // --- NOVO: Lidar com o menu dropdown do caderno ---
-        if (target.closest('.caderno-menu-btn')) {
-            event.stopPropagation(); // Impede que o 'open' do caderno-item dispare
-            const button = target.closest('.caderno-menu-btn');
-            const cadernoId = button.dataset.cadernoId;
-            const dropdown = document.getElementById(`menu-dropdown-${cadernoId}`);
-            
-            if (dropdown) {
-                // Esconde todos os outros dropdowns abertos
-                document.querySelectorAll('.caderno-menu-dropdown').forEach(d => {
-                    if (d.id !== dropdown.id) {
-                        d.classList.add('hidden');
-                    }
-                });
-                // Alterna o dropdown atual
-                dropdown.classList.toggle('hidden');
-            }
-        }
+        // --- Lógica de fechar menus (clique fora) ---
+
         // Esconde os menus de caderno se o clique for fora
-        else if (!target.closest('.caderno-menu-dropdown') && !target.closest('.caderno-menu-btn')) {
+        if (!target.closest('.caderno-menu-dropdown') && !target.closest('.caderno-menu-btn')) {
             document.querySelectorAll('.caderno-menu-dropdown').forEach(d => {
                 d.classList.add('hidden');
             });
         }
-        // --- FIM DO NOVO ---
 
         // Esconde o menu mobile se o clique for fora dele
         if (!target.closest('#mobile-menu') && !target.closest('#hamburger-btn')) {
@@ -302,9 +285,30 @@ export function setupAllEventListeners() {
                 panel.classList.add('hidden');
             });
         }
+        
+        // --- Cadeia Principal de Ações (IF-ELSE IF) ---
+        
+        // --- Lidar com o menu dropdown do caderno (MAIS ESPEFÍFICO) ---
+        if (target.closest('.caderno-menu-btn')) {
+            // event.stopPropagation(); // Removido
+            const button = target.closest('.caderno-menu-btn');
+            const cadernoId = button.dataset.cadernoId;
+            const dropdown = document.getElementById(`menu-dropdown-${cadernoId}`);
+            
+            if (dropdown) {
+                // Esconde todos os outros dropdowns abertos
+                document.querySelectorAll('.caderno-menu-dropdown').forEach(d => {
+                    if (d.id !== dropdown.id) {
+                        d.classList.add('hidden');
+                    }
+                });
+                // Alterna o dropdown atual
+                dropdown.classList.toggle('hidden');
+            }
+        }
 
         // --- Auth ---
-        if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
+        else if (target.closest('#show-login-modal-btn') || target.closest('#login-from-empty')) {
             openAuthModal();
         } else if (targetId === 'login-btn') {
             await handleAuth('login');
@@ -549,4 +553,3 @@ export function setupAllEventListeners() {
         // --- FIM DA MODIFICAÇÃO ---
     });
 }
-
