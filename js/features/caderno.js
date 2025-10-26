@@ -58,22 +58,41 @@ function renderFolderContentView() {
 
     const cadernosInFolder = state.userCadernos.filter(c => c.folderId === state.currentFolderId);
     if (cadernosInFolder.length > 0) {
-         DOM.savedCadernosListContainer.innerHTML = cadernosInFolder.map(caderno => `
-            <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm caderno-item mb-2" data-caderno-id="${caderno.id}">
-               <div class="flex items-center cursor-pointer flex-grow" data-action="open">
-                    <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
-                    <div>
-                        <h4 class="font-bold text-lg">${caderno.name}</h4>
-                        <p class="text-sm text-gray-500">${caderno.questionIds ? caderno.questionIds.length : 0} questões</p>
+         // --- MODIFICAÇÃO: Wrapper para o layout de lista ---
+         let html = '<div class="bg-white rounded-lg shadow-sm overflow-hidden">';
+         cadernosInFolder.forEach((caderno, index) => {
+             const isLast = index === cadernosInFolder.length - 1;
+             // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista ---
+             html += `
+                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? 'border-b border-gray-200' : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
+                    <!-- Left: Icon + Name (clickable to open) -->
+                    <div class="flex items-center flex-grow cursor-pointer" data-action="open" style="min-width: 0;"> <!-- min-width: 0 para truncamento -->
+                        <i class="far fa-file-alt text-blue-500 text-lg w-6 text-center mr-3 sm:mr-4"></i>
+                        <span class="font-medium text-gray-800 truncate" title="${caderno.name}">${caderno.name}</span>
                     </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button class="stats-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
-                    <button class="edit-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
-                    <button class="delete-caderno-btn text-red-500 hover:text-red-700 p-2 rounded-full" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
-                </div>
-            </div>
-        `).join('');
+                    
+                    <!-- Middle: Question Count -->
+                    <div class="flex-shrink-0 mx-4">
+                        <span class="text-sm text-gray-500 whitespace-nowrap">${caderno.questionIds ? caderno.questionIds.length : 0} questões</span>
+                    </div>
+
+                    <!-- Right: Menu -->
+                    <div class="relative flex-shrink-0">
+                        <button class="caderno-menu-btn p-2 rounded-full text-gray-500 hover:bg-gray-200" data-caderno-id="${caderno.id}">
+                            <i class="fas fa-ellipsis-v pointer-events-none"></i>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div id="menu-dropdown-${caderno.id}" class="caderno-menu-dropdown hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 stats-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar w-5 mr-2 text-gray-500"></i>Desempenho</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 edit-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt w-5 mr-2 text-gray-500"></i>Renomear</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 delete-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-trash-alt w-5 mr-2"></i>Excluir</a>
+                        </div>
+                    </div>
+                </div>`;
+            // --- FIM DA MODIFICAÇÃO ---
+         });
+         html += '</div>'; // --- FIM do wrapper
+         DOM.savedCadernosListContainer.innerHTML = html;
     } else {
         DOM.savedCadernosListContainer.innerHTML = '<p class="text-center text-gray-500 bg-white p-6 rounded-lg shadow-sm">Nenhum caderno nesta pasta ainda. Clique em "Adicionar Caderno" para criar um.</p>';
     }
@@ -124,23 +143,43 @@ function renderRootCadernosView() {
         if (state.userFolders.length > 0) { 
             html += '<h3 class="mt-6 mb-2 text-md font-semibold text-gray-600">Cadernos sem Pasta</h3>'; 
         }
-        unfiledCadernos.forEach(caderno => {
+        
+        // --- MODIFICAÇÃO: Wrapper para o layout de lista ---
+        html += '<div class="bg-white rounded-lg shadow-sm overflow-hidden">';
+
+        unfiledCadernos.forEach((caderno, index) => {
+            const isLast = index === unfiledCadernos.length - 1;
+            // --- MODIFICAÇÃO: HTML do item do caderno para layout de lista ---
             html += `
-                <div class="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm caderno-item mb-2" data-caderno-id="${caderno.id}">
-                     <div class="flex items-center cursor-pointer flex-grow" data-action="open">
-                        <i class="fas fa-book text-blue-500 text-2xl mr-4"></i>
-                        <div>
-                            <h4 class="font-bold text-lg">${caderno.name}</h4>
-                            <p class="text-sm text-gray-500">${caderno.questionIds ? caderno.questionIds.length : 0} questões</p>
+                <div class="caderno-item flex justify-between items-center p-3 ${!isLast ? 'border-b border-gray-200' : ''} hover:bg-gray-50" data-caderno-id="${caderno.id}">
+                    <!-- Left: Icon + Name (clickable to open) -->
+                    <div class="flex items-center flex-grow cursor-pointer" data-action="open" style="min-width: 0;"> <!-- min-width: 0 para truncamento -->
+                        <i class="far fa-file-alt text-blue-500 text-lg w-6 text-center mr-3 sm:mr-4"></i>
+                        <span class="font-medium text-gray-800 truncate" title="${caderno.name}">${caderno.name}</span>
+                    </div>
+                    
+                    <!-- Middle: Question Count -->
+                    <div class="flex-shrink-0 mx-4">
+                        <span class="text-sm text-gray-500 whitespace-nowrap">${caderno.questionIds ? caderno.questionIds.length : 0} questões</span>
+                    </div>
+
+                    <!-- Right: Menu -->
+                    <div class="relative flex-shrink-0">
+                        <button class="caderno-menu-btn p-2 rounded-full text-gray-500 hover:bg-gray-200" data-caderno-id="${caderno.id}">
+                            <i class="fas fa-ellipsis-v pointer-events-none"></i>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div id="menu-dropdown-${caderno.id}" class="caderno-menu-dropdown hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 stats-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar w-5 mr-2 text-gray-500"></i>Desempenho</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 edit-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt w-5 mr-2 text-gray-500"></i>Renomear</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 delete-caderno-btn" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-trash-alt w-5 mr-2"></i>Excluir</a>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button class="stats-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-chart-bar pointer-events-none"></i></button>
-                        <button class="edit-caderno-btn text-gray-400 hover:text-blue-600 p-2 rounded-full" data-id="${caderno.id}" data-name="${caderno.name}"><i class="fas fa-pencil-alt pointer-events-none"></i></button>
-                        <button class="delete-caderno-btn text-red-500 hover:text-red-700 p-2 rounded-full" data-id="${caderno.id}"><i class="fas fa-trash-alt pointer-events-none"></i></button>
-                    </div>
                 </div>`;
+            // --- FIM DA MODIFICAÇÃO ---
         });
+        
+        html += '</div>'; // --- FIM do wrapper
     }
     DOM.savedCadernosListContainer.innerHTML = html;
 }
@@ -202,6 +241,14 @@ export function handleFolderItemClick(event) {
 export function handleCadernoItemClick(event) {
     const cadernoItem = event.target.closest('.caderno-item');
     if (!cadernoItem) return;
+
+    // --- NOVO: Fecha o dropdown após um clique em uma ação ---
+    const dropdown = cadernoItem.querySelector('.caderno-menu-dropdown');
+    // Verifica se o clique NÃO foi para abrir o caderno (data-action=open)
+    if (dropdown && !dropdown.classList.contains('hidden') && !event.target.closest('[data-action="open"]')) {
+         dropdown.classList.add('hidden');
+    }
+    // --- FIM DO NOVO ---
 
     const cadernoId = cadernoItem.dataset.cadernoId;
     const caderno = state.userCadernos.find(c => c.id === cadernoId);
