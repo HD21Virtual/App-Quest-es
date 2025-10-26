@@ -9,6 +9,16 @@ import { updateStatsPageUI, renderEstatisticasView } from "../features/stats.js"
 import { updateSavedFiltersList } from "../ui/modal.js";
 import DOM from "../dom-elements.js";
 
+/**
+ * Ordena strings alfanumericamente (ex: "2.10" vem depois de "2.9").
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function naturalSort(a, b) {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 export async function fetchAllQuestions() {
     try {
         const querySnapshot = await getDocs(collection(db, "questions"));
@@ -68,17 +78,17 @@ export async function fetchAllQuestions() {
         for (const materiaName of sortedMaterias) {
             const materiaData = { name: materiaName, assuntos: [] }; // Nível 1
             const assuntosMap = hierarchy.get(materiaName);
-            const sortedAssuntos = Array.from(assuntosMap.keys()).sort();
+            const sortedAssuntos = Array.from(assuntosMap.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
 
             for (const assuntoName of sortedAssuntos) {
                 const subAssuntosMap = assuntosMap.get(assuntoName);
-                const sortedSubAssuntos = Array.from(subAssuntosMap.keys()).sort();
+                const sortedSubAssuntos = Array.from(subAssuntosMap.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                 
                 const assuntoData = { name: assuntoName, subAssuntos: [] }; // Nível 2
 
                 for (const subAssuntoName of sortedSubAssuntos) {
                     const subSubAssuntosSet = subAssuntosMap.get(subAssuntoName);
-                    const sortedSubSubAssuntos = Array.from(subSubAssuntosSet).sort();
+                    const sortedSubSubAssuntos = Array.from(subSubAssuntosSet).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                     
                     // Nível 3 (objeto) e Nível 4 (array de strings)
                     assuntoData.subAssuntos.push({
@@ -427,3 +437,4 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
         console.error("Erro ao adicionar questões ao caderno:", error);
     }
 }
+
