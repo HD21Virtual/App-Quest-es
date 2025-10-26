@@ -12,6 +12,16 @@ const MIN_EASE_FACTOR = 1.3;
 const INITIAL_EASE_FACTOR = 2.5;
 
 /**
+ * Ordena strings alfanumericamente (ex: "2.10" vem depois de "2.9").
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function naturalSort(a, b) {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+/**
  * Calcula os próximos parâmetros do SRS com base no algoritmo SM-2.
  * @param {object} reviewItem - O item de revisão atual da questão.
  * @param {number} quality - A qualidade da resposta (0: Errei, 1: Difícil, 2: Bom, 3: Fácil).
@@ -143,75 +153,102 @@ export function renderReviewView() {
         return;
     }
 
+    // --- MODIFICAÇÃO: Popula questionIdToDetails com 4 níveis ---
     const questionIdToDetails = new Map();
     state.allQuestions.forEach(q => {
-        questionIdToDetails.set(q.id, { materia: q.materia, assunto: q.assunto });
+        if (q.materia && q.assunto) { // Apenas questões válidas
+            questionIdToDetails.set(q.id, {
+                materia: q.materia,
+                assunto: q.assunto,
+                subAssunto: q.subAssunto || null,
+                subSubAssunto: q.subSubAssunto || null
+            });
+        }
     });
+    // --- FIM DA MODIFICAÇÃO ---
 
-    const reviewStatsByMateria = {};
+
+    // --- MODIFICAÇÃO: Construção da hierarquia de 4 níveis ---
+    const hierarchy = new Map();
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    state.userReviewItemsMap.forEach(item => {
-        const details = questionIdToDetails.get(item.questionId);
-        if (!details) return;
-        const { materia, assunto } = details;
+    // Helper para criar um nó de estatísticas
+    const createStatsNode = () => ({
+        total: 0, errei: 0, dificil: 0, bom: 0, facil: 0, aRevisar: 0,
+        questionIdsARevisar: [],
+        children: new Map() // Usar Map para sub-níveis
+    });
 
-        if (!reviewStatsByMateria[materia]) {
-            reviewStatsByMateria[materia] = {
-                total: 0, errei: 0, dificil: 0, bom: 0, facil: 0, aRevisar: 0,
-                questionIdsARevisar: [],
-                assuntos: {}
-            };
-        }
-
-        if (!reviewStatsByMateria[materia].assuntos[assunto]) {
-            reviewStatsByMateria[materia].assuntos[assunto] = {
-                total: 0, errei: 0, dificil: 0, bom: 0, facil: 0, aRevisar: 0,
-                questionIdsARevisar: []
-            };
-        }
-
-        const materiaStats = reviewStatsByMateria[materia];
-        const assuntoStats = reviewStatsByMateria[materia].assuntos[assunto];
-        
-        materiaStats.total++;
-        assuntoStats.total++;
-        
-        // **CORREÇÃO:** Lógica de classificação agora se baseia no Fator de Facilidade (Ease Factor).
+    // Helper para incrementar as estatísticas de um nó
+    const incrementStats = (node, item) => {
+        node.total++;
         const { repetitions = 0, easeFactor = INITIAL_EASE_FACTOR } = item;
-        if (repetitions === 0) { // Se a questão foi errada na última vez, 'repetitions' é 0.
-            materiaStats.errei++;
-            assuntoStats.errei++;
-        } else if (easeFactor < 2.4) { // Fator de facilidade baixo indica uma questão difícil.
-            materiaStats.dificil++;
-            assuntoStats.dificil++;
-        } else if (easeFactor < 2.6) { // Fator de facilidade na média.
-            materiaStats.bom++;
-            assuntoStats.bom++;
-        } else { // Fator de facilidade alto indica uma questão fácil.
-            materiaStats.facil++;
-            assuntoStats.facil++;
+        
+        if (repetitions === 0) {
+            node.errei++;
+        } else if (easeFactor < 2.4) {
+            node.dificil++;
+        } else if (easeFactor < 2.6) {
+            node.bom++;
+        } else {
+            node.facil++;
         }
-
 
         if (item.nextReviewDate) {
             const reviewDate = item.nextReviewDate.toDate();
             reviewDate.setHours(0, 0, 0, 0);
             if (reviewDate <= now) {
-                materiaStats.aRevisar++;
-                assuntoStats.aRevisar++;
-                materiaStats.questionIdsARevisar.push(item.questionId);
-                assuntoStats.questionIdsARevisar.push(item.questionId);
+                node.aRevisar++;
+                node.questionIdsARevisar.push(item.questionId);
+            }
+        }
+    };
+
+    state.userReviewItemsMap.forEach(item => {
+        const details = questionIdToDetails.get(item.questionId);
+        if (!details) return; // Pula se a questão não for encontrada
+
+        const { materia, assunto, subAssunto, subSubAssunto } = details;
+
+        // Nível 1: Matéria
+        if (!hierarchy.has(materia)) {
+            hierarchy.set(materia, createStatsNode());
+        }
+        const materiaNode = hierarchy.get(materia);
+        incrementStats(materiaNode, item);
+
+        // Nível 2: Assunto
+        if (!materiaNode.children.has(assunto)) {
+            materiaNode.children.set(assunto, createStatsNode());
+        }
+        const assuntoNode = materiaNode.children.get(assunto);
+        incrementStats(assuntoNode, item);
+
+        // Nível 3: SubAssunto (só adiciona se existir)
+        if (subAssunto) {
+            if (!assuntoNode.children.has(subAssunto)) {
+                assuntoNode.children.set(subAssunto, createStatsNode());
+            }
+            const subAssuntoNode = assuntoNode.children.get(subAssunto);
+            incrementStats(subAssuntoNode, item);
+
+            // Nível 4: SubSubAssunto (só adiciona se existir)
+            if (subSubAssunto) {
+                if (!subSubAssuntoNode.children.has(subSubAssunto)) {
+                    subSubAssuntoNode.children.set(subSubAssunto, createStatsNode());
+                }
+                const subSubAssuntoNode = subSubAssuntoNode.children.get(subSubAssunto);
+                incrementStats(subSubAssuntoNode, item);
             }
         }
     });
     
-    setState('reviewStatsByMateria', reviewStatsByMateria);
+    setState('reviewStatsByMateria', hierarchy); // Salva a nova hierarquia
+    // --- FIM DA MODIFICAÇÃO ---
 
-    const sortedMaterias = Object.keys(reviewStatsByMateria).sort();
     
-    if (sortedMaterias.length === 0) {
+    if (hierarchy.size === 0) {
         DOM.reviewTableContainer.innerHTML = `<p class="text-center text-gray-500 p-8">Nenhuma matéria com questões para revisar.</p>`;
         return;
     }
@@ -220,7 +257,12 @@ export function renderReviewView() {
         <table class="min-w-full divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-50">
                 <tr>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" id="select-all-review-materias" class="rounded"></th>
+                    <!-- MODIFICAÇÃO: Adicionado div.pl-4 para alinhar checkbox -->
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="pl-4">
+                            <input type="checkbox" id="select-all-review-materias" class="rounded">
+                        </div>
+                    </th>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-black-500 tracking-wider">Matérias e Assuntos</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider">Total</th>
                     <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-black-500 tracking-wider" title="Questões marcadas como 'Errei'">Errei</th>
@@ -233,60 +275,76 @@ export function renderReviewView() {
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">`;
 
-    sortedMaterias.forEach(materia => {
-        const materiaStats = reviewStatsByMateria[materia];
-        const isMateriaDisabled = materiaStats.aRevisar === 0;
-        const materiaConcluidoPercent = materiaStats.total > 0 ? Math.round(((materiaStats.total - materiaStats.aRevisar) / materiaStats.total) * 100) : 100;
-        const materiaProgressColor = materiaConcluidoPercent >= 80 ? 'bg-green-500' : materiaConcluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+    // --- MODIFICAÇÃO: Função recursiva para renderizar linhas ---
+    const renderRow = (node, name, level, parentId = '', pathData = {}) => {
+        const { total, errei, dificil, bom, facil, aRevisar } = node;
+        const isDisabled = aRevisar === 0;
+        const concluidoPercent = total > 0 ? Math.round(((total - aRevisar) / total) * 100) : 100;
+        const progressColor = concluidoPercent >= 80 ? 'bg-green-500' : concluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+        const hasChildren = node.children.size > 0;
+        const isHidden = level > 1 ? 'hidden' : '';
+        const rowTypeClass = ['materia-row', 'assunto-row', 'subassunto-row', 'subsubassunto-row'][level - 1];
+        const indentClass = `pl-${(level - 1) * 4}`; // pl-0, pl-4, pl-8, pl-12
+        const rowId = parentId ? `${parentId}__${name.replace(/[^a-zA-Z0-9]/g, '-')}` : `row__${name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        
+        // Passa os dados do caminho (materia, assunto, etc.) para o checkbox
+        const dataAttributes = Object.entries(pathData).map(([key, value]) => `data-${key}="${value}"`).join(' ');
 
-        tableHtml += `
-            <tr class="materia-row ${isMateriaDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50 cursor-pointer'}" data-materia="${materia}">
-                <td class="px-4 py-4 whitespace-nowrap"><input type="checkbox" class="materia-review-checkbox rounded" data-materia="${materia}" ${isMateriaDisabled ? 'disabled' : ''}></td>
-                <td class="px-4 py-4 whitespace-nowrap font-medium ${isMateriaDisabled ? '' : 'text-gray-900'}">
-                    <div class="flex items-center">
-                        <i class="fas fa-chevron-right transition-transform duration-200 mr-2 text-gray-400"></i>
-                        <span>${materia}</span>
+        let html = `
+            <tr class="${rowTypeClass} ${isHidden} ${isDisabled ? 'bg-gray-50 text-gray-400' : 'hover:bg-gray-50'}" data-id="${rowId}" data-parent-id="${parentId}" data-level="${level}">
+                <td class="px-4 py-4 whitespace-nowrap">
+                    <!-- Checkbox alinhado (pl-4) e com data attributes -->
+                    <div class="flex items-center pl-4">
+                        <input type="checkbox" class="review-checkbox rounded" ${dataAttributes} ${isDisabled ? 'disabled' : ''} data-level="${level}">
                     </div>
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-center">${materiaStats.total}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${materiaStats.errei}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${materiaStats.dificil}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${materiaStats.bom}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${materiaStats.facil}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isMateriaDisabled ? '' : 'text-blue-600'}">${materiaStats.aRevisar}</td>
+                <td class="px-4 py-4 whitespace-nowrap font-medium ${isDisabled ? '' : 'text-gray-900'}">
+                    <!-- Nome com indentação (baseada no nível) -->
+                    <div class="flex items-center ${indentClass}">
+                        ${hasChildren
+                            ? `<i class="fas fa-chevron-right toggle-review-row transition-transform duration-200 mr-2 text-gray-400 cursor-pointer"></i>`
+                            : `<span class="w-6 mr-2"></span>`
+                        }
+                        <span>${name}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-center">${total}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-red-500 font-medium">${errei}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-yellow-500 font-medium">${dificil}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-green-500 font-medium">${bom}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center text-blue-500 font-medium">${facil}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-center font-bold ${isDisabled ? '' : 'text-blue-600'}">${aRevisar}</td>
                 <td class="px-4 py-4 whitespace-nowrap">
                     <div class="flex items-center justify-center">
-                        <span class="text-xs font-medium text-gray-700 w-8">${materiaConcluidoPercent}%</span>
-                        <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2"><div class="${materiaProgressColor} h-2.5 rounded-full" style="width: ${materiaConcluidoPercent}%"></div></div>
+                        <span class="text-xs font-medium text-gray-700 w-8">${concluidoPercent}%</span>
+                        <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2"><div class="${progressColor} h-2.5 rounded-full" style="width: ${concluidoPercent}%"></div></div>
                     </div>
                 </td>
-            </tr>`;
+            </tr>
+        `;
 
-        const sortedAssuntos = Object.keys(materiaStats.assuntos).sort();
-        sortedAssuntos.forEach(assunto => {
-            const assuntoStats = materiaStats.assuntos[assunto];
-            const isAssuntoDisabled = assuntoStats.aRevisar === 0;
-            const assuntoConcluidoPercent = assuntoStats.total > 0 ? Math.round(((assuntoStats.total - assuntoStats.aRevisar) / assuntoStats.total) * 100) : 100;
-            const assuntoProgressColor = assuntoConcluidoPercent >= 80 ? 'bg-green-500' : assuntoConcluidoPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+        if (hasChildren) {
+            const sortedChildren = Array.from(node.children.keys()).sort(naturalSort);
+            for (const childName of sortedChildren) {
+                const childNode = node.children.get(childName);
+                
+                // Constrói o path de dados para o filho
+                let childPathData = { ...pathData };
+                if (level === 1) childPathData.assunto = childName;
+                else if (level === 2) childPathData.subassunto = childName;
+                else if (level === 3) childPathData.subsubassunto = childName;
+                
+                html += renderRow(childNode, childName, level + 1, rowId, childPathData);
+            }
+        }
+        return html;
+    };
+    // --- FIM DA FUNÇÃO RECURSIVA ---
 
-            tableHtml += `
-                <tr class="assunto-row hidden bg-blue-50 hover:bg-blue-100" data-parent-materia="${materia}">
-                    <td class="pl-12 pr-4 py-3 whitespace-nowrap"><input type="checkbox" class="assunto-review-checkbox rounded" data-materia="${materia}" data-assunto="${assunto}" ${isAssuntoDisabled ? 'disabled' : ''}></td>
-                    <td class="px-4 py-3 whitespace-nowrap text-gray-700">${assunto}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center">${assuntoStats.total}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-red-500">${assuntoStats.errei}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-yellow-500">${assuntoStats.dificil}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-green-500">${assuntoStats.bom}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center text-blue-500">${assuntoStats.facil}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-center font-medium ${isAssuntoDisabled ? '' : 'text-blue-600'}">${assuntoStats.aRevisar}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        <div class="flex items-center justify-center">
-                            <span class="text-xs text-gray-600 w-8">${assuntoConcluidoPercent}%</span>
-                            <div class="w-24 bg-gray-200 rounded-full h-2.5 ml-2"><div class="${assuntoProgressColor} h-2.5 rounded-full" style="width: ${assuntoConcluidoPercent}%"></div></div>
-                        </div>
-                    </td>
-                </tr>`;
-        });
+    const sortedMaterias = Array.from(hierarchy.keys()).sort(naturalSort);
+    sortedMaterias.forEach(materiaName => {
+        const materiaNode = hierarchy.get(materiaName);
+        tableHtml += renderRow(materiaNode, materiaName, 1, '', { materia: materiaName });
     });
 
     tableHtml += `</tbody></table>`;
@@ -297,18 +355,48 @@ export function renderReviewView() {
 export async function handleStartReview() {
     if (!state.currentUser) return;
     
-    const selectedCheckboxes = DOM.reviewTableContainer.querySelectorAll('.assunto-review-checkbox:checked');
+    // --- MODIFICAÇÃO: Seleciona pela classe genérica e busca nós na hierarquia ---
+    const selectedCheckboxes = DOM.reviewTableContainer.querySelectorAll('.review-checkbox:checked');
     if (selectedCheckboxes.length === 0) return;
 
     const questionsToReviewIds = new Set();
+    const hierarchy = state.reviewStatsByMateria; // Pega a hierarquia salva no estado
+
     selectedCheckboxes.forEach(cb => {
-        const materia = cb.dataset.materia;
-        const assunto = cb.dataset.assunto;
-        const stats = state.reviewStatsByMateria[materia]?.assuntos[assunto];
-        if (stats && stats.questionIdsARevisar) {
-            stats.questionIdsARevisar.forEach(id => questionsToReviewIds.add(id));
+        const { materia, assunto, subassunto, subsubassunto } = cb.dataset;
+
+        let node;
+        try {
+            // Navega na hierarquia (Map) para encontrar o nó selecionado
+            node = hierarchy.get(materia);
+            if (assunto) node = node.children.get(assunto);
+            if (subassunto) node = node.children.get(subassunto);
+            if (subsubassunto) node = node.children.get(subsubassunto);
+        } catch (e) {
+            console.warn("Nó não encontrado na hierarquia de revisão:", cb.dataset);
+            node = null;
+        }
+
+        // Adiciona os IDs de revisão do nó (e de todos os seus filhos, implicitamente)
+        // A lógica de seleção de checkbox (em event-listeners) garante que se um pai é checado, os filhos também são.
+        // Aqui só precisamos coletar os IDs do nó específico.
+        // CORREÇÃO: A lógica de seleção (em event-listeners) *não* checa os filhos.
+        // A *coleta* aqui deve ser recursiva.
+
+        if (node) {
+            // Função recursiva para coletar IDs
+            const collectIds = (currentNode) => {
+                if (currentNode.questionIdsARevisar) {
+                    currentNode.questionIdsARevisar.forEach(id => questionsToReviewIds.add(id));
+                }
+                if (currentNode.children.size > 0) {
+                    currentNode.children.forEach(childNode => collectIds(childNode));
+                }
+            };
+            collectIds(node);
         }
     });
+    // --- FIM DA MODIFICAÇÃO ---
 
     const uniqueQuestionIds = Array.from(questionsToReviewIds);
 
