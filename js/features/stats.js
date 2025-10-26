@@ -2,7 +2,9 @@ import { state, getActiveContainer } from '../state.js';
 // ===== INÍCIO DA MODIFICAÇÃO =====
 import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart, renderStatsPagePerformanceChart, renderEvolutionChart } from '../ui/charts.js';
 // ===== FIM DA MODIFICAÇÃO =====
-import { getHistoricalCountsForQuestions } from '../services/firestore.js';
+// ===== INÍCIO DA MODIFICAÇÃO =====
+import { getHistoricalCountsForQuestions, fetchPerformanceLog } from '../services/firestore.js';
+// ===== FIM DA MODIFICAÇÃO =====
 import DOM from '../dom-elements.js';
 
 /**
@@ -131,7 +133,7 @@ export function updateStatsAssuntoFilter(selectedMateria) {
 /**
  * Coleta os filtros da UI de Estatísticas e reaplica na view.
  */
-export function handleStatsFilter() {
+export async function handleStatsFilter() {
     if (!state.currentUser) return;
 
     // 1. Coleta os valores dos filtros
@@ -149,13 +151,13 @@ export function handleStatsFilter() {
     // 2. Re-renderiza as seções com os filtros aplicados
     // Nota: A função renderEstatisticasView (cards/gráfico) será modificada para aceitar filtros
     // A função renderDesempenhoMateriaTable (tabela) também será modificada
-    renderEstatisticasView(filters);
+    await renderEstatisticasView(filters);
 }
 // ===== FIM DA MODIFICAÇÃO =====
 
 
-// ===== INÍCIO DA MODIFICAÇÃO: Atualiza renderEstatisticasView para aceitar filtros =====
-export function renderEstatisticasView(filters = null) {
+// ===== INÍCIO DA MODIFICAÇÃO: Atualiza renderEstatisticasView para aceitar filtros e ser async =====
+export async function renderEstatisticasView(filters = null) {
 // ===== FIM DA MODIFICAÇÃO =====
     if (!state.currentUser) {
         DOM.statsMainContent.innerHTML = '<p class="text-center text-gray-500 p-8">Por favor, faça login para ver suas estatísticas.</p>';
@@ -306,7 +308,7 @@ export function renderEstatisticasView(filters = null) {
 
     // 5. Renderiza a nova tabela de desempenho por matéria
     // ===== INÍCIO DA MODIFICAÇÃO =====
-    renderDesempenhoMateriaTable(filters);
+    await renderDesempenhoMateriaTable(filters);
     // ===== FIM DA MODIFICAÇÃO =====
 
     // ===== INÍCIO DA MODIFICAÇÃO =====
@@ -436,12 +438,13 @@ function renderTreeTableRow(level, name, counts, id, parentId = '', hasChildren 
 }
 
 // Função Principal para renderizar a tabela completa
-// ===== INÍCIO DA MODIFICAÇÃO: Atualiza renderDesempenhoMateriaTable para aceitar filtros =====
-function renderDesempenhoMateriaTable(filters = null) {
+// ===== INÍCIO DA MODIFICAÇÃO: Atualiza renderDesempenhoMateriaTable para aceitar filtros e ser async =====
+async function renderDesempenhoMateriaTable(filters = null) {
 // ===== FIM DA MODIFICAÇÃO =====
     if (!DOM.statsDesempenhoMateriaContainer) return;
 
     // --- MODIFICAÇÃO: Mapear 'Questões Gerais' para null ---
+    // (Este map é usado em ambos os casos, com ou sem filtro de data)
     const questionIdToDetails = new Map();
     state.allQuestions.forEach(q => {
         if(q.materia && q.assunto) {
@@ -458,76 +461,148 @@ function renderDesempenhoMateriaTable(filters = null) {
     const hierarchy = new Map();
     const createCounts = () => ({ total: 0, correct: 0, incorrect: 0 });
 
-    state.userQuestionHistoryMap.forEach(item => {
-        const details = questionIdToDetails.get(item.id);
-        if (!details) return;
+    // Função auxiliar para incrementar
+    const incrementCounts = (node, isCorrect, total = 1) => {
+        node.counts.total += total;
+        if (isCorrect) {
+            node.counts.correct += total;
+        } else {
+            node.counts.incorrect += total;
+        }
+    };
+    
+    // ===== INÍCIO DA MODIFICAÇÃO: Lógica de Fonte de Dados (Data vs. Vitalício) =====
 
-        // ===== INÍCIO DA LÓGICA DE FILTRAGEM DA TABELA =====
-        // NOTA: O filtro de data NÃO pode ser aplicado aqui pois
-        // userQuestionHistoryMap não armazena datas de resolução.
-        // Apenas filtros de matéria e assunto são aplicados.
-        if (filters) {
-            if (filters.materia && details.materia !== filters.materia) {
+    // CASO 1: Filtro de data está ATIVO. Usar o novo 'performanceLog'.
+    if (filters && filters.startDate) {
+        const performanceLog = await fetchPerformanceLog(filters.startDate, filters.endDate);
+
+        performanceLog.forEach(entry => {
+            // Aplica filtros de matéria/assunto AO MESMO TEMPO
+            if (filters.materia && entry.materia !== filters.materia) {
                 return; // Pula item, matéria não bate
             }
             if (filters.assunto) {
-                // Checa se o filtro de assunto bate em qualquer nível
-                const assuntoMatch = details.assunto === filters.assunto ||
-                                     details.subAssunto === filters.assunto ||
-                                     details.subSubAssunto === filters.assunto;
+                const assuntoMatch = entry.assunto === filters.assunto ||
+                                     entry.subAssunto === filters.assunto ||
+                                     entry.subSubAssunto === filters.assunto;
                 if (!assuntoMatch) {
                     return; // Pula item, assunto não bate
                 }
             }
-        }
-        // ===== FIM DA LÓGICA DE FILTRAGEM DA TABELA =====
 
-        const { materia, assunto, subAssunto, subSubAssunto } = details;
-        const itemCorrect = item.correct || 0;
-        const itemIncorrect = item.incorrect || 0;
-        const itemTotal = item.total || 0;
-
-        if (itemTotal === 0) return;
-        
-        // Função auxiliar para incrementar
-        const incrementCounts = (node) => {
-            node.counts.total += itemTotal;
-            node.counts.correct += itemCorrect;
-            node.counts.incorrect += itemIncorrect;
-        };
-
-        // Nível 1: Matéria
-        if (!hierarchy.has(materia)) {
-            hierarchy.set(materia, { counts: createCounts(), assuntos: new Map() });
-        }
-        const materiaNode = hierarchy.get(materia);
-        incrementCounts(materiaNode);
-
-        // Nível 2: Assunto
-        if (!materiaNode.assuntos.has(assunto)) {
-            materiaNode.assuntos.set(assunto, { counts: createCounts(), subAssuntos: new Map() });
-        }
-        const assuntoNode = materiaNode.assuntos.get(assunto);
-        incrementCounts(assuntoNode);
-
-        // Nível 3: SubAssunto (Só processa se subAssunto não for null)
-        if (subAssunto) {
-            if (!assuntoNode.subAssuntos.has(subAssunto)) {
-                assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts(), subSubAssuntos: new Map() });
+            // Destalhes denormalizados do log
+            const { materia, assunto, subAssunto, subSubAssunto, isCorrect } = entry;
+            
+            // Pula se a questão não tiver matéria ou assunto (dados inválidos)
+            if (!materia || !assunto) return;
+            
+            // Nível 1: Matéria
+            if (!hierarchy.has(materia)) {
+                hierarchy.set(materia, { counts: createCounts(), assuntos: new Map() });
             }
-            const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
-            incrementCounts(subAssuntoNode);
+            const materiaNode = hierarchy.get(materia);
+            incrementCounts(materiaNode, isCorrect);
 
-            // Nível 4: SubSubAssunto (Só processa se subSubAssunto não for null)
-            if (subSubAssunto) {
-                if (!subAssuntoNode.subSubAssuntos.has(subSubAssunto)) {
-                    subAssuntoNode.subSubAssuntos.set(subSubAssunto, { counts: createCounts() });
+            // Nível 2: Assunto
+            if (!materiaNode.assuntos.has(assunto)) {
+                materiaNode.assuntos.set(assunto, { counts: createCounts(), subAssuntos: new Map() });
+            }
+            const assuntoNode = materiaNode.assuntos.get(assunto);
+            incrementCounts(assuntoNode, isCorrect);
+
+            // Nível 3: SubAssunto (Só processa se subAssunto não for null)
+            if (subAssunto) {
+                if (!assuntoNode.subAssuntos.has(subAssunto)) {
+                    assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts(), subSubAssuntos: new Map() });
                 }
-                const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssunto);
-                incrementCounts(subSubAssuntoNode);
+                const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
+                incrementCounts(subAssuntoNode, isCorrect);
+
+                // Nível 4: SubSubAssunto (Só processa se subSubAssunto não for null)
+                if (subSubAssunto) {
+                    if (!subAssuntoNode.subSubAssuntos.has(subSubAssunto)) {
+                        subAssuntoNode.subSubAssuntos.set(subSubAssunto, { counts: createCounts() });
+                    }
+                    const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssunto);
+                    incrementCounts(subSubAssuntoNode, isCorrect);
+                }
             }
-        }
-    });
+        });
+
+    } else {
+        // CASO 2: Filtro de data INATIVO ("Tudo"). Usar 'userQuestionHistoryMap' (vitalício).
+        // (Lógica original, mas adaptada para a função incrementCounts)
+
+        state.userQuestionHistoryMap.forEach(item => {
+            const details = questionIdToDetails.get(item.id);
+            if (!details) return;
+
+            // Aplica filtros de matéria/assunto
+            if (filters) {
+                if (filters.materia && details.materia !== filters.materia) {
+                    return; // Pula item, matéria não bate
+                }
+                if (filters.assunto) {
+                    const assuntoMatch = details.assunto === filters.assunto ||
+                                         details.subAssunto === filters.assunto ||
+                                         details.subSubAssunto === filters.assunto;
+                    if (!assuntoMatch) {
+                        return; // Pula item, assunto não bate
+                    }
+                }
+            }
+
+            const { materia, assunto, subAssunto, subSubAssunto } = details;
+            const itemCorrect = item.correct || 0;
+            const itemIncorrect = item.incorrect || 0;
+            const itemTotal = item.total || 0;
+
+            if (itemTotal === 0) return;
+            
+            // Nível 1: Matéria
+            if (!hierarchy.has(materia)) {
+                hierarchy.set(materia, { counts: createCounts(), assuntos: new Map() });
+            }
+            const materiaNode = hierarchy.get(materia);
+            // Aqui passamos o total de acertos/erros de uma vez
+            materiaNode.counts.total += itemTotal;
+            materiaNode.counts.correct += itemCorrect;
+            materiaNode.counts.incorrect += itemIncorrect;
+
+            // Nível 2: Assunto
+            if (!materiaNode.assuntos.has(assunto)) {
+                materiaNode.assuntos.set(assunto, { counts: createCounts(), subAssuntos: new Map() });
+            }
+            const assuntoNode = materiaNode.assuntos.get(assunto);
+            assuntoNode.counts.total += itemTotal;
+            assuntoNode.counts.correct += itemCorrect;
+            assuntoNode.counts.incorrect += itemIncorrect;
+
+            // Nível 3: SubAssunto (Só processa se subAssunto não for null)
+            if (subAssunto) {
+                if (!assuntoNode.subAssuntos.has(subAssunto)) {
+                    assuntoNode.subAssuntos.set(subAssunto, { counts: createCounts(), subSubAssuntos: new Map() });
+                }
+                const subAssuntoNode = assuntoNode.subAssuntos.get(subAssunto);
+                subAssuntoNode.counts.total += itemTotal;
+                subAssuntoNode.counts.correct += itemCorrect;
+                subAssuntoNode.counts.incorrect += itemIncorrect;
+
+                // Nível 4: SubSubAssunto (Só processa se subSubAssunto não for null)
+                if (subSubAssunto) {
+                    if (!subAssuntoNode.subSubAssuntos.has(subSubAssunto)) {
+                        subAssuntoNode.subSubAssuntos.set(subSubAssunto, { counts: createCounts() });
+                    }
+                    const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssunto);
+                    subSubAssuntoNode.counts.total += itemTotal;
+                    subSubAssuntoNode.counts.correct += itemCorrect;
+                    subSubAssuntoNode.counts.incorrect += itemIncorrect;
+                }
+            }
+        });
+    }
+    // ===== FIM DA MODIFICAÇÃO DA FONTE DE DADOS =====
     // --- FIM DA MODIFICAÇÃO ---
 
     if (hierarchy.size === 0) {
@@ -603,7 +678,7 @@ function renderDesempenhoMateriaTable(filters = null) {
                         if (hasSubSubAssuntos) {
                             const sortedSubSubAssuntos = Array.from(subAssuntoNode.subSubAssuntos.keys()).sort(naturalSort); // <- MUDANÇA: Ordenação natural
                             for (const subSubAssuntoName of sortedSubSubAssuntos) {
-                                const subSubAssuntoNode = subSubAssuntoNode.subSubAssuntos.get(subSubAssuntoName);
+                                const subSubAssuntoNode = subAssuntoNode.subSubAssuntos.get(subSubAssuntoName);
                                 const subSubAssuntoId = `subsubassunto-${subAssuntoId}-${subSubAssuntoName.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
                                 tableHtml += renderTreeTableRow(4, subSubAssuntoName, subSubAssuntoNode.counts, subSubAssuntoId, subAssuntoId, false);
