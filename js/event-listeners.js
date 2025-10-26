@@ -261,6 +261,32 @@ export function setupAllEventListeners() {
     document.addEventListener('click', async (event) => {
         const target = event.target;
         const targetId = target.id;
+
+        // --- NOVO: Lidar com o menu dropdown do caderno ---
+        if (target.closest('.caderno-menu-btn')) {
+            event.stopPropagation(); // Impede que o 'open' do caderno-item dispare
+            const button = target.closest('.caderno-menu-btn');
+            const cadernoId = button.dataset.cadernoId;
+            const dropdown = document.getElementById(`menu-dropdown-${cadernoId}`);
+            
+            if (dropdown) {
+                // Esconde todos os outros dropdowns abertos
+                document.querySelectorAll('.caderno-menu-dropdown').forEach(d => {
+                    if (d.id !== dropdown.id) {
+                        d.classList.add('hidden');
+                    }
+                });
+                // Alterna o dropdown atual
+                dropdown.classList.toggle('hidden');
+            }
+        }
+        // Esconde os menus de caderno se o clique for fora
+        else if (!target.closest('.caderno-menu-dropdown') && !target.closest('.caderno-menu-btn')) {
+            document.querySelectorAll('.caderno-menu-dropdown').forEach(d => {
+                d.classList.add('hidden');
+            });
+        }
+        // --- FIM DO NOVO ---
         
         // Esconde o menu mobile se o clique for fora dele
         if (!target.closest('#mobile-menu') && !target.closest('#hamburger-btn')) {
@@ -324,6 +350,7 @@ export function setupAllEventListeners() {
         else if (target.closest('.remove-question-btn')) removeQuestionFromCaderno(target.closest('.remove-question-btn').dataset.questionId);
 
         // --- Cadernos / Folders ---
+        // Este listener agora pega [data-action="open"] e os cliques nos itens do menu dropdown
         else if (target.closest('#saved-cadernos-list-container')) {
             handleCadernoItemClick(event);
             handleFolderItemClick(event);
@@ -523,4 +550,3 @@ export function setupAllEventListeners() {
         // --- FIM DA MODIFICAÇÃO ---
     });
 }
-
