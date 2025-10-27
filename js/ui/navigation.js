@@ -81,6 +81,29 @@ export async function navigateToView(viewId, isUserClick = true) {
         // ===== INÍCIO DA MODIFICAÇÃO: Adicionado await =====
         await renderEstatisticasView();
         // ===== FIM DA MODIFICAÇÃO =====
+
+        // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO): Resetar para a sub-aba padrão =====
+        // Se o usuário clicou diretamente no link de navegação principal
+        if (isUserClick) {
+            // 1. Reseta os botões das sub-abas
+            const tabButtons = DOM.statsTabsContainer.querySelectorAll('.tab-button');
+            const defaultTabButton = DOM.statsTabsContainer.querySelector('button[data-tab="desempenho-geral"]');
+            
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            if (defaultTabButton) {
+                defaultTabButton.classList.add('active');
+            }
+
+            // 2. Reseta os painéis de conteúdo das sub-abas
+            const tabContents = document.querySelectorAll('#stats-tabs-content-container .stats-tab-content');
+            const defaultTabContent = document.getElementById('desempenho-geral-tab');
+            
+            tabContents.forEach(content => content.classList.add('hidden'));
+            if (defaultTabContent) {
+                defaultTabContent.classList.remove('hidden');
+            }
+        }
+        // ===== FIM DA MODIFICAÇÃO =====
     }
 
 
