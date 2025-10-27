@@ -343,9 +343,10 @@
 
             <!-- ===== INÍCIO DA MODIFICAÇÃO: Filtro da aba Estatísticas redesenhado ===== -->
             <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                <!-- MODIFICAÇÃO: Alterado para lg:grid-cols-4 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                     
-                    <!-- Período -->
+                    <!-- Col 1: Período -->
                     <div class="relative">
                         <label for="stats-periodo-button" class="text-sm font-medium text-gray-700 mb-1 block">Período</label>
                         <button type="button" id="stats-periodo-button" data-value="tudo" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -376,7 +377,7 @@
                     </div>
                     <!-- Fim Período -->
 
-                    <!-- Custom Select: Matéria (Novo) -->
+                    <!-- Col 2: Matéria (Novo) -->
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
                         <div id="stats-materia-filter-custom" class="relative custom-select-container">
@@ -393,7 +394,7 @@
                         </div>
                     </div>
                     
-                    <!-- Custom Select: Assunto (Novo) -->
+                    <!-- Col 3: Assunto (Novo) -->
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1 block">Assunto</label>
                          <div id="stats-assunto-filter-custom" class="relative custom-select-container">
@@ -410,8 +411,8 @@
                         </div>
                     </div>
 
-                    <!-- Botão Filtrar (Movido para cá) -->
-                    <div class="lg:col-start-3 lg:col-span-1">
+                    <!-- Col 4: Botão Filtrar (Movido) -->
+                    <div>
                         <button id="stats-filter-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 w-full">Filtrar</button>
                     </div>
                 </div>
