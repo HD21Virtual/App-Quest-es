@@ -87,7 +87,15 @@ function updateStatsAssuntoFilterCustom(disciplinas) {
         optionsContainer.innerHTML = `<div class="p-2 text-center text-gray-400 text-sm">Selecione uma matéria</div>`;
     } else {
         assuntoButton.disabled = false;
-        let newHtml = '';
+        
+        // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+        let newHtml = `
+            <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer font-bold border-b pb-2 mb-1">
+                <input type="checkbox" data-type="select-all-assuntos" class="custom-select-option rounded">
+                <span>Selecionar tudo</span>
+            </label>
+        `;
+        // ===== FIM DA MODIFICAÇÃO =====
         
         disciplinas.forEach(disciplinaName => {
             const materiaObj = state.filterOptions.materia.find(m => m.name === disciplinaName);
@@ -179,18 +187,115 @@ function populateStatsFilters() {
     const materiaContainer = DOM.statsMateriaFilterCustom.querySelector('.custom-select-options');
     if (materiaContainer) {
         const materias = state.filterOptions.materia.map(m => m.name).sort(naturalSort);
-        materiaContainer.innerHTML = materias.map(materiaName => `
+        
+        // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+        const selectAllMateriasHtml = `
+            <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer font-bold border-b pb-2 mb-1">
+                <input type="checkbox" data-type="select-all-materias" class="custom-select-option rounded">
+                <span>Selecionar tudo</span>
+            </label>
+        `;
+        
+        const materiasHtml = materias.map(materiaName => `
             <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
-                <input type="checkbox" data-value="${materiaName}" class="custom-select-option rounded">
+                <input type="checkbox" data-value="${materiaName}" data-type="materia" class="custom-select-option rounded">
                 <span>${materiaName}</span>
             </label>
         `).join('');
+        
+        materiaContainer.innerHTML = selectAllMateriasHtml + materiasHtml;
+        // ===== FIM DA MODIFICAÇÃO =====
     }
 
     // 2. Registra os listeners dos filtros customizados
-    // Passa 'updateStatsAssuntoFilterCustom' como callback para o filtro de matéria
-    setupCustomSelect(DOM.statsMateriaFilterCustom, updateStatsAssuntoFilterCustom);
-    setupCustomSelect(DOM.statsAssuntoFilterCustom);
+    // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+    // Modifica o callback do setupCustomSelect para matéria
+    setupCustomSelect(DOM.statsMateriaFilterCustom, (selected, e) => { // 'selected' é passado como [], 'e' é o evento
+        // Esta é a nova função de callback que também lida com "Selecionar Tudo"
+        const selectAllCheckbox = DOM.statsMateriaFilterCustom.querySelector('[data-type="select-all-materias"]');
+        const materiaCheckboxes = DOM.statsMateriaFilterCustom.querySelectorAll('[data-type="materia"]');
+        
+        // Verifica se o 'Selecionar Tudo' foi o gatilho
+        const triggeredBySelectAll = e.target && e.target.dataset.type === 'select-all-materias';
+        
+        if (triggeredBySelectAll) {
+            const isChecked = selectAllCheckbox.checked;
+            materiaCheckboxes.forEach(cb => cb.checked = isChecked);
+        } else {
+            // Verifica o estado dos filhos para atualizar o 'Selecionar Tudo'
+            const allChecked = Array.from(materiaCheckboxes).every(cb => cb.checked);
+            const noneChecked = Array.from(materiaCheckboxes).every(cb => !cb.checked);
+            
+            if (allChecked && materiaCheckboxes.length > 0) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (noneChecked) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+        
+        // Coleta as matérias selecionadas (excluindo o 'Selecionar Tudo')
+        const finalSelectedMaterias = Array.from(materiaCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.dataset.value);
+            
+        // Chama a função original de atualização do filtro de assunto
+        updateStatsAssuntoFilterCustom(finalSelectedMaterias);
+        
+        // Retorna o array de matérias para o setupCustomSelect atualizar o valor
+        return finalSelectedMaterias;
+    });
+    
+    setupCustomSelect(DOM.statsAssuntoFilterCustom, (selected, e) => { // 'selected' é passado como [], 'e' é o evento
+        // Callback para o filtro de Assunto (para lidar com "Selecionar Tudo")
+        const selectAllCheckbox = DOM.statsAssuntoFilterCustom.querySelector('[data-type="select-all-assuntos"]');
+        if (!selectAllCheckbox) return []; // Ainda não populado, retorna array vazio
+
+        const assuntoCheckboxes = DOM.statsAssuntoFilterCustom.querySelectorAll('[data-type="assunto"]');
+        const subAssuntoCheckboxes = DOM.statsAssuntoFilterCustom.querySelectorAll('[data-type="subassunto"]');
+        const subSubAssuntoCheckboxes = DOM.statsAssuntoFilterCustom.querySelectorAll('[data-type="subsubassunto"]');
+        
+        const allCheckboxes = [ ...assuntoCheckboxes, ...subAssuntoCheckboxes, ...subSubAssuntoCheckboxes ];
+        
+        const triggeredBySelectAll = e.target && e.target.dataset.type === 'select-all-assuntos';
+
+        if (triggeredBySelectAll) {
+            const isChecked = selectAllCheckbox.checked;
+            // Marca/desmarca todos os níveis
+            allCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+                cb.indeterminate = false; // Limpa estado indeterminado
+            });
+        } else {
+            // A lógica de hierarquia no filter.js já rodou.
+            // Agora atualiza o "Selecionar Tudo"
+            const allChecked = allCheckboxes.length > 0 && allCheckboxes.every(cb => cb.checked);
+            const noneChecked = allCheckboxes.every(cb => !cb.checked && !cb.indeterminate);
+
+            if (allChecked) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (noneChecked) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+        
+        // Coleta os assuntos selecionados
+        const finalSelectedAssuntos = Array.from(allCheckboxes)
+            .filter(cb => cb.checked && !cb.indeterminate) 
+            .map(cb => cb.dataset.value);
+
+        return finalSelectedAssuntos; // Retorna o array para o setupCustomSelect
+    });
+    // ===== FIM DA MODIFICAÇÃO =====
     
     // 3. Inicializa o filtro de assunto (desabilitado)
     updateStatsAssuntoFilterCustom([]);
@@ -319,9 +424,6 @@ export async function renderEstatisticasView(filters = null) {
         
         const materiaMatch = appliedFilters.materias.length === 0 || appliedFilters.materias.includes(stat.materia);
         if (!materiaMatch) return false;
-
-        // Se filtrou por matéria e não por assunto, ok
-        if (appliedFilters.materias.length > 0 && appliedFilters.assuntos.length === 0) return true;
         
         // Se não filtrou por matéria nem assunto, ok
         if (appliedFilters.materias.length === 0 && appliedFilters.assuntos.length === 0) return true;
@@ -335,9 +437,12 @@ export async function renderEstatisticasView(filters = null) {
                        (details.subAssunto && appliedFilters.assuntos.includes(details.subAssunto)) || 
                        (details.subSubAssunto && appliedFilters.assuntos.includes(details.subSubAssunto));
              }
+             // Se não achou detalhes (ex: questão antiga sem assunto), ou se os assuntos não bateram
+             return false;
         }
         
-        return false; // Assunto não bateu
+        // Se chegou aqui, é porque a matéria bateu (e não havia filtro de assunto)
+        return true;
     };
     // ===== FIM DA MODIFICAÇÃO =====
 
