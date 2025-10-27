@@ -65,7 +65,7 @@ export async function applyFilters() {
         const mainContentContainer = DOM.vadeMecumView.querySelector('#tabs-and-main-content');
         if(mainContentContainer) mainContentContainer.classList.remove('hidden');
         await displayQuestion();
-        updateStatsPanel();
+        // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
     }
 
     updateSelectedFiltersDisplay();
