@@ -584,8 +584,8 @@ export function setupAllEventListeners() {
                 DOM.statsPeriodoPanel.classList.add('hidden');
                 DOM.statsPeriodoCustomRange.classList.add('hidden');
                 
-                // ===== INÍCIO DA MODIFICAÇÃO: Chama o filtro de estatísticas =====
-                await handleStatsFilter(); 
+                // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO): Chamada removida =====
+                // Removido: await handleStatsFilter(); (Agora só filtra ao clicar em "Filtrar")
                 // ===== FIM DA MODIFICAÇÃO =====
             }
         }
@@ -618,8 +618,8 @@ export function setupAllEventListeners() {
                 DOM.statsPeriodoPanel.classList.add('hidden');
                 DOM.statsPeriodoCustomRange.classList.add('hidden');
                 
-                // ===== INÍCIO DA MODIFICAÇÃO: Chama o filtro de estatísticas =====
-                await handleStatsFilter();
+                // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO): Chamada removida =====
+                // Removido: await handleStatsFilter(); (Agora só filtra ao clicar em "Filtrar")
                 // ===== FIM DA MODIFICAÇÃO =====
             } else {
                 console.warn("Selecione data de início e fim.");
