@@ -71,7 +71,9 @@ export async function applyFilters() {
     updateSelectedFiltersDisplay();
 }
 
-function setupCustomSelect(container) {
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora aceita um callback =====
+export function setupCustomSelect(container, onValueChangeCallback = null) {
+// ===== FIM DA MODIFICAÇÃO =====
     const button = container.querySelector('.custom-select-button');
     const panel = container.querySelector('.custom-select-panel');
     const searchInput = container.querySelector('.custom-select-search');
@@ -109,7 +111,9 @@ function setupCustomSelect(container) {
         const changedCheckbox = e.target;
         
         // --- MODIFICAÇÃO: Lógica de checkbox para 4 níveis ---
-        if (container.id === 'assunto-filter' && changedCheckbox.matches('.custom-select-option')) {
+        // ===== INÍCIO DA MODIFICAÇÃO: Verificação de ID removida para ser genérica =====
+        if (changedCheckbox.matches('.custom-select-option')) {
+        // ===== FIM DA MODIFICAÇÃO =====
             const isChecked = changedCheckbox.checked;
             const type = changedCheckbox.dataset.type;
 
@@ -165,10 +169,17 @@ function setupCustomSelect(container) {
             valueSpan.classList.remove('text-gray-500');
         }
         
-        if (container.id === 'materia-filter') {
-            updateAssuntoFilter(selected);
+        // ===== INÍCIO DA MODIFICAÇÃO: Chama o callback se ele existir =====
+        if (onValueChangeCallback) {
+            onValueChangeCallback(selected);
         }
-        updateSelectedFiltersDisplay();
+        // ===== FIM DA MODIFICAÇÃO =====
+        
+        // Esta lógica é específica da aba "Questões", então verificamos o ID
+        if (container.id === 'materia-filter') {
+            updateSelectedFiltersDisplay();
+        }
+        
         if (state.isAddingQuestionsMode.active) {
             applyFilters();
         }
@@ -212,9 +223,10 @@ function updateParentCheckbox(parentGroup, parentSelector, childSelector) {
 // --- FIM DA NOVA FUNÇÃO ---
 
 export function setupCustomSelects() {
-    const materiaOptions = state.filterOptions.materia.map(m => m.name);
+    // Popula o filtro de Matéria da aba "Questões"
     const materiaContainer = DOM.materiaFilter.querySelector('.custom-select-options');
     if (materiaContainer) {
+        const materiaOptions = state.filterOptions.materia.map(m => m.name);
         materiaContainer.innerHTML = materiaOptions.map(opt => `
             <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
                 <input type="checkbox" data-value="${opt}" class="custom-select-option rounded">
@@ -223,7 +235,15 @@ export function setupCustomSelects() {
         `).join('');
     }
     
-    document.querySelectorAll('.custom-select-container').forEach(setupCustomSelect);
+    // ===== INÍCIO DA MODIFICAÇÃO: Chama setupCustomSelect especificamente =====
+    // Configura os filtros da aba "Questões"
+    if (DOM.materiaFilter) {
+        setupCustomSelect(DOM.materiaFilter, updateAssuntoFilter); // Passa o callback
+    }
+    if (DOM.assuntoFilter) {
+        setupCustomSelect(DOM.assuntoFilter); // Sem callback
+    }
+    // ===== FIM DA MODIFICAÇÃO =====
 }
 
 export function clearAllFilters() {
