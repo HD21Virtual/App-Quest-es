@@ -48,7 +48,7 @@ export async function checkAnswer() {
         });
     }
 
-    updateStatsPanel();
+    // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
     updateStatsPageUI();
 }
 
