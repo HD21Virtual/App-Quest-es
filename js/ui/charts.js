@@ -619,12 +619,20 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
                 position: 'top',
                 align: 'center',
                 labels: {
-                    // ===== ALTERAÇÃO 1 INÍCIO: Legendas retangulares =====
-                    // 'usePointStyle: true' usa círculos, 'false' usa retângulos.
                     usePointStyle: false, 
-                    // Ajusta o tamanho da caixa da legenda retangular.
-                    boxWidth: 20 
-                    // ===== ALTERAÇÃO 1 FIM =====
+                    boxWidth: 20,
+                    // ===== ALTERAÇÃO 3 INÍCIO: Adiciona generateLabels =====
+                    // Função para garantir que a cor de preenchimento da legenda
+                    // seja a mesma da borda da linha.
+                    generateLabels: function(chart) {
+                        const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                        originalLabels.forEach(label => {
+                            // Define fillStyle para ser igual ao strokeStyle (cor da linha)
+                            label.fillStyle = label.strokeStyle; 
+                        });
+                        return originalLabels;
+                    }
+                    // ===== ALTERAÇÃO 3 FIM =====
                 }
             },
             tooltip: {
@@ -638,11 +646,7 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
         },
         scales: {
             x: {
-                // ===== ALTERAÇÃO 2 INÍCIO: Linhas verticais =====
-                // 'display: false' estava escondendo as linhas.
-                // Agora mostramos as linhas com a cor padrão (igual ao eixo y).
                 grid: { color: '#e5e7eb' }, 
-                // ===== ALTERAÇÃO 2 FIM =====
                 ticks: { color: '#6b7280' } // gray-500
             },
             y: {
@@ -686,3 +690,4 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
     });
 }
 // ===== FIM DA MODIFICAÇÃO =====
+
