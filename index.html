@@ -343,11 +343,11 @@
 
             <!-- ===== INÍCIO DA MODIFICAÇÃO: Filtro da aba Estatísticas redesenhado ===== -->
             <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                <!-- MODIFICAÇÃO: Alterado para lg:grid-cols-4 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <!-- MODIFICAÇÃO: Alterado de 'lg:grid-cols-4' para 'lg:flex' para rebalancear colunas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:flex gap-4 items-end">
                     
                     <!-- Col 1: Período -->
-                    <div class="relative">
+                    <div class="relative lg:flex-1">
                         <label for="stats-periodo-button" class="text-sm font-medium text-gray-700 mb-1 block">Período</label>
                         <button type="button" id="stats-periodo-button" data-value="tudo" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <span id="stats-periodo-value" class="text-gray-900">Tudo</span>
@@ -378,7 +378,7 @@
                     <!-- Fim Período -->
 
                     <!-- Col 2: Matéria (Novo) -->
-                    <div>
+                    <div class="lg:flex-1">
                         <label class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
                         <div id="stats-materia-filter-custom" class="relative custom-select-container">
                              <button type="button" class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-lg bg-white text-gray-500 flex justify-between items-center">
@@ -395,7 +395,7 @@
                     </div>
                     
                     <!-- Col 3: Assunto (Novo) -->
-                    <div>
+                    <div class="lg:flex-1">
                         <label class="text-sm font-medium text-gray-700 mb-1 block">Assunto</label>
                          <div id="stats-assunto-filter-custom" class="relative custom-select-container">
                              <button type="button" class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-lg bg-white text-gray-500 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -411,9 +411,10 @@
                         </div>
                     </div>
 
-                    <!-- Col 4: Botão Filtrar (Movido) -->
+                    <!-- Col 4: Botão Filtrar (Movido e modificado) -->
                     <div>
-                        <button id="stats-filter-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 w-full">Filtrar</button>
+                        <!-- MODIFICAÇÃO: Removido font-bold, rounded-lg, w-full. Alterado px-6 para px-4 -->
+                        <button id="stats-filter-btn" class="bg-blue-600 text-white py-2 px-4 hover:bg-blue-700">Filtrar</button>
                     </div>
                 </div>
             </div>
