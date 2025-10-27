@@ -6,6 +6,9 @@ import { renderPerformanceChart, renderWeeklyChart, renderHomePerformanceChart, 
 import { getHistoricalCountsForQuestions, fetchPerformanceLog } from '../services/firestore.js';
 // ===== FIM DA MODIFICAÇÃO =====
 import DOM from '../dom-elements.js';
+// ===== INÍCIO DA MODIFICAÇÃO: Importar setupCustomSelect =====
+import { setupCustomSelect } from './filter.js';
+// ===== FIM DA MODIFICAÇÃO =====
 
 /**
  * Ordena strings alfanumericamente (ex: "2.10" vem depois de "2.9").
@@ -61,73 +64,139 @@ export function updateStatsPageUI() {
     renderWeeklyChart();
 }
 
-// ===== INÍCIO DA MODIFICAÇÃO: Nova função para popular os filtros =====
+// ===== INÍCIO DA MODIFICAÇÃO: Nova função para popular o filtro de Assunto customizado =====
 /**
- * Popula os filtros de Matéria e Assunto na aba de Estatísticas.
+ * Atualiza o filtro de Assunto customizado (hierárquico) com base nas Matérias selecionadas.
+ * @param {string[]} disciplinas - Um array de nomes de matérias selecionadas.
  */
-function populateStatsFilters() {
-    if (!DOM.statsMateriaFilter || !DOM.statsAssuntoFilter) return;
+function updateStatsAssuntoFilterCustom(disciplinas) {
+    const assuntoContainer = DOM.statsAssuntoFilterCustom;
+    if (!assuntoContainer) return;
 
-    // 1. Limpa filtros antigos (exceto a opção "Todos")
-    DOM.statsMateriaFilter.innerHTML = '<option value="">Todas</option>';
-    DOM.statsAssuntoFilter.innerHTML = '<option value="">Todos</option>';
-    DOM.statsAssuntoFilter.disabled = true; // Desabilita assuntos por padrão
-
-    // 2. Popula Matérias
-    const materias = state.filterOptions.materia.map(m => m.name).sort(naturalSort);
-    materias.forEach(materiaName => {
-        const option = document.createElement('option');
-        option.value = materiaName;
-        option.textContent = materiaName;
-        DOM.statsMateriaFilter.appendChild(option);
-    });
-}
-
-/**
- * Atualiza o filtro de Assunto com base na Matéria selecionada.
- * @param {string} selectedMateria - O nome da matéria selecionada.
- */
-export function updateStatsAssuntoFilter(selectedMateria) {
-    if (!DOM.statsAssuntoFilter) return;
-
-    DOM.statsAssuntoFilter.innerHTML = '<option value="">Todos</option>';
+    const assuntoButton = assuntoContainer.querySelector('.custom-select-button');
+    const valueSpan = assuntoContainer.querySelector('.custom-select-value');
+    const optionsContainer = assuntoContainer.querySelector('.custom-select-options');
     
-    if (!selectedMateria) {
-        DOM.statsAssuntoFilter.disabled = true;
-        return;
-    }
+    valueSpan.textContent = 'Todos'; // Texto padrão para "Todos"
+    valueSpan.classList.add('text-gray-500');
+    assuntoContainer.dataset.value = '[]';
+    optionsContainer.innerHTML = '';
 
-    const materiaObj = state.filterOptions.materia.find(m => m.name === selectedMateria);
-    if (materiaObj && materiaObj.assuntos) {
-        // Coleta todos os assuntos, sub-assuntos e sub-sub-assuntos para um Set
-        const allAssuntos = new Set();
-        materiaObj.assuntos.forEach(assunto => {
-            allAssuntos.add(assunto.name);
-            if (assunto.subAssuntos) {
-                assunto.subAssuntos.forEach(sub => {
-                    allAssuntos.add(sub.name);
-                    if (sub.subSubAssuntos) {
-                        sub.subSubAssuntos.forEach(subSub => allAssuntos.add(subSub));
+    if (disciplinas.length === 0) {
+        assuntoButton.disabled = true;
+        optionsContainer.innerHTML = `<div class="p-2 text-center text-gray-400 text-sm">Selecione uma matéria</div>`;
+    } else {
+        assuntoButton.disabled = false;
+        let newHtml = '';
+        
+        disciplinas.forEach(disciplinaName => {
+            const materiaObj = state.filterOptions.materia.find(m => m.name === disciplinaName);
+            if (materiaObj && materiaObj.assuntos.length > 0) {
+                newHtml += `<div class="font-bold text-sm text-gray-700 mt-2 px-1">${materiaObj.name}</div>`;
+
+                // Lógica de renderização de 4 níveis (copiada de ui-helpers.js)
+                materiaObj.assuntos.forEach(assunto => { // Nível 2: Assunto
+                    const hasSubAssuntos = assunto.subAssuntos && assunto.subAssuntos.length > 0;
+                    newHtml += `
+                        <div class="assunto-group">
+                            <div class="flex items-center p-1 rounded-lg hover:bg-gray-100">
+                                ${hasSubAssuntos ?
+                                    `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle"></i>` :
+                                    `<span class="w-6 mr-2"></span>`
+                                }
+                                <label class="flex-grow flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" data-value="${assunto.name}" data-type="assunto" class="custom-select-option rounded">
+                                    <span>${assunto.name}</span>
+                                </label>
+                            </div>
+                    `;
+
+                    if (hasSubAssuntos) {
+                        newHtml += `<div class="sub-assunto-list pl-6 mt-1 space-y-1 hidden">`;
+                        assunto.subAssuntos.forEach(subAssunto => { // Nível 3: SubAssunto
+                            const hasSubSubAssuntos = subAssunto.subSubAssuntos && subAssunto.subSubAssuntos.length > 0;
+                            newHtml += `
+                                <div class="sub-assunto-group">
+                                    <div class="flex items-center p-1 rounded-lg hover:bg-gray-100">
+                                        ${hasSubSubAssuntos ?
+                                            `<i class="fas fa-chevron-right text-gray-400 w-4 text-center mr-2 cursor-pointer transition-transform duration-200 assunto-toggle"></i>` :
+                                            `<span class="w-6 mr-2"></span>`
+                                        }
+                                        <label class="flex-grow flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" data-value="${subAssunto.name}" data-parent-assunto="${assunto.name}" data-type="subassunto" class="custom-select-option rounded">
+                                            <span>${subAssunto.name}</span>
+                                        </label>
+                                    </div>
+                            `;
+
+                            if (hasSubSubAssuntos) {
+                                newHtml += `<div class="sub-sub-assunto-list pl-6 mt-1 space-y-1 hidden">`;
+                                subAssunto.subSubAssuntos.forEach(subSubAssunto => { // Nível 4: SubSubAssunto
+                                    newHtml += `
+                                        <label class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 cursor-pointer">
+                                            <input type="checkbox" data-value="${subSubAssunto}" data-parent-assunto="${assunto.name}" data-parent-subassunto="${subAssunto.name}" data-type="subsubassunto" class="custom-select-option rounded">
+                                            <span>${subSubAssunto}</span>
+                                        </label>
+                                    `;
+                                });
+                                newHtml += `</div>`;
+                            }
+                            newHtml += `</div>`; // Fim .sub-assunto-group
+                        });
+                        newHtml += `</div>`; // Fim .sub-assunto-list
                     }
+                    newHtml += `</div>`; // Fim .assunto-group
                 });
             }
         });
 
-        // Ordena e popula o dropdown
-        const sortedAssuntos = Array.from(allAssuntos).sort(naturalSort);
-        sortedAssuntos.forEach(assuntoName => {
-            const option = document.createElement('option');
-            option.value = assuntoName;
-            option.textContent = assuntoName;
-            DOM.statsAssuntoFilter.appendChild(option);
+        optionsContainer.innerHTML = newHtml;
+
+        // Adiciona listeners para os botões de toggle
+        optionsContainer.querySelectorAll('.assunto-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const list = e.target.closest('.assunto-group, .sub-assunto-group').querySelector('.sub-assunto-list, .sub-sub-assunto-list');
+                if (list) {
+                    list.classList.toggle('hidden');
+                    e.target.classList.toggle('rotate-90');
+                }
+            });
         });
-        
-        DOM.statsAssuntoFilter.disabled = false;
-    } else {
-        DOM.statsAssuntoFilter.disabled = true;
     }
 }
 // ===== FIM DA MODIFICAÇÃO =====
+
+
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora popula os filtros customizados =====
+/**
+ * Popula os filtros de Matéria e Assunto na aba de Estatísticas.
+ */
+function populateStatsFilters() {
+    if (!DOM.statsMateriaFilterCustom || !DOM.statsAssuntoFilterCustom) return;
+
+    // 1. Popula Matérias (com checkboxes)
+    const materiaContainer = DOM.statsMateriaFilterCustom.querySelector('.custom-select-options');
+    if (materiaContainer) {
+        const materias = state.filterOptions.materia.map(m => m.name).sort(naturalSort);
+        materiaContainer.innerHTML = materias.map(materiaName => `
+            <label class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+                <input type="checkbox" data-value="${materiaName}" class="custom-select-option rounded">
+                <span>${materiaName}</span>
+            </label>
+        `).join('');
+    }
+
+    // 2. Registra os listeners dos filtros customizados
+    // Passa 'updateStatsAssuntoFilterCustom' como callback para o filtro de matéria
+    setupCustomSelect(DOM.statsMateriaFilterCustom, updateStatsAssuntoFilterCustom);
+    setupCustomSelect(DOM.statsAssuntoFilterCustom);
+    
+    // 3. Inicializa o filtro de assunto (desabilitado)
+    updateStatsAssuntoFilterCustom([]);
+}
+// ===== FIM DA MODIFICAÇÃO =====
+
 
 // ===== INÍCIO DA MODIFICAÇÃO: Nova função de filtragem =====
 /**
@@ -138,8 +207,10 @@ export async function handleStatsFilter() {
 
     // 1. Coleta os valores dos filtros
     const periodButton = DOM.statsPeriodoButton;
-    const materiaSelect = DOM.statsMateriaFilter;
-    const assuntoSelect = DOM.statsAssuntoFilter;
+    // ===== INÍCIO DA MODIFICAÇÃO: Lê dos novos filtros customizados =====
+    const selectedMaterias = JSON.parse(DOM.statsMateriaFilterCustom.dataset.value || '[]');
+    const selectedAssuntos = JSON.parse(DOM.statsAssuntoFilterCustom.dataset.value || '[]');
+    // ===== FIM DA MODIFICAÇÃO =====
 
     // ===== INÍCIO DA MODIFICAÇÃO: Normaliza datas =====
     // Garante que 'Tudo' (null) não quebre a lógica de data
@@ -162,8 +233,10 @@ export async function handleStatsFilter() {
         evolutionStartDate: evolutionStartDate, 
         evolutionEndDate: endDate,
         
-        materia: materiaSelect.value || null,
-        assunto: assuntoSelect.value || null,
+        // ===== INÍCIO DA MODIFICAÇÃO: Passa arrays =====
+        materias: selectedMaterias,
+        assuntos: selectedAssuntos,
+        // ===== FIM DA MODIFICAÇÃO =====
     };
     // ===== FIM DA MODIFICAÇÃO =====
 
@@ -200,8 +273,10 @@ export async function renderEstatisticasView(filters = null) {
             endDate: new Date(), // Hoje (para os cards e tabela)
             evolutionStartDate: startDate, // 6 meses atrás (para gráfico de evolução)
             evolutionEndDate: new Date(), // Hoje (para gráfico de evolução)
-            materia: null,
-            assunto: null
+            // ===== INÍCIO DA MODIFICAÇÃO: Filtros como arrays vazios =====
+            materias: [],
+            assuntos: [],
+            // ===== FIM DA MODIFICAÇÃO =====
         };
     }
     // ===== FIM DA MODIFICAÇÃO =====
@@ -221,55 +296,50 @@ export async function renderEstatisticasView(filters = null) {
         });
     });
 
+    // ===== INÍCIO DA MODIFICAÇÃO: Helpers de filtro atualizados para arrays =====
     // Helper para checar matéria/assunto de uma sessão
     const sessionMatchesFilter = (session) => {
-        if (!appliedFilters || (!appliedFilters.materia && !appliedFilters.assunto)) return true; // Passa se não houver filtro de
+        if (!appliedFilters || (!appliedFilters.materias.length && !appliedFilters.assuntos.length)) return true;
         
-        for (const materia in session.details) {
-            if (appliedFilters.materia && materia !== appliedFilters.materia) {
-                continue; // Matéria não bate, pula
-            }
-            
-            // Matéria bateu (ou não há filtro de matéria). Checa assunto.
-            if (!appliedFilters.assunto) {
-                return true; // Matéria bateu e não há filtro de assunto
-            }
+        const materiaMatch = appliedFilters.materias.length === 0 || 
+                             Object.keys(session.details).some(materia => appliedFilters.materias.includes(materia));
+        
+        if (!materiaMatch) return false;
+        
+        // Se materias batem (ou sem filtro) e não há filtro de assunto, ok
+        if (appliedFilters.assuntos.length === 0) return true;
 
-            // Precisa checar o assunto. Isso é difícil, pois a sessão só tem 'materia'.
-            // A granularidade do filtro de assunto só pode ser aplicada na tabela.
-            // Para os cards e gráfico, SÓ PODEMOS FILTRAR POR MATÉRIA.
-            // O filtro de assunto só se aplicará à tabela.
-            if(appliedFilters.materia) return true;
-        }
-        return false;
+        // Não podemos filtrar sessões por assunto, então se a matéria bateu, consideramos ok
+        return true;
     };
 
     // Helper para checar matéria/assunto de um stat da sessão ATUAL
      const statMatchesFilter = (stat) => {
         if (!appliedFilters) return true;
         
-        const materiaMatch = !appliedFilters.materia || stat.materia === appliedFilters.materia;
+        const materiaMatch = appliedFilters.materias.length === 0 || appliedFilters.materias.includes(stat.materia);
         if (!materiaMatch) return false;
 
         // Se filtrou por matéria e não por assunto, ok
-        if (appliedFilters.materia && !appliedFilters.assunto) return true;
+        if (appliedFilters.materias.length > 0 && appliedFilters.assuntos.length === 0) return true;
         
         // Se não filtrou por matéria nem assunto, ok
-        if (!appliedFilters.materia && !appliedFilters.assunto) return true;
+        if (appliedFilters.materias.length === 0 && appliedFilters.assuntos.length === 0) return true;
 
         // Se filtrou por assunto, precisamos checar
-        if (appliedFilters.assunto) {
+        if (appliedFilters.assuntos.length > 0) {
              const details = questionIdToDetails.get(stat.questionId);
              if (details) {
                 // Checa se o assunto bate em qualquer nível da hierarquia da questão
-                return details.assunto === appliedFilters.assunto || 
-                       details.subAssunto === appliedFilters.assunto || 
-                       details.subSubAssunto === appliedFilters.assunto;
+                return appliedFilters.assuntos.includes(details.assunto) || 
+                       (details.subAssunto && appliedFilters.assuntos.includes(details.subAssunto)) || 
+                       (details.subSubAssunto && appliedFilters.assuntos.includes(details.subSubAssunto));
              }
         }
         
         return false; // Assunto não bateu
     };
+    // ===== FIM DA MODIFICAÇÃO =====
 
     // 1. Processa as sessões históricas do Firestore
     state.historicalSessions.forEach(session => {
@@ -282,9 +352,8 @@ export async function renderEstatisticasView(filters = null) {
         if (appliedFilters && appliedFilters.endDate && sessionDate && sessionDate > appliedFilters.endDate) {
             return;
         }
-        // --- FILTRAGEM POR MATÉRIA ---
-        // (O filtro de assunto não pode ser aplicado aqui de forma granular)
-        if (appliedFilters && appliedFilters.materia && !sessionMatchesFilter(session)) {
+        // --- FILTRAGEM POR MATÉRIA (ARRAY) ---
+        if (appliedFilters && appliedFilters.materias.length > 0 && !sessionMatchesFilter(session)) {
              return;
         }
         
@@ -292,13 +361,15 @@ export async function renderEstatisticasView(filters = null) {
         let sessionTotal = 0;
         let sessionCorrect = 0;
 
-        if (appliedFilters && appliedFilters.materia) {
-            // Se há filtro de matéria, soma apenas dessa matéria
-            const detail = session.details[appliedFilters.materia];
-            if(detail) {
-                sessionTotal = detail.total || 0;
-                sessionCorrect = detail.correct || 0;
-            }
+        if (appliedFilters && appliedFilters.materias.length > 0) {
+            // Se há filtro de matéria, soma apenas dessas matérias
+            appliedFilters.materias.forEach(materia => {
+                const detail = session.details[materia];
+                if(detail) {
+                    sessionTotal += detail.total || 0;
+                    sessionCorrect += detail.correct || 0;
+                }
+            });
         } else {
             // Sem filtro, soma tudo
             sessionTotal = session.totalQuestions || 0;
@@ -309,7 +380,7 @@ export async function renderEstatisticasView(filters = null) {
         totalCorrect += sessionCorrect;
         
         for (const materia in session.details) {
-            if (!appliedFilters || !appliedFilters.materia || materia === appliedFilters.materia) {
+            if (!appliedFilters || appliedFilters.materias.length === 0 || appliedFilters.materias.includes(materia)) {
                 materiasSet.add(materia);
             }
         }
@@ -358,13 +429,15 @@ export async function renderEstatisticasView(filters = null) {
 
     // 7. Filtra o log por matéria/assunto (o fetch só filtra por data)
     const filteredLog = performanceLog.filter(entry => {
-        if (appliedFilters.materia && entry.materia !== appliedFilters.materia) {
+        // Filtra por Matérias (array)
+        if (appliedFilters.materias.length > 0 && !appliedFilters.materias.includes(entry.materia)) {
             return false;
         }
-        if (appliedFilters.assunto) {
-            const assuntoMatch = entry.assunto === appliedFilters.assunto ||
-                                 entry.subAssunto === appliedFilters.assunto ||
-                                 entry.subSubAssunto === appliedFilters.assunto;
+        // Filtra por Assuntos (array)
+        if (appliedFilters.assuntos.length > 0) {
+            const assuntoMatch = appliedFilters.assuntos.includes(entry.assunto) ||
+                                 (entry.subAssunto && appliedFilters.assuntos.includes(entry.subAssunto)) ||
+                                 (entry.subSubAssunto && appliedFilters.assuntos.includes(entry.subSubAssunto));
             if (!assuntoMatch) {
                 return false;
             }
@@ -530,6 +603,7 @@ async function renderDesempenhoMateriaTable(filters = null) {
     };
     
     // ===== INÍCIO DA MODIFICAÇÃO: Lógica de Fonte de Dados (Data vs. Vitalício) =====
+    // ===== E Lógica de Filtro (Arrays) =====
 
     // CASO 1: Filtro de data está ATIVO. Usar o novo 'performanceLog'.
     if (filters && filters.startDate) {
@@ -537,13 +611,13 @@ async function renderDesempenhoMateriaTable(filters = null) {
 
         performanceLog.forEach(entry => {
             // Aplica filtros de matéria/assunto AO MESMO TEMPO
-            if (filters.materia && entry.materia !== filters.materia) {
+            if (filters.materias.length > 0 && !filters.materias.includes(entry.materia)) {
                 return; // Pula item, matéria não bate
             }
-            if (filters.assunto) {
-                const assuntoMatch = entry.assunto === filters.assunto ||
-                                     entry.subAssunto === filters.assunto ||
-                                     entry.subSubAssunto === filters.assunto;
+            if (filters.assuntos.length > 0) {
+                const assuntoMatch = filters.assuntos.includes(entry.assunto) ||
+                                     (entry.subAssunto && filters.assuntos.includes(entry.subAssunto)) ||
+                                     (entry.subSubAssunto && filters.assuntos.includes(entry.subSubAssunto));
                 if (!assuntoMatch) {
                     return; // Pula item, assunto não bate
                 }
@@ -598,13 +672,13 @@ async function renderDesempenhoMateriaTable(filters = null) {
 
             // Aplica filtros de matéria/assunto
             if (filters) {
-                if (filters.materia && details.materia !== filters.materia) {
+                if (filters.materias.length > 0 && !filters.materias.includes(details.materia)) {
                     return; // Pula item, matéria não bate
                 }
-                if (filters.assunto) {
-                    const assuntoMatch = details.assunto === filters.assunto ||
-                                         details.subAssunto === filters.assunto ||
-                                         details.subSubAssunto === filters.assunto;
+                if (filters.assuntos.length > 0) {
+                    const assuntoMatch = filters.assuntos.includes(details.assunto) ||
+                                         (details.subAssunto && filters.assuntos.includes(details.subAssunto)) ||
+                                         (details.subSubAssunto && filters.assuntos.includes(details.subSubAssunto));
                     if (!assuntoMatch) {
                         return; // Pula item, assunto não bate
                     }
@@ -666,7 +740,7 @@ async function renderDesempenhoMateriaTable(filters = null) {
     if (hierarchy.size === 0) {
         // ===== INÍCIO DA MODIFICAÇÃO: Mensagem de "Nenhum dado" melhorada =====
         let emptyMessage = "Nenhum dado de desempenho encontrado.";
-        if (filters && (filters.materia || filters.assunto || filters.startDate)) {
+        if (filters && (filters.materias.length > 0 || filters.assuntos.length > 0 || filters.startDate)) {
              emptyMessage = "Nenhum dado de desempenho encontrado para os filtros aplicados.";
         } else {
              emptyMessage += " Comece a resolver questões no modo Revisão para ver suas estatísticas detalhadas.";
