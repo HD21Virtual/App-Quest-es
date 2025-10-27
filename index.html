@@ -341,22 +341,19 @@
                 </button>
             </div>
 
-            <!-- MODIFICAÇÃO: Filtro movido para cá -->
+            <!-- ===== INÍCIO DA MODIFICAÇÃO: Filtro da aba Estatísticas redesenhado ===== -->
             <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                     
-                    <!-- Período (MODIFICADO) -->
+                    <!-- Período -->
                     <div class="relative">
                         <label for="stats-periodo-button" class="text-sm font-medium text-gray-700 mb-1 block">Período</label>
                         <button type="button" id="stats-periodo-button" data-value="tudo" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <span id="stats-periodo-value" class="text-gray-900">Tudo</span>
                             <i class="fas fa-calendar-alt text-gray-400"></i>
                         </button>
-                        <!-- MODIFICADO: Alterado para flex e w-auto, e ordem dos filhos trocada -->
                         <div id="stats-periodo-panel" class="period-dropdown-panel hidden absolute z-20 mt-1 w-auto bg-white border border-gray-300 rounded-lg shadow-lg flex">
-                            
-                            <!-- Lista de Opções (AGORA À ESQUERDA) -->
-                            <ul id="stats-periodo-options" class="py-1 w-48 max-h-[280px] overflow-y-auto"> <!-- MODIFICADO: classes de layout adicionadas -->
+                            <ul id="stats-periodo-options" class="py-1 w-48 max-h-[280px] overflow-y-auto">
                                 <li class="period-option-item" data-value="hoje">Hoje</li>
                                 <li class="period-option-item" data-value="ontem">Ontem</li>
                                 <li class="period-option-item" data-value="ultimos-7-dias">Últimos 7 dias</li>
@@ -368,43 +365,58 @@
                                 <li class="period-option-item active" data-value="tudo">Tudo</li>
                                 <li class="period-option-item" data-value="personalizado">Personalizado</li>
                             </ul>
-
-                            <!-- Range Personalizado (AGORA À DIREITA) -->
-                            <div id="stats-periodo-custom-range" class="hidden p-2 space-y-2 w-64 border-l border-gray-200"> <!-- MODIFICADO: movido para baixo, classes alteradas -->
+                            <div id="stats-periodo-custom-range" class="hidden p-2 space-y-2 w-64 border-l border-gray-200">
                                 <label class="text-xs text-gray-500">Início:</label>
                                 <input type="date" id="stats-periodo-start" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
                                 <label class="text-xs text-gray-500">Fim:</label>
                                 <input type="date" id="stats-periodo-end" class="w-full p-1 border border-gray-300 rounded-lg text-sm">
                                 <button id="stats-periodo-custom-apply" class="w-full bg-blue-600 text-white text-sm py-1.5 rounded-lg hover:bg-blue-700">Aplicar</button>
                             </div>
-                            
                         </div>
                     </div>
                     <!-- Fim Período -->
 
-                    <!-- Matéria -->
+                    <!-- Custom Select: Matéria (Novo) -->
                     <div>
-                        <label for="stats-materia-filter" class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
-                        <select id="stats-materia-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todas</option>
-                            <!-- Opções de matéria aqui -->
-                        </select>
+                        <label class="text-sm font-medium text-gray-700 mb-1 block">Matéria</label>
+                        <div id="stats-materia-filter-custom" class="relative custom-select-container">
+                             <button type="button" class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-lg bg-white text-gray-500 flex justify-between items-center">
+                                 <span class="custom-select-value">Todas</span>
+                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                             </button>
+                             <div class="custom-select-panel hidden absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
+                                <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-lg" placeholder="Pesquisar..."></div>
+                                <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
+                                    <!-- Opções serão inseridas pelo JS -->
+                                </div>
+                             </div>
+                        </div>
                     </div>
-                    <!-- MODIFICAÇÃO: Label alterada de "Pasta" para "Assunto" -->
+                    
+                    <!-- Custom Select: Assunto (Novo) -->
                     <div>
-                        <label for="stats-pasta-filter" class="text-sm font-medium text-gray-700 mb-1 block">Assunto</label>
-                        <select id="stats-pasta-filter" class="w-full p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todos</option>
-                            <!-- Opções de pasta/assunto aqui -->
-                        </select>
+                        <label class="text-sm font-medium text-gray-700 mb-1 block">Assunto</label>
+                         <div id="stats-assunto-filter-custom" class="relative custom-select-container">
+                             <button type="button" class="custom-select-button w-full text-left p-2 border border-gray-300 rounded-lg bg-white text-gray-500 flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                 <span class="custom-select-value">Todos</span>
+                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                             </button>
+                             <div class="custom-select-panel hidden absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
+                                <div class="p-2 border-b"><input type="text" class="custom-select-search w-full p-1 border border-gray-300 rounded-lg" placeholder="Pesquisar..."></div>
+                                <div class="custom-select-options max-h-48 overflow-y-auto p-2 space-y-1">
+                                   <!-- Opções serão inseridas pelo JS -->
+                                </div>
+                             </div>
+                        </div>
                     </div>
-                    <!-- Botão Filtrar -->
-                    <div>
+
+                    <!-- Botão Filtrar (Movido para cá) -->
+                    <div class="lg:col-start-3 lg:col-span-1">
                         <button id="stats-filter-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 w-full">Filtrar</button>
                     </div>
                 </div>
             </div>
-            <!-- FIM DA MODIFICAÇÃO -->
+            <!-- ===== FIM DA MODIFICAÇÃO ===== -->
 
             <div id="stats-main-content">
                 <!-- Abas de Navegação -->
