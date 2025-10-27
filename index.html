@@ -239,16 +239,13 @@
             
             <!-- Main Content Area for Vade Mecum -->
             <div id="vade-mecum-content-area">
-                <!-- Abas de Navegação e Container -->
+                <!-- MODIFICAÇÃO: Abas 'Questões' e 'Estatísticas' removidas -->
                 <div id="tabs-and-main-content">
-                    <div class="mb-4">
-                        <nav id="tabs-container" class="flex space-x-1">
-                            <button data-tab="question" class="tab-button active">Questões</button>
-                            <button data-tab="stats" class="tab-button">Estatísticas</button>
-                        </nav>
-                    </div>
                     
-                    <div id="main-content-container" class="bg-gray-50 rounded-b-xl rounded-tr-xl shadow-md -mt-4">
+                    <!-- MODIFICAÇÃO: Bloco <nav id="tabs-container">...</div> removido -->
+
+                    <!-- MODIFICAÇÃO: Ajustadas classes do container principal. Removido 'rounded-b-xl rounded-tr-xl -mt-4', adicionado 'rounded-xl' -->
+                    <div id="main-content-container" class="bg-gray-50 rounded-xl shadow-md">
                         <div class="p-4 border-b border-gray-200">
                             <h3 id="question-counter-top" class="flex items-baseline text-xl text-gray-800 hidden"></h3>
                         </div>
@@ -272,11 +269,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div id="stats-view" class="hidden">
-                                 <div id="stats-content">
-                                    <!-- O conteúdo das estatísticas será inserido aqui -->
-                                 </div>
-                            </div>
+                            <!-- MODIFICAÇÃO: Bloco <div id="stats-view">...</div> removido -->
                          </div>
                     </div>
                 </div>
