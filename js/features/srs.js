@@ -140,7 +140,7 @@ export async function handleSrsFeedback(feedback) {
     }
 
     renderAnsweredQuestion(isCorrect, state.selectedAnswer, false);
-    updateStatsPanel();
+    // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
     updateStatsPageUI();
     
     // **CORREÇÃO:** Força a atualização da estrutura de dados da tela de revisão em tempo real.
@@ -426,6 +426,6 @@ export async function handleStartReview() {
         DOM.selectedFiltersContainer.innerHTML = `<span class="text-gray-500">Revisando ${uniqueQuestionIds.length} questões.</span>`;
 
         await displayQuestion();
-        updateStatsPanel();
+        // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
     }
 }
