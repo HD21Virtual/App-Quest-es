@@ -71,7 +71,7 @@ export async function applyFilters() {
     updateSelectedFiltersDisplay();
 }
 
-// ===== INÍCIO DA MODIFICAÇÃO: Função agora aceita um callback =====
+// ===== INÍCIO DA MODIFICAÇÃO: Função agora aceita um callback e passa o evento 'e' =====
 export function setupCustomSelect(container, onValueChangeCallback = null) {
 // ===== FIM DA MODIFICAÇÃO =====
     const button = container.querySelector('.custom-select-button');
@@ -96,10 +96,18 @@ export function setupCustomSelect(container, onValueChangeCallback = null) {
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
         // --- MODIFICAÇÃO: Atualizado seletor para buscar em todos os níveis ---
+        // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+        // Seleciona também a label "Selecionar tudo"
         optionsContainer.querySelectorAll('label, .assunto-group > div, .sub-assunto-group > div').forEach(el => {
+        // ===== FIM DA MODIFICAÇÃO =====
             const text = el.textContent.toLowerCase();
-            const parent = el.closest('li, .assunto-group, .sub-assunto-group');
+            const parent = el.closest('li, .assunto-group, .sub-assunto-group, label'); // Inclui a própria label
             if (parent) {
+                // Não esconde "Selecionar tudo"
+                if (el.querySelector('[data-type^="select-all"]')) {
+                     parent.style.display = '';
+                     return;
+                }
                 parent.style.display = text.includes(searchTerm) ? '' : 'none';
             } else {
                  el.style.display = text.includes(searchTerm) ? '' : 'none';
@@ -144,34 +152,48 @@ export function setupCustomSelect(container, onValueChangeCallback = null) {
         }
         // --- FIM DA MODIFICAÇÃO ---
 
-        const selected = [];
-        const selectedText = [];
-        optionsContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => {
-            // Só adiciona se não for um pai com estado indeterminado
-            if (!cb.indeterminate) {
-                selected.push(cb.dataset.value);
-                const label = cb.closest('label');
-                selectedText.push(label && label.querySelector('span') ? label.querySelector('span').textContent : cb.dataset.value);
-            }
-        });
-
-        container.dataset.value = JSON.stringify(selected);
-
-        if (selected.length === 0 && optionsContainer.querySelectorAll('.custom-select-option:indeterminate').length === 0) {
-            valueSpan.textContent = originalText;
-            valueSpan.classList.add('text-gray-500');
-        } else if (selected.length === 1 && optionsContainer.querySelectorAll('.custom-select-option:indeterminate').length === 0) {
-            valueSpan.textContent = selectedText[0];
-            valueSpan.classList.remove('text-gray-500');
-        } else {
-            const totalSelected = selected.length + optionsContainer.querySelectorAll('.custom-select-option:indeterminate').length;
-            valueSpan.textContent = `${totalSelected} itens selecionados`;
-            valueSpan.classList.remove('text-gray-500');
+        // ===== INÍCIO DA MODIFICAÇÃO: Passa 'e' (evento) para o callback =====
+        let callbackResult = null;
+        if (onValueChangeCallback) {
+            // Passa um array vazio 'selected' (pois o callback irá calculá-lo) e o evento 'e'
+            callbackResult = onValueChangeCallback([], e); 
         }
         
-        // ===== INÍCIO DA MODIFICAÇÃO: Chama o callback se ele existir =====
-        if (onValueChangeCallback) {
-            onValueChangeCallback(selected);
+        // Se o callback retornar um array, use-o como a lista de selecionados
+        // (Isso permite que o callback manipule "Selecionar Tudo")
+        const finalSelected = Array.isArray(callbackResult) ? callbackResult : [];
+        
+        // Se o callback não retornou um array (ou não existia), calcula o padrão
+        if (!Array.isArray(callbackResult)) {
+            optionsContainer.querySelectorAll('.custom-select-option:checked').forEach(cb => {
+                // Só adiciona se não for um pai com estado indeterminado
+                // E se não for um "select-all"
+                if (!cb.indeterminate && cb.dataset.type && !cb.dataset.type.startsWith('select-all')) {
+                    finalSelected.push(cb.dataset.value);
+                }
+            });
+        }
+        // ===== FIM DA MODIFICAÇÃO =====
+
+        // ===== INÍCIO DA MODIFICAÇÃO: Usa finalSelected =====
+        container.dataset.value = JSON.stringify(finalSelected);
+        
+        // Conta os indeterminados (exceto o 'select-all')
+        const indeterminateCount = optionsContainer.querySelectorAll('.custom-select-option:indeterminate:not([data-type^="select-all"])').length;
+
+        if (finalSelected.length === 0 && indeterminateCount === 0) {
+            valueSpan.textContent = originalText;
+            valueSpan.classList.add('text-gray-500');
+        } else if (finalSelected.length === 1 && indeterminateCount === 0) {
+            // Recalcula o texto se o callback foi usado
+             const cb = optionsContainer.querySelector(`.custom-select-option[data-value="${finalSelected[0]}"]`);
+             const label = cb ? cb.closest('label') : null;
+             valueSpan.textContent = label && label.querySelector('span') ? label.querySelector('span').textContent : finalSelected[0];
+            valueSpan.classList.remove('text-gray-500');
+        } else {
+            const totalSelected = finalSelected.length + indeterminateCount;
+            valueSpan.textContent = `${totalSelected} itens selecionados`;
+            valueSpan.classList.remove('text-gray-500');
         }
         // ===== FIM DA MODIFICAÇÃO =====
         
@@ -238,10 +260,18 @@ export function setupCustomSelects() {
     // ===== INÍCIO DA MODIFICAÇÃO: Chama setupCustomSelect especificamente =====
     // Configura os filtros da aba "Questões"
     if (DOM.materiaFilter) {
-        setupCustomSelect(DOM.materiaFilter, updateAssuntoFilter); // Passa o callback
+        setupCustomSelect(DOM.materiaFilter, (selected, e) => {
+            // Callback padrão para o filtro de matéria da aba Questões
+            const selectedMaterias = [];
+             DOM.materiaFilter.querySelectorAll('.custom-select-option:checked').forEach(cb => {
+                selectedMaterias.push(cb.dataset.value);
+            });
+            updateAssuntoFilter(selectedMaterias);
+            return selectedMaterias; // Retorna o array para o setupCustomSelect
+        });
     }
     if (DOM.assuntoFilter) {
-        setupCustomSelect(DOM.assuntoFilter); // Sem callback
+        setupCustomSelect(DOM.assuntoFilter); // Sem callback especial (além da hierarquia interna)
     }
     // ===== FIM DA MODIFICAÇÃO =====
 }
