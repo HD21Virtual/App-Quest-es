@@ -10,7 +10,8 @@ import { createCaderno, createOrUpdateName, saveFilter, saveSessionStats } from 
 // CORREÇÃO APLICADA ---
 // O caminho foi alterado de "../features/stats.js" para "./features/stats.js"
 // ===== INÍCIO DA MODIFICAÇÃO =====
-import { updateStatsPageUI, renderEstatisticasView, updateStatsAssuntoFilter, handleStatsFilter } from "./features/stats.js";
+// MODIFICAÇÃO: updateStatsAssuntoFilter removido, pois a lógica agora está em stats.js
+import { updateStatsPageUI, renderEstatisticasView, handleStatsFilter } from "./features/stats.js";
 // ===== FIM DA MODIFICAÇÃO =====
 // CORREÇÃO: Importar handleGoogleAuth para corrigir o login com Google
 import { handleAuth, handleGoogleAuth } from './services/auth.js';
@@ -18,7 +19,9 @@ import { handleAddQuestionsToCaderno, handleCadernoItemClick, handleFolderItemCl
 import { handleAssuntoListClick, handleMateriaListClick, handleBackToMaterias } from './features/materias.js';
 import { handleStartReview, handleSrsFeedback } from './features/srs.js';
 import { navigateQuestion, handleOptionSelect, checkAnswer, handleDiscardOption } from './features/question-viewer.js';
-import { applyFilters, clearAllFilters, removeFilter } from './features/filter.js';
+// ===== INÍCIO DA MODIFICAÇÃO: Importar setupCustomSelect =====
+import { applyFilters, clearAllFilters, removeFilter, setupCustomSelect } from './features/filter.js';
+// ===== FIM DA MODIFICAÇÃO =====
 import { navigateToView } from './ui/navigation.js';
 import { updateSelectedFiltersDisplay } from './ui/ui-helpers.js';
 
@@ -724,14 +727,13 @@ export function setupAllEventListeners() {
         const target = event.target;
 
         // ===== INÍCIO DA MODIFICAÇÃO =====
-        // Filtro de Matéria da aba Estatísticas
-        if (target.id === 'stats-materia-filter') {
-            updateStatsAssuntoFilter(target.value);
-        }
+        // REMOVIDO: Bloco 'if (target.id === 'stats-materia-filter')'
+        // A nova lógica de filtro customizado (setupCustomSelect)
+        // cuidará disso através do callback.
         // ===== FIM DA MODIFICAÇÃO =====
 
         // Tabela de Estatísticas
-        else if (target.closest('#stats-desempenho-materia-container')) {
+        if (target.closest('#stats-desempenho-materia-container')) {
             handleStatsTableSelection(event);
         }
         
