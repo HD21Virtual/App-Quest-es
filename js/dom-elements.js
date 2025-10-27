@@ -22,7 +22,7 @@ export function initDOM() {
     DOM.homeChartCanvas = document.getElementById('homePerformanceChart');
     DOM.weeklyChartCanvas = document.getElementById('weeklyPerformanceChart');
 
-    // Filters
+    // Filters (Vade Mecum)
     DOM.vadeMecumTitle = document.getElementById('vade-mecum-title');
     DOM.filterBtn = document.getElementById('filter-btn');
     DOM.materiaFilter = document.getElementById('materia-filter');
@@ -122,8 +122,14 @@ export function initDOM() {
     // --- FIM NOVO ---
 
     // ===== INÍCIO DA MODIFICAÇÃO: Filtros da aba Estatísticas =====
-    DOM.statsMateriaFilter = document.getElementById('stats-materia-filter');
-    DOM.statsAssuntoFilter = document.getElementById('stats-pasta-filter'); // O ID no HTML é 'stats-pasta-filter'
+    // Remove referências aos <select> antigos
+    // DOM.statsMateriaFilter = document.getElementById('stats-materia-filter'); // REMOVIDO
+    // DOM.statsAssuntoFilter = document.getElementById('stats-pasta-filter'); // REMOVIDO
+    
+    // Adiciona referências aos novos containers .custom-select-container
+    DOM.statsMateriaFilterCustom = document.getElementById('stats-materia-filter-custom');
+    DOM.statsAssuntoFilterCustom = document.getElementById('stats-assunto-filter-custom');
+    
     DOM.statsFilterBtn = document.getElementById('stats-filter-btn');
     // ===== FIM DA MODIFICAÇÃO =====
 
