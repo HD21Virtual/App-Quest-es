@@ -619,8 +619,12 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
                 position: 'top',
                 align: 'center',
                 labels: {
-                    usePointStyle: true,
-                    boxWidth: 8
+                    // ===== ALTERAÇÃO 1 INÍCIO: Legendas retangulares =====
+                    // 'usePointStyle: true' usa círculos, 'false' usa retângulos.
+                    usePointStyle: false, 
+                    // Ajusta o tamanho da caixa da legenda retangular.
+                    boxWidth: 20 
+                    // ===== ALTERAÇÃO 1 FIM =====
                 }
             },
             tooltip: {
@@ -634,7 +638,11 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
         },
         scales: {
             x: {
-                grid: { display: false },
+                // ===== ALTERAÇÃO 2 INÍCIO: Linhas verticais =====
+                // 'display: false' estava escondendo as linhas.
+                // Agora mostramos as linhas com a cor padrão (igual ao eixo y).
+                grid: { color: '#e5e7eb' }, 
+                // ===== ALTERAÇÃO 2 FIM =====
                 ticks: { color: '#6b7280' } // gray-500
             },
             y: {
@@ -678,4 +686,3 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
     });
 }
 // ===== FIM DA MODIFICAÇÃO =====
-
