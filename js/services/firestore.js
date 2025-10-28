@@ -544,17 +544,18 @@ export async function resetAllUserData() {
     if (!state.currentUser) return;
     const userId = state.currentUser.uid;
 
+    // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+    // A lista foi reduzida para apagar apenas os dados de progresso.
+    // 'filtros', 'cadernos', e 'folders' foram removidos desta lista.
     const collectionsToDelete = [
-        'sessions',
-        'reviewItems',
-        'userQuestionState',
-        'questionHistory',
-        'cadernoState',
-        'filtros',
-        'cadernos',
-        'folders',
-        'performanceLog' // ===== ADICIONADO =====
+        'sessions',          // Estatísticas de sessão
+        'reviewItems',       // Agendamentos de revisão (SRS)
+        'userQuestionState', // Respostas salvas (qual alternativa marcou)
+        'questionHistory',   // Histórico vitalício (acertos/erros por questão)
+        'cadernoState',      // Posição salva em cada caderno
+        'performanceLog'     // Log de desempenho para gráfico de evolução
     ];
+    // ===== FIM DA MODIFICAÇÃO =====
 
     // Cria um array de promessas para deletar todas as coleções em paralelo
     const deletePromises = collectionsToDelete.map(collectionName => 
@@ -567,15 +568,14 @@ export async function resetAllUserData() {
         // O listener onAuthStateChanged em auth.js vai recarregar o estado vazio
         // (pois as coleções estarão vazias), então não precisamos forçar um reset aqui.
         // Apenas para garantir, podemos limpar os mapas locais.
-        setState('userFolders', []);
-        setState('userCadernos', []);
+        // state.userFolders e state.userCadernos NÃO são resetados.
         setState('userReviewItems', []);
         setState('historicalSessions', []);
         setState('userAnswers', new Map());
         setState('userCadernoState', new Map());
         setState('userReviewItemsMap', new Map());
         setState('userQuestionHistoryMap', new Map());
-        setState('savedFilters', []);
+        // state.savedFilters NÃO é resetado.
         setState('sessionStats', []);
     } catch (error) {
         console.error("Erro geral ao resetar o progresso do usuário:", error);
