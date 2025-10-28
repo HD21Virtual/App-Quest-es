@@ -1,6 +1,6 @@
 import DOM from './dom-elements.js';
-// --- CORREÇÃO: Importar setState ---
-import { state, setState } from './state.js';
+// --- CORREÇÃO: Importar setState e clearSessionStats ---
+import { state, setState, clearSessionStats } from './state.js';
 import { closeSaveModal, closeCadernoModal, closeNameModal, handleConfirmation, openSaveModal, openCadernoModal, openNameModal, openLoadModal, closeLoadModal, handleLoadModalEvents, updateSavedFiltersList, closeConfirmationModal, closeStatsModal, openAuthModal, closeAuthModal } from './ui/modal.js';
 // CORREÇÃO: Salvar o progresso ao sair da página
 // --- MODIFICAÇÃO: Importar resetAllUserData e updateStatsAssuntoFilter ---
@@ -718,7 +718,11 @@ export function setupAllEventListeners() {
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             if (state.currentUser && state.sessionStats.length > 0) {
+                // ===== INÍCIO DA MODIFICAÇÃO (BUG FIX) =====
+                // Agora também limpa as estatísticas locais para evitar contagem dupla
                 saveSessionStats();
+                clearSessionStats();
+                // ===== FIM DA MODIFICAÇÃO =====
             }
         }
     });
