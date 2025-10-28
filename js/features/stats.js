@@ -844,11 +844,12 @@ async function renderDesempenhoMateriaTable(filters = null) {
 
     if (hierarchy.size === 0) {
         // ===== INÍCIO DA MODIFICAÇÃO: Mensagem de "Nenhum dado" melhorada =====
-        let emptyMessage = "Nenhum dado de desempenho encontrado.";
+        let emptyMessage; // = "Nenhum dado de desempenho encontrado.";
         if (filters && (filters.materias.length > 0 || filters.assuntos.length > 0 || filters.startDate)) {
-             emptyMessage = "Nenhum dado de desempenho encontrado para os filtros aplicados.";
+             emptyMessage = "Não foram encontradas resoluções com o filtro selecionado."; // ALTERADO AQUI
         } else {
-             emptyMessage += " Comece a resolver questões no modo Revisão para ver suas estatísticas detalhadas.";
+             // emptyMessage += " Comece a resolver questões no modo Revisão para ver suas estatísticas detalhadas.";
+             emptyMessage = "Não foram encontradas resoluções com o filtro selecionado."; // ALTERADO AQUI
         }
         
         DOM.statsDesempenhoMateriaContainer.innerHTML = `
