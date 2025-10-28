@@ -7,7 +7,8 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { auth } from '../firebase-config.js';
-import { state, setState, resetStateOnLogout, clearUnsubscribes } from '../state.js';
+// --- CORREÇÃO: Importar 'state' e 'saveSessionStats' ---
+import { state, setState, resetStateOnLogout, clearUnsubscribes, clearSessionStats } from '../state.js';
 // CORREÇÃO: Importar saveSessionStats para salvar o progresso ao deslogar
 import { setupAllListeners, saveSessionStats } from '../services/firestore.js';
 import { updateUserUI } from '../ui/ui-helpers.js';
@@ -47,7 +48,14 @@ export async function handleAuth(action) {
         } else if (action === 'register') {
             await createUserWithEmailAndPassword(auth, DOM.emailInput.value, DOM.passwordInput.value);
         } else if (action === 'logout') {
+            // ===== INÍCIO DA MODIFICAÇÃO (BUG FIX) =====
+            // Salva a sessão atual ANTES de fazer o logout
+            if (state.currentUser && state.sessionStats.length > 0) {
+                await saveSessionStats();
+                clearSessionStats(); // Limpa localmente após salvar
+            }
             await signOut(auth);
+            // ===== FIM DA MODIFICAÇÃO =====
         }
     } catch (error) {
         DOM.authError.textContent = error.message;
