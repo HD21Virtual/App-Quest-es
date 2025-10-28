@@ -98,8 +98,11 @@ export async function handleConfirmation() {
     if (!state.currentUser || !state.deletingType) return;
 
     if (state.deletingType === 'all-progress') {
-        // Correção: Removida linha duplicada/comentada.
+        // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+        // A função resetAllUserData foi modificada em firestore.js
+        // para apagar apenas os dados de progresso.
         await resetAllUserData();
+        // ===== FIM DA MODIFICAÇÃO =====
     } else {
         await deleteItem(state.deletingType, state.deletingId);
     }
