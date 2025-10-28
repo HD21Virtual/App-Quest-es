@@ -517,25 +517,45 @@ export async function addQuestionIdsToCaderno(cadernoId, questionIds) {
  * Apaga todas as subcoleções de dados de um usuário.
  * @param {string} userId - O ID do usuário.
  */
+// ===== INÍCIO DA MODIFICAÇÃO: deleteUserCollection agora usa batches de 500 e lança erro =====
 async function deleteUserCollection(userId, collectionName) {
     if (!userId) return;
+
+    const collectionRef = collection(db, 'users', userId, collectionName);
+    const q = query(collectionRef); // Sem limit, pega tudo
+    
     try {
-        const collectionRef = collection(db, 'users', userId, collectionName);
-        const q = query(collectionRef);
         const snapshot = await getDocs(q);
         
-        if (snapshot.empty) return; // Coleção já está vazia
+        if (snapshot.empty) {
+            console.log(`Coleção ${collectionName} já está vazia.`);
+            return; // Sucesso, nada a fazer
+        }
 
-        const batch = writeBatch(db);
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
-        console.log(`Coleção ${collectionName} resetada.`);
+        const docs = snapshot.docs;
+        const batchSize = 500; // Limite do Firestore para writes em batch
+        const batches = [];
+
+        // Divide os documentos em lotes de 500
+        for (let i = 0; i < docs.length; i += batchSize) {
+            const batch = writeBatch(db);
+            const end = Math.min(i + batchSize, docs.length);
+            for (let j = i; j < end; j++) {
+                batch.delete(docs[j].ref);
+            }
+            batches.push(batch.commit()); // Adiciona a promessa do commit ao array
+        }
+
+        await Promise.all(batches); // Executa todos os batches em paralelo
+        console.log(`Coleção ${collectionName} resetada (${docs.length} documentos).`);
+
     } catch (error) {
         console.error(`Erro ao resetar a coleção ${collectionName}:`, error);
+        // Lança o erro para que resetAllUserData possa pegá-lo
+        throw error;
     }
 }
+// ===== FIM DA MODIFICAÇÃO =====
 
 /**
  * Reseta todos os dados do usuário logado.
