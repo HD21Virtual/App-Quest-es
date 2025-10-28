@@ -691,8 +691,11 @@ export function setupAllEventListeners() {
             if (!state.currentUser) return; // Proteção
             setState('deletingId', null);
             setState('deletingType', 'all-progress');
-            if (DOM.confirmationModalTitle) DOM.confirmationModalTitle.textContent = 'Resetar Todo o Progresso';
-            if (DOM.confirmationModalText) DOM.confirmationModalText.innerHTML = `Tem certeza que deseja apagar <strong>TODO</strong> o seu progresso? Isso inclui todas as estatísticas, filtros, pastas, cadernos e agendamentos de revisão. <br><br><span class="font-bold text-red-600">Esta ação não pode ser desfeita.</span>`;
+            if (DOM.confirmationModalTitle) DOM.confirmationModalTitle.textContent = 'Resetar Progresso';
+            // ===== INÍCIO DA MODIFICAÇÃO (SOLICITAÇÃO DO USUÁRIO) =====
+            // Texto do modal atualizado para refletir a nova ação.
+            if (DOM.confirmationModalText) DOM.confirmationModalText.innerHTML = `Tem certeza que deseja apagar o seu progresso? Isso irá apagar <strong>SOMENTE</strong> suas estatísticas, resoluções de questões e agendamentos de revisão. <br><br>Seus filtros, pastas e cadernos serão mantidos. <br><span class="font-bold text-red-600">Esta ação não pode ser desfeita.</span>`;
+            // ===== FIM DA MODIFICAÇÃO =====
             if (DOM.confirmationModal) DOM.confirmationModal.classList.remove('hidden');
         }
         // ===== INÍCIO DA MODIFICAÇÃO =====
