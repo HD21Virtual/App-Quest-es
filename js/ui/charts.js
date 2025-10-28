@@ -311,7 +311,9 @@ export function renderStatsPagePerformanceChart(correct, incorrect) {
         ctx.textBaseline = "middle";
         ctx.font = "16px 'Inter', sans-serif";
         ctx.fillStyle = "#9ca3af";
-        ctx.fillText("Nenhum dado para exibir.", canvas.width / 2, canvas.height / 2);
+        // ===== INÍCIO DA MODIFICAÇÃO =====
+        ctx.fillText("Não foram encontradas resoluções com o filtro selecionado.", canvas.width / 2, canvas.height / 2);
+        // ===== FIM DA MODIFICAÇÃO =====
         ctx.restore();
         return;
     }
@@ -605,7 +607,9 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
         ctx.textBaseline = "middle";
         ctx.font = "16px 'Inter', sans-serif";
         ctx.fillStyle = "#9ca3af";
-        ctx.fillText("Nenhum dado de evolução encontrado para os filtros aplicados.", canvas.width / 2, canvas.height / 2);
+        // ===== INÍCIO DA MODIFICAÇÃO =====
+        ctx.fillText("Não foram encontradas resoluções com o filtro selecionado.", canvas.width / 2, canvas.height / 2);
+        // ===== FIM DA MODIFICAÇÃO =====
         ctx.restore();
         return;
     }
@@ -690,4 +694,3 @@ export function renderEvolutionChart(performanceLog, startDate, endDate) {
     });
 }
 // ===== FIM DA MODIFICAÇÃO =====
-
