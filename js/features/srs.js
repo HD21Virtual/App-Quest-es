@@ -36,29 +36,48 @@ function calculateSm2(reviewItem, quality) {
     // 1. Lida com respostas incorretas (qualidade 0)
     if (quality === 0) {
         repetitions = 0; // Reseta o progresso
-        interval = 1;    // Agenda para o próximo dia
+        interval = 1;    // Agenda para o próximo dia (Errei 1d)
         easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor - 0.20); // Penaliza o 'ease'
     } else {
-    // 2. Lida com respostas corretas (qualidade 1, 2, 3)
+        // 2. Lida com respostas corretas (qualidade 1, 2, 3)
         repetitions += 1;
 
-        // Calcula o novo intervalo base para 'Bom'
+        // --- INÍCIO DA CORREÇÃO (Lógica de Intervalo) ---
+        // A lógica foi ajustada para refletir os intervalos esperados na primeira revisão:
+        // Difícil (1) = 2 dias, Bom (2) = 3 dias, Fácil (3) = 4 dias.
+        // As revisões seguintes (rep 2+) seguem um padrão SM-2 modificado.
+
         if (repetitions === 1) {
-            interval = 1;
+            // Primeira revisão (Repetição 1)
+            if (quality === 1) { // 'Difícil'
+                interval = 2; // Agendado para 2 dias
+            } else if (quality === 2) { // 'Bom'
+                interval = 3; // Agendado para 3 dias
+            } else if (quality === 3) { // 'Fácil'
+                interval = 4; // Agendado para 4 dias
+            } else {
+                interval = 1; // Fallback
+            }
         } else if (repetitions === 2) {
-            interval = 6;
+            // Segunda revisão (Repetição 2)
+            // Usamos um intervalo fixo padrão do SM-2
+            interval = 6; 
         } else {
+            // Terceira revisão e subsequentes (Repetição 3+)
+            // Usa o easeFactor para calcular o próximo intervalo
             interval = Math.ceil(interval * easeFactor);
+
+            // Aplicamos modificadores de bônus/penalidade
+            if (quality === 1) { // 'Difícil'
+                // Penaliza levemente o intervalo se achar difícil (mas não reseta)
+                interval = Math.ceil(interval * 0.9);
+            } else if (quality === 3) { // 'Fácil'
+                // Aplica um bônus de 30% sobre o intervalo recém-calculado.
+                interval = Math.ceil(interval * 1.3);
+            }
+            // 'Bom' (quality 2) não modifica o intervalo, usa o easeFactor puro.
         }
-        
-        // Aplica modificadores para 'Difícil' e 'Fácil'
-        if (quality === 1) { // 'Difícil'
-            // Multiplica o intervalo ANTERIOR por 1.2, um comportamento padrão do Anki.
-            interval = Math.ceil((reviewItem?.interval || 1) * 1.2);
-        } else if (quality === 3) { // 'Fácil'
-            // Aplica um bônus de 30% sobre o intervalo recém-calculado.
-            interval = Math.ceil(interval * 1.3);
-        }
+        // --- FIM DA CORREÇÃO ---
     }
 
     // 3. Atualiza o Fator de Facilidade (apenas para respostas corretas)
