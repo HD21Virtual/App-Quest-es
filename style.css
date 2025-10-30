@@ -404,3 +404,21 @@ body {
     }
 }
 /* ===== FIM DA MODIFICAÇÃO ===== */
+
+/* ===== INÍCIO DA MODIFICAÇÃO: Fonte das Pastas e Matérias ===== */
+
+/*
+  Aplica-se aos títulos das Pastas na aba "Cadernos"
+  e aos títulos das Matérias na aba "Matérias".
+*/
+#cadernos-view .folder-item .font-bold.text-lg,
+#materias-view .materia-item .font-bold.text-lg {
+    font-family: "Source Sans Pro", "Trebuchet MS", Tahoma, sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 24px;
+    font-style: normal;
+}
+
+/* ===== FIM DA MODIFICAÇÃO ===== */
+
