@@ -48,11 +48,7 @@ export async function checkAnswer() {
         });
     }
 
-    // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
-    updateStatsPageUI();
-}
-
-    // ===== INÍCIO DA MODIFICAÇÃO: Registrar no log e histórico (para "Evolução" e "Desempenho") =====
+        // ===== INÍCIO DA MODIFICAÇÃO: Registrar no log e histórico (para "Evolução" e "Desempenho") =====
     if (state.currentUser) {
         // Salva a resposta (C/E)
         await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
@@ -387,4 +383,5 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
 
