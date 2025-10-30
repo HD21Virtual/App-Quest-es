@@ -1,7 +1,7 @@
 import { state, setState, getActiveContainer } from '../state.js';
 import { handleSrsFeedback, formatInterval } from './srs.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
-import { saveUserAnswer, updateQuestionHistory, saveCadernoState } from '../services/firestore.js';
+import { saveUserAnswer, updateQuestionHistory, saveCadernoState, logPerformanceEntry } from '../services/firestore.js';
 // A importação de 'caderno.js' foi removida para corrigir um erro de dependência circular.
 
 export async function navigateQuestion(direction) {
@@ -47,6 +47,21 @@ export async function checkAnswer() {
             assunto: question.assunto, userAnswer: state.selectedAnswer
         });
     }
+
+    // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
+    updateStatsPageUI();
+}
+
+    // ===== INÍCIO DA MODIFICAÇÃO: Registrar no log e histórico (para "Evolução" e "Desempenho") =====
+    if (state.currentUser) {
+        // Salva a resposta (C/E)
+        await saveUserAnswer(question.id, state.selectedAnswer, isCorrect);
+        // Atualiza o histórico vitalício (para a tabela de desempenho)
+        await updateQuestionHistory(question.id, isCorrect);
+        // Loga a entrada de performance (para o gráfico de evolução)
+        await logPerformanceEntry(question, isCorrect);
+    }
+    // ===== FIM DA MODIFICAÇÃO =====
 
     // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
     updateStatsPageUI();
@@ -372,3 +387,4 @@ export function renderQuestionListForAdding(questions, existingQuestionIds) {
         `;
     }).join('');
 }
+
