@@ -6,7 +6,7 @@ import { navigateToView } from '../ui/navigation.js';
 import { renderAnsweredQuestion, displayQuestion } from './question-viewer.js';
 import { updateStatsPanel, updateStatsPageUI } from './stats.js';
 // ===== INÍCIO DA MODIFICAÇÃO =====
-import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory, logPerformanceEntry } from '../services/firestore.js';
+import { setSrsReviewItem, saveUserAnswer, updateQuestionHistory, logPerformanceEntry, saveSessionStats } from '../services/firestore.js';
 // ===== FIM DA MODIFICAÇÃO =====
 
 // --- IMPLEMENTAÇÃO DO ALGORITMO SM-2 (AJUSTADO) ---
@@ -434,6 +434,12 @@ export async function handleStartReview() {
     if (uniqueQuestionIds.length > 0) {
         setState('isReviewSession', true);
         setState('filteredQuestions', state.allQuestions.filter(q => uniqueQuestionIds.includes(q.id)));
+        
+        // ===== INÍCIO DA MODIFICAÇÃO: Salva a sessão anterior antes de limpar =====
+        if (state.sessionStats.length > 0) {
+            await saveSessionStats();
+        }
+        // ===== FIM DA MODIFICAÇÃO =====
         setState('sessionStats', []);
         setState('currentQuestionIndex', 0);
 
@@ -448,3 +454,4 @@ export async function handleStartReview() {
         // updateStatsPanel(); // Painel de estatísticas da aba foi removido.
     }
 }
+
