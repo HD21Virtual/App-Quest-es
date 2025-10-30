@@ -347,3 +347,60 @@ body {
     font-weight: 500;
 }
 /* --- FIM NOVO --- */
+
+/* ===== INÍCIO DA MODIFICAÇÃO: Fonte das Questões e Alternativas ===== */
+
+/* Estilo para o texto da questão */
+#questions-container p.text-lg {
+    font-family: "Source Sans Pro", "Trebuchet MS", Tahoma, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    color: rgb(51, 51, 51); /* #333333 */
+    font-size: 18px;
+    line-height: 28px;
+}
+
+/* Estilo para o texto da alternativa */
+.option-text {
+    font-family: "Source Sans Pro", "Trebuchet MS", Tahoma, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    color: rgb(51, 51, 51); /* #333333 */
+    font-size: 18px;
+    line-height: 28px;
+}
+
+/* Sobrescreve a cor da alternativa correta/incorreta, mantendo a fonte */
+.correct-answer .option-text {
+    /* Mantém as cores originais de feedback */
+    color: #16a34a; 
+    font-weight: 500;
+    /* Aplica o resto da fonte */
+    font-family: "Source Sans Pro", "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+}
+
+.incorrect-answer .option-text {
+    /* Mantém as cores originais de feedback */
+    color: #dc2626;
+    font-weight: 500;
+    /* Aplica o resto da fonte */
+    font-family: "Source Sans Pro", "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+}
+
+/* Ajuste para telas pequenas (sobrescreve a regra anterior) */
+@media (max-width: 768px) {
+    /* O texto da questão já é tratado pelo seletor principal */
+    #questions-container p.text-lg {
+         font-size: 18px; /* Mantém 18px */
+         line-height: 28px;
+    }
+    
+    .option-text {
+        font-size: 18px; /* Mantém 18px */
+    }
+}
+/* ===== FIM DA MODIFICAÇÃO ===== */
