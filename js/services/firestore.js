@@ -1,5 +1,6 @@
 import { collection, getDocs, query, orderBy, onSnapshot, getDoc, doc, updateDoc, arrayRemove, setDoc, addDoc, serverTimestamp, where, writeBatch, deleteDoc, arrayUnion, increment, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from '../firebase-config.js';
+// --- MODIFICAÇÃO: Removido 'clearSessionStats' da importação ---
 import { state, setState, addUnsubscribe } from '../state.js';
 import { renderFoldersAndCadernos } from '../features/caderno.js';
 import { renderReviewView } from '../features/srs.js';
@@ -326,6 +327,8 @@ export async function createOrUpdateName(type, name, id = null) {
 
 export async function saveSessionStats() {
     if (!state.currentUser || state.sessionStats.length === 0) return;
+    
+    // --- MODIFICAÇÃO: A função agora lê o state.sessionStats mas NÃO o limpa. ---
     
     const total = state.sessionStats.length;
     const correct = state.sessionStats.filter(s => s.isCorrect).length;
