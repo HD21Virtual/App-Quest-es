@@ -714,16 +714,16 @@ export function setupAllEventListeners() {
     // --- MODIFICAÇÃO: Removido listener antigo da tabela de revisão ---
     // A nova lógica será adicionada abaixo
 
-    // CORREÇÃO: Salva a sessão se o usuário fechar ou mudar de aba
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            if (state.currentUser && state.sessionStats.length > 0) {
-                // ===== INÍCIO DA MODIFICAÇÃO (BUG FIX) =====
-                // Agora também limpa as estatísticas locais para evitar contagem dupla
-                saveSessionStats();
-                clearSessionStats();
-                // ===== FIM DA MODIFICAÇÃO =====
-            }
+    // --- MODIFICAÇÃO: Substituído 'visibilitychange' por 'pagehide' ---
+    // 'pagehide' é mais confiável para salvar dados antes de sair
+    // e não dispara ao trocar de aba do navegador.
+    window.addEventListener('pagehide', (event) => {
+        // Salva a sessão ANTES do usuário sair da página
+        // Não usamos 'await' e NÃO limpamos o sessionStats.
+        // A sessão será limpa na próxima vez que o usuário
+        // aplicar um filtro ou fizer logout.
+        if (state.currentUser && state.sessionStats.length > 0) {
+            saveSessionStats();
         }
     });
 
