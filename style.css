@@ -404,19 +404,3 @@ body {
     }
 }
 /* ===== FIM DA MODIFICAÇÃO ===== */
-
-/* ===== INÍCIO DA MODIFICAÇÃO: Fonte das Pastas e Matérias ===== */
-
-/*
-  Aplica-se aos títulos das Pastas na aba "Cadernos"
-  e aos títulos das Matérias na aba "Matérias".
-*/
-#cadernos-view .folder-item .font-bold.text-lg,
-#materias-view .materia-item .font-bold.text-lg {
-   
-}
-
-/* ===== FIM DA MODIFICAÇÃO ===== */
-
-
-
