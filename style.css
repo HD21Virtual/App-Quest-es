@@ -1,6 +1,6 @@
 /* Estilos personalizados */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: "Source Sans Pro", "Trebuchet MS", Tahoma, sans-serif;
 }
 
 /* MODIFICAÇÃO: Efeito hover agora só aplica em dispositivos com mouse (@media (hover: hover)) */
@@ -421,4 +421,5 @@ body {
 }
 
 /* ===== FIM DA MODIFICAÇÃO ===== */
+
 
